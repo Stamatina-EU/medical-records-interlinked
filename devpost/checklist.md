@@ -9,7 +9,7 @@ Build mode: fast (concise explanations, no full code walkthroughs; extra trust c
 
 ## Slices
 
-- [ ] **1. The fictional patient's records exist as real, verified evidence**
+- [x] **1. The fictional patient's records exist as real, verified evidence**
   Becomes usable: A running Next.js app where Alex Rowan's six synthetic source documents open as real PDFs through the Document Route. For checking, there's a **dev-only** internal harness page, which is not product scope and not a records library. It renders only when `NODE_ENV=development` and is removed in slice 3. `npm run verify:seed` proves every hand-authored seed fact against its PDF using the deterministic trust gate.
   Why now: Everything downstream depends on the corpus and the verifier. Writing seven plausible, consistent, verbatim-matchable documents is the biggest hidden risk (`spec.md > Decisions and Open Issues`). Building the trust gate first means every later slice stands on verified evidence. Project bootstrapping lives here.
   PRD ref: `prd.md > Synthetic Demo Record Set`, `prd.md > Evidence Drawer` (source document viewer)
@@ -30,17 +30,17 @@ Build mode: fast (concise explanations, no full code walkthroughs; extra trust c
   Learner check: In dev mode, open `http://localhost:3000/dev/documents` and click through the six documents plus `demo-files/follow-up-consultation-2026-09-25.pdf`. Do they read like plausible, calm, clearly synthetic medical records? Is anything in the wording, dates or tone off? Then run `npm run verify:seed` and see every fact reported as verified.
   Commit: `Add synthetic corpus, seed history and deterministic verifier`
 
-- [ ] **2. Live AI extraction is proven against the real trust gate**
-  Becomes usable: `npm run preflight` sends the live follow-up note through PDF text → Claude Sonnet 5 → schema → verifier → dedupe against the seed, five times. It reports both expected facts (ferritin 32 μg/L, oral iron completed) verified on every run.
-  Why now: The Claude API is the only external service and the riskiest unknown. This is the one allowed technical-layer slice, because it proves that risk with runnable evidence before any UI depends on it. If Sonnet 5 isn't reliable, we learn it now and switch `EXTRACTION_MODEL`, not on camera.
+- [x] **2. Live AI extraction is proven against the real trust gate**
+  Becomes usable: `npm run preflight` sends the live follow-up note through PDF text → OpenAI Responses API (`EXTRACTION_MODEL`, default `gpt-6-luna`) → strict schema → verifier → dedupe against the seed, five times. It reports both expected facts (ferritin 32 μg/L, oral iron completed) verified on every run.
+  Why now: The OpenAI API is the only external service and the riskiest unknown. This is the one allowed technical-layer slice, because it proves that risk with runnable evidence before any UI depends on it. If the default model isn't reliable, we learn it now and switch `EXTRACTION_MODEL` (e.g. to `gpt-6-sol`), not on camera.
   PRD ref: `prd.md > Adding a Record and Reviewing Proposed Changes` (extraction and verification), `prd.md > States and Boundaries` (unusable extraction)
   Spec ref: `spec.md > Extraction Client`, `spec.md > PDF Text Reader`, `spec.md > Preflight Script`, `spec.md > External Services and Dependencies`, `spec.md > Where It Runs and How Someone Tries It`
   Build:
   - Add `lib/extraction/schema.ts` (zod, no confidence field) and `prompt.ts`.
-  - Add `extract.ts` using `client.messages.parse` + `zodOutputFormat`, with `EXTRACTION_MODEL` and `EXTRACTION_EFFORT` from env, a `stop_reason` check and a timeout.
+  - Add `extract.ts` using the OpenAI Responses API (`client.responses.parse` + `zodTextFormat`, strict JSON schema), with `EXTRACTION_MODEL` and `EXTRACTION_EFFORT` (as `reasoning.effort`) from env, refusal and `status: "incomplete"` checks, and a timeout.
   - Add a minimal `lib/engine/dedupe.ts`.
   - Add `scripts/preflight.ts`. It never writes runtime state and never logs document text beyond the verified facts.
-  - **Needs the learner to add `ANTHROPIC_API_KEY` to `.env.local` themselves.**
+  - **Needs the learner to add `OPENAI_API_KEY` to `.env.local` themselves.**
   Verify (mechanical): `npm run preflight` → 5/5 runs pass with both facts verified, with correct values, range and page numbers. Running it with a deliberately wrong API key produces a clear error and no state change.
   Learner check: Read the preflight output. For each run, you should see the two verified facts with their page numbers and source wording, and "PASS". Confirm that the source wording shown is the note's own text.
   Commit: `Add live extraction client and preflight check`
@@ -153,4 +153,7 @@ Activity mode:
 - The "Prescribed" status cue matches only `Prescribed:` or `is/was/has been prescribed`, never the bare word. The live note's "completed the prescribed course of oral iron" would otherwise have let a model claim a *Prescribed* event from a completion sentence. Covered by a test.
 - D6 comparison wording is now a single sentence naming both exam dates ("Thyroid ultrasound of 12 Mar 2026 compared with the thyroid ultrasound of 10 Sep 2025."), so one contiguous excerpt proves the relationship, the exam date and the earlier date together. This still satisfies the spec's corpus rule.
 - Imaging exam excerpts may span consecutive source lines (e.g. exam sentence + finding). `verifiedExcerpt` keeps the original line breaks, because it is page text.
+- AI provider changed from Anthropic to OpenAI before slice 2 (learner decision; provider-only change). `@anthropic-ai/sdk` was replaced by the official `openai` SDK (7.23), using the Responses API with strict JSON-schema Structured Outputs (`client.responses.parse` + `zodTextFormat`). The key is `OPENAI_API_KEY`, and the default model is `gpt-6-luna` with `gpt-6-sol` as the fallback, checked against current OpenAI docs. The schema, verifier, trust pipeline, data model, corpus and review flow are unchanged. The earlier zod note (zod 4 as an Anthropic SDK peer) is superseded: `openai` also accepts zod v3 or v4.
+- Extraction schema `page` fields are `z.number().int().min(1)`. OpenAI's docs list Integer as a supported type and `minimum`/`maximum` as supported number properties (not for fine-tuned models, which we don't use). `zodTextFormat` emits `{"type":"integer","minimum":1,…}` with `strict: true` and re-validates each response locally, and the verifier's integer and page-range check stays as defense in depth.
+- `scripts/preflight.ts` ends with `process.exitCode` instead of `process.exit()`. On Windows, `process.exit()` while the HTTP client's sockets were closing tripped a libuv assertion (exit 127 instead of 1). SDK-internal retries (`maxRetries: 2`) aren't surfaced by the script, so per-run latency is the only visible signal of a retry.
 - Small internal helpers added outside the planned tree: `lib/text/dates.ts` (date parse/format) and `lib/store/paths.ts` (seed/runtime locations). `vitest.config.mts` uses the ESM extension.

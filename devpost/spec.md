@@ -17,7 +17,7 @@ Working label: **Medical History**. No brand is locked (`prd.md > Product Decisi
 The app is **one Next.js web app that runs on your laptop.** It has two halves:
 
 - **The screens** (Snapshot, History, Doctor Summary, the drawer and panels) run in the browser.
-- **The server part** is code running on your laptop, not in the browser. It holds the Claude API key, talks to Claude, checks everything Claude says, and is the only thing allowed to write the trusted history.
+- **The server part** is code running on your laptop, not in the browser. It holds the OpenAI API key, talks to the OpenAI API, checks everything the model says, and is the only thing allowed to write the trusted history.
 
 The **trusted history** is a JSON file (a structured text file, like a very strict spreadsheet) at `data/runtime/state.json`. It holds only **approved source facts** and the documents they came from. **Calculated claims are never saved.** Every time a screen loads, code recalculates them from the approved facts: "outside supplied range," "changed since previous," "matching follow-up result found." That's why the Snapshot, History and Doctor Summary can never go stale or disagree.
 
@@ -28,7 +28,7 @@ The **starting history** for the fictional patient is a committed **seed**: `dat
 | Step | Who does it | What happens |
 |---|---|---|
 | 1 | **Code** | Reads the PDF's text, page by page. No AI. |
-| 2 | **AI (Claude Sonnet 5)** | Proposes facts in a strict format. Only two kinds are allowed: a lab measurement and a medication status statement. Each comes with its page and a word-for-word excerpt. |
+| 2 | **AI (OpenAI model, set by `EXTRACTION_MODEL`)** | Proposes facts in a strict format. Only two kinds are allowed: a lab measurement and a medication status statement. Each comes with its page and a word-for-word excerpt. |
 | 3 | **Code** | Checks each fact on its own. Is the excerpt really on that page, word for word? Does the source text itself name the subject (ferritin, oral iron) *and* contain the value, unit or status? Facts that fail are left out. The excerpt shown to the patient is then taken from the page, never from the model. |
 | 4 | **Code** | Previews what would change if the verified facts were approved. |
 | 5 | **Patient** | Approves evidence (source facts). Consequences aren't approvable. |
@@ -38,7 +38,7 @@ The **starting history** for the fictional patient is a committed **seed**: `dat
 The AI's only job is step 2: **it proposes, it never decides.** Changing the model never changes steps 1 or 3–7.
 
 **Why this shape and not something bigger:**
-- One project, one process, and one external service (the Claude API).
+- One project, one process, and one external service (the OpenAI API).
 - No database server, no accounts and no hosting.
 - It runs from a stable production build for the recording.
 
@@ -52,18 +52,18 @@ PRD ref: `prd.md > The Core Journey`.
 3. **Check a claim.** The patient clicks the Iron / Ferritin section and goes to `/history/iron`. Clicking a fact opens the **Evidence Drawer**. It already has the fact, its document and its excerpt, because the page sent them along. "Open source document" loads `/api/documents/{id}` in the browser's built-in PDF viewer, at `#page=N`.
 4. **See breadth.** The topic switcher goes to `/history/imaging`, the same template with no chart.
 5. **Add a record.** Add record opens a modal with a file picker. The PDF is sent to `POST /api/records/extract`, and the **Processing** state shows while it runs.
-6. **Server work.** PDF → page text → Claude → schema check → per-fact **verification** → duplicate check → consequence preview. The result is saved as a **pending proposal**, a temporary file on the server, and returned to the browser.
+6. **Server work.** PDF → page text → OpenAI model → schema check → per-fact **verification** → duplicate check → consequence preview. The result is saved as a **pending proposal**, a temporary file on the server, and returned to the browser.
 7. **Review.** The **Review Panel** shows the verified facts, a "left out" note if any facts failed, and "This would also update…". Rejecting a fact reruns the preview in the browser using the same pure engine code.
 8. **Apply.** The browser sends only `{proposalId, approvedFactIds}` to `POST /api/records/apply`. The server reloads the pending proposal from its *own* temporary file. It never trusts fact contents sent back from the browser. It then applies the approved facts, stores the document, sets `latestUpdate`, saves `state.json` and deletes the pending proposal.
 9. **See what changed.** The pages refresh from the new state. Recent changes and the latest-update marks come from `latestUpdate`.
 10. **Doctor Summary.** `/summary` runs the **Summary Composer** on the current state. Every line carries source markers that open the same drawer.
 
 ```
-Browser                          Server part (your laptop)                 Claude API
+Browser                          Server part (your laptop)                 OpenAI API
 ───────                          ─────────────────────────                 ──────────
 Add record ──PDF──▶ /api/records/extract
                      ├─ PDF Text Reader (page text)
-                     ├─ Extraction Client ──page text + schema──────────▶ Sonnet 5
+                     ├─ Extraction Client ──page text + schema──────────▶ EXTRACTION_MODEL
                      │                    ◀──proposed facts (JSON)────────
                      ├─ Fact Verifier (excerpt on page? value in excerpt?)
                      ├─ Engine: dedupe + preview
@@ -83,9 +83,9 @@ Snapshot / History / Summary ◀── State Store + Engine: derive (+ Summary C
 | Choice | Role | Why (learner-agreed unless marked) | Docs |
 |---|---|---|---|
 | **Next.js (App Router) + TypeScript** | Screens and the server part in one project | Learner accepted: one local app, the key stays server-side | https://nextjs.org/docs |
-| **@anthropic-ai/sdk** (TypeScript) | Calls Claude from the server part | Official SDK | https://github.com/anthropics/anthropic-sdk-typescript |
-| **Claude structured outputs** (`client.messages.parse` + `zodOutputFormat`) | Forces the model's answer into our schema | Schema-valid output before verification even starts | https://platform.claude.com/docs/en/build-with-claude/structured-outputs |
-| **zod** | Defines the extraction schema and validates it again | The SDK's structured-output helper uses it | https://zod.dev |
+| **openai** (official TypeScript SDK) | Calls the OpenAI Responses API from the server part | Official SDK (learner choice of provider) | https://github.com/openai/openai-node |
+| **OpenAI Structured Outputs** (`client.responses.parse` + `zodTextFormat`, strict JSON schema) | Forces the model's answer into our schema | Schema-valid output before verification even starts | https://developers.openai.com/api/docs/guides/structured-outputs |
+| **zod** | Defines the extraction schema and validates it again | The SDK's `zodTextFormat` helper uses it | https://zod.dev |
 | **unpdf** | Reads PDF text page by page on the server (built on Mozilla's pdf.js) | Deterministic step 1 *(agent-derived)* | https://github.com/unjs/unpdf |
 | **Playwright** (dev-only) | Renders the synthetic HTML documents to PDF | Print-quality, realistic documents with a clean text layer *(agent-derived)* | https://playwright.dev/docs/api/class-page#page-pdf |
 | **Vitest** | Tests for the engine, verifier and composer | Fast, TypeScript-native *(agent-derived)* | https://vitest.dev |
@@ -93,13 +93,13 @@ Snapshot / History / Summary ◀── State Store + Engine: derive (+ Summary C
 | **CSS Modules + CSS custom properties** | Styling | Direct control of an editorial look; tokens live in one file *(agent-derived)* | https://nextjs.org/docs/app/getting-started/css |
 | **next/font** (Google Fonts, self-hosted at build) | Typography | Fonts are bundled, so nothing is fetched at runtime *(agent-derived)* | https://nextjs.org/docs/app/api-reference/components/font |
 
-**Model:** `claude-sonnet-5` by default (learner choice, for demo latency on a narrow task). It's configurable server-side through `EXTRACTION_MODEL`, and `claude-opus-5` is the fallback if pre-flight shows Sonnet isn't reliable. Effort is configurable through `EXTRACTION_EFFORT` (default `medium`). Changing either never changes the schema or the pipeline.
+**Model:** `gpt-6-luna` by default. It's OpenAI's most efficient current model, for focused high-volume tasks, and the learner's criterion was a fast, cost-effective model for a narrow task. It's configurable server-side through `EXTRACTION_MODEL`, and `gpt-6-sol` is the step up if preflight shows Luna isn't reliable. Reasoning effort is configurable through `EXTRACTION_EFFORT`, sent as `reasoning.effort` (default `low`). Changing either never changes the schema or the pipeline. *(Provider switched from Anthropic to OpenAI by learner decision; see `checklist.md > Revisions`.)*
 
 **Environment already present on this machine:** Node.js v24, Git. *(Python isn't needed.)*
 
 **⚠ Unverified, so check at the start of the build.** No live lookup was done for this spec.
 - The current Next.js major version and its App Router conventions.
-- Which zod major version the installed SDK's `zodOutputFormat` helper expects (v3 or v4). Pin to match.
+- Which zod major version the installed SDK's `zodTextFormat` helper expects. *(Checked: `openai` 7.23 accepts zod v3 and v4.)*
 - The `unpdf` per-page text API (`extractText(..., { mergePages: false })`). Fall back to `pdfjs-dist` directly if it differs.
 - That Playwright's Chromium download (dev-only, roughly 150 MB) is acceptable.
 
@@ -111,13 +111,13 @@ Snapshot / History / Summary ◀── State Store + Engine: derive (+ Summary C
 
 **Requirements:**
 - Node.js 20+ (v24 is installed)
-- `ANTHROPIC_API_KEY` in `.env.local`, which is gitignored. The learner adds it locally. It's never pasted into chat or committed.
+- `OPENAI_API_KEY` in `.env.local`, which is gitignored. The learner adds it locally. It's never pasted into chat or committed.
 
 **Configuration (`.env.example` is committed with no values):**
 ```
-ANTHROPIC_API_KEY=
-EXTRACTION_MODEL=claude-sonnet-5
-EXTRACTION_EFFORT=medium
+OPENAI_API_KEY=
+EXTRACTION_MODEL=gpt-6-luna
+EXTRACTION_EFFORT=low
 ```
 
 **Commands:**
@@ -259,14 +259,15 @@ The trusted state isn't touched at any point.
 `lib/extraction/pdfText.ts`, server only. Converts the PDF to `string[]` (one entry per page) using unpdf. The page text is kept **as extracted, un-normalized**, because it's the source the canonical `verifiedExcerpt` is cut from. Normalization happens only inside the verifier, through the index map.
 
 ### Extraction Client
-`lib/extraction/extract.ts`, server only. It calls `client.messages.parse()` with:
+`lib/extraction/extract.ts`, server only. It calls the OpenAI Responses API, `client.responses.parse()`, with:
 - `model = EXTRACTION_MODEL`
-- `output_config: { format: zodOutputFormat(ExtractionSchema), effort: EXTRACTION_EFFORT }`
-- `max_tokens: 16000`
-- the system prompt from `prompt.ts`
-- the user content: page-labelled text (`=== PAGE 1 ===\n…`)
+- `text: { format: zodTextFormat(ExtractionSchema, "extraction") }` (strict JSON schema)
+- `reasoning: { effort: EXTRACTION_EFFORT }`
+- `max_output_tokens: 16000`
+- `instructions`: the system prompt from `prompt.ts`
+- `input`: page-labelled text (`=== PAGE 1 ===\n…`)
 
-The model sees **exactly the text the verifier checks against**, not the PDF image. It checks `stop_reason` before reading output. SDK retries stay at the default (2), with a request timeout of about 60 seconds. The model's raw output is never shown to the patient and never written to the trusted state.
+The model sees **exactly the text the verifier checks against**, not the PDF image. Before reading `output_parsed`, it checks for a `refusal` content item and for `status: "incomplete"`. SDK retries stay at the default (2), with a request timeout of about 60 seconds. The model's raw output is never shown to the patient and never written to the trusted state.
 
 **Extraction schema** (`lib/extraction/schema.ts`). It's deliberately narrow and has no confidence field:
 ```ts
@@ -548,7 +549,7 @@ medical-history/                     # repo root (current folder)
 │   ├── verify.test.ts               # every verifier check, pass + fail cases (see Verifier Tests)
 │   └── summary.test.ts              # sections, no-absence rule, refs on every statement
 ├── devpost/                         # planning docs (learner-profile.md is gitignored)
-├── .env.example                     # ANTHROPIC_API_KEY=, EXTRACTION_MODEL=, EXTRACTION_EFFORT=
+├── .env.example                     # OPENAI_API_KEY=, EXTRACTION_MODEL=, EXTRACTION_EFFORT=
 ├── .gitignore                       # + node_modules/, .next/, /data/runtime/, test-results/
 ├── package.json
 ├── tsconfig.json
@@ -560,15 +561,15 @@ medical-history/                     # repo root (current folder)
 
 ## External Services and Dependencies
 
-### Claude API (the only external service)
-- **Call:** `client.messages.parse({ model, max_tokens: 16000, system, messages: [{ role: "user", content: pageLabelledText }], output_config: { format: zodOutputFormat(ExtractionSchema), effort } })`
-- **Response:** `parsed_output`, which is null if parsing failed. Always check `stop_reason` first: `refusal` or `max_tokens` → `unusable`.
-- **Auth:** `ANTHROPIC_API_KEY` from `.env.local`, read only by server code.
-- **Model:** `EXTRACTION_MODEL`, default `claude-sonnet-5`, switchable to `claude-opus-5`.
-- **Cost:** a few cents per extraction at current list prices (Sonnet 5: $2 / $10 per million input/output tokens). Preflight × 5 plus a few demo takes costs well under $1.
+### OpenAI API (the only external service)
+- **Call:** `client.responses.parse({ model, instructions, input: pageLabelledText, text: { format: zodTextFormat(ExtractionSchema, "extraction") }, reasoning: { effort }, max_output_tokens: 16000 })`
+- **Response:** `output_parsed`, which is null if parsing failed. Check first: a `refusal` content item, or `status: "incomplete"` (e.g. `incomplete_details.reason: "max_output_tokens"`) → `unusable`.
+- **Auth:** `OPENAI_API_KEY` from `.env.local` (the SDK's default variable), read only by server code.
+- **Model:** `EXTRACTION_MODEL`, default `gpt-6-luna`, switchable to `gpt-6-sol` (or `gpt-6-astra`).
+- **Cost:** well under a cent per extraction on `gpt-6-luna` ($0.10 / $0.50 per million input/output tokens), or about a cent on `gpt-6-sol` ($2 / $10). Preflight × 5 plus demo takes cost a few cents at most.
 - **Limits:** the standard rate limits of your API account. Not a concern at this volume.
 - **Errors:** the SDK retries 408/409/429/5xx up to 2 times. Remaining errors surface as the retry state in the UI.
-- **Docs:** https://platform.claude.com/docs/en/build-with-claude/structured-outputs · https://github.com/anthropics/anthropic-sdk-typescript
+- **Docs:** https://developers.openai.com/api/docs/guides/structured-outputs · https://developers.openai.com/api/docs/models · https://github.com/openai/openai-node
 - **Privacy:** only synthetic documents are ever sent. Server logs never print document text or excerpts by default.
 
 ### Local, no account needed
@@ -578,7 +579,7 @@ Next.js, unpdf, zod, Vitest, tsx, next/font (fonts bundled at build), and Playwr
 
 ## Important Failure Modes
 
-- **The Claude call fails or times out during the demo** → "We couldn't read this record just now. Your history hasn't changed." **Try again** resends the same file. The trusted state stays untouched. No cached or replayed extraction, ever.
+- **The OpenAI call fails or times out during the demo** → "We couldn't read this record just now. Your history hasn't changed." **Try again** resends the same file. The trusted state stays untouched. No cached or replayed extraction, ever.
 - **The model returns something unusable** (refusal, truncation, schema mismatch, unverifiable document date, or *every* fact failing verification) → "This record couldn't be read into structured facts. Your history hasn't changed." Nothing proceeds to review.
 - **Some facts fail verification** → only verified facts appear. The note reads "1 extracted item could not be verified against the source document and was left out." Consequences are computed only from what remains.
 - **The same note is added again after approval** → "No new history changes found. Your documented history hasn't changed." Nothing persisted.
@@ -592,7 +593,7 @@ Next.js, unpdf, zod, Vitest, tsx, next/font (fonts bundled at build), and Playwr
 - **A JSON file** instead of a database. It's one patient and one writer. The full version would use a real database with migrations and access control.
 - **Clean text-layer PDFs that we author**, instead of OCR or layout analysis. The kernel is what happens after extraction. The full version would need OCR and table-aware parsing for real-world scans.
 - **Page text sent to the model**, instead of the PDF image. The model sees exactly what the verifier checks. The full version might add vision input for complex layouts, but it would still verify against a text source.
-- **Built-in excerpt verification** instead of Claude's citations feature. Citations can't be combined with strict schema output, and we need our own page text anyway.
+- **Built-in excerpt verification** instead of any provider-side citation feature. We need our own page text to check against anyway, and it keeps the trust gate independent of the provider.
 - **Pending proposals as temporary files**, instead of a job or queue system. There's one proposal at a time.
 - **The browser's built-in PDF viewer** (`#page=N`) instead of a custom viewer or highlight overlay. Page-level provenance plus the exact excerpt in the drawer is enough (`scope.md > Explicitly Cut`: bounding boxes).
 - **A hand-drawn SVG chart** instead of a charting library. It's one small series and gives full control over the editorial look.
@@ -610,7 +611,7 @@ Next.js, unpdf, zod, Vitest, tsx, next/font (fonts bundled at build), and Playwr
 - **A production build for recording**, if practical. It is: see *Where It Runs*.
 - **Per-fact independent verification.** Only verified facts reach review, and a partial failure doesn't invalidate the rest. All failing → unusable. *"Patients review evidence that code could verify."*
 - **No fake fallback.** Never replay a cached extraction as live. A live preflight and a normal retry path instead.
-- **Claude Sonnet 5 by default** for latency on a narrow task. The model and effort are configurable server-side, with Opus 5 as the switch if preflight shows unreliability. Changing the model never changes the schema or pipeline.
+- **OpenAI as the provider, `gpt-6-luna` by default,** for speed and cost on a narrow task. The model and effort are configurable server-side, with `gpt-6-sol` as the switch if preflight shows unreliability. Changing the provider or model never changes the schema or pipeline. *(Provider changed from Anthropic to OpenAI before slice 2 by learner decision.)*
 
 ### Agent-derived implementation details (follow from the above; change freely)
 unpdf for page text; Playwright for authoring the corpus; Vitest/tsx; CSS Modules plus tokens; a hand-drawn SVG chart; the browser's PDF viewer; the proposal stored server-side, with apply accepting only IDs; atomic writes; model confidence omitted from the schema; a shared lexicon of aliases and cues; the "first number + unit after the alias" binding rule and the same-sentence rule for medication status; NFKC normalization with an index map back to the original page text.
@@ -623,7 +624,7 @@ unpdf for page text; Playwright for authoring the corpus; Vitest/tsx; CSS Module
 ### One useful unknown — the learner's learning goal
 **Question:** *Where exactly should AI reasoning stop and deterministic code take over, in a product where trust matters?*
 **What clarified it:** the responsibility table in *How This Works*. The AI does exactly one thing, proposing facts in a closed schema, and every downstream decision is code or the patient. The sharpest concrete example is the **Fact Verifier**. The model's excerpt is only a *search key*. Code must find it on the stated page, confirm that the *source text itself* names the subject and contains the value or status, and then display the canonical page wording (`verifiedExcerpt`), never the model's string. The learner's review sharpened this further: verifying the value without verifying the subject would have let a correctly quoted number be attached to the wrong analyte. It also showed that the seed must meet the same bar as live data.
-**Checked during the build by:** `verify.test.ts` (see *Verifier Tests*: wrong subject, wrong binding, generic medication, missing cue, wrong page, canonical excerpt), `npm run verify:seed`, and `npm run preflight` (does Sonnet 5 pass the gate on every run?).
+**Checked during the build by:** `verify.test.ts` (see *Verifier Tests*: wrong subject, wrong binding, generic medication, missing cue, wrong page, canonical excerpt), `npm run verify:seed`, and `npm run preflight` (does the configured model pass the gate on every run?).
 
 ### Confirmed in review
 - **Demo reset is terminal-only** (`npm run demo:reset`, then refresh). There's no in-app control of any kind.
@@ -634,4 +635,4 @@ unpdf for page text; Playwright for authoring the corpus; Vitest/tsx; CSS Module
 - **The displayed excerpt is always a canonical `verifiedExcerpt`** cut from the page text through an index map (see *Fact Verifier*, *Verifier Tests*).
 
 ### To verify at the start of the build (no live lookup was done)
-Next.js current major and conventions; the zod version expected by the SDK's `zodOutputFormat`; the `unpdf` per-page API; the Playwright Chromium install.
+Next.js current major and conventions; the zod version expected by the SDK's `zodTextFormat` (checked: v3 or v4); the `unpdf` per-page API; the Playwright Chromium install.
