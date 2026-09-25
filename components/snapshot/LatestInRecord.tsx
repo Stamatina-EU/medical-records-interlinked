@@ -74,10 +74,11 @@ export default function LatestInRecord({ groups, index }: { groups: LatestGroup[
       </div>
       <ul className={`${styles.surface} ${styles.groups}`}>
         {groups.map((g) => (
-          <li key={g.kind} className={styles.group}>
+          <li key={g.kind} className={g.updated ? `${styles.group} ${styles.updated}` : styles.group}>
             <div className={styles.groupHead}>
               <h3 className={styles.groupTitle}>{TITLES[g.kind]}</h3>
               <p className={styles.groupCount}>{g.countLabel}</p>
+              {g.updated && <p className={styles.updatedLabel}>Updated from latest record</p>}
             </div>
             <div className={styles.groupBody}>
               <div className={styles.groupLatestLine}>

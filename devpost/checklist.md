@@ -64,7 +64,7 @@ Build mode: fast (concise explanations, no full code walkthroughs; extra trust c
   Learner check: Open `http://localhost:3000`. Read the Snapshot top to bottom: does it feel like a calm editorial record rather than a dashboard? Click the latest ferritin value and check the drawer shows page 2 of the 27 Jan 2026 report with its source wording on paper. Click "Open source document" and land on that page. Then click the calculated "previously outside supplied range" label and follow its input fact back to the 14 Mar 2025 report.
   Commit: `Add Snapshot, trusted state store and evidence drawer`
 
-- [ ] **4. Add one record, review verified evidence, approve, and watch the history update**
+- [x] **4. Add one record, review verified evidence, approve, and watch the history update**
   Becomes usable: The kernel, end to end.
   - **Add record** → pick the demo note → the neutral processing state → a review panel with "Verified from this record" (both facts with page and source wording), a "This would also update…" preview that recomputes as facts are rejected, Apply all / Apply selected (disabled when all are rejected) / Cancel.
   - **Apply** updates the persisted trusted state. The Snapshot then shows the header status line, **What changed**, Latest in your record with ferritin 32 μg/L and oral iron "Completed · documented 25 Sep 2026", "Matching follow-up result found" under Follow-up on record, and latest-update marks.
@@ -173,4 +173,11 @@ Activity mode:
   - Fully opaque mobile top and tab bars.
   - Home follow-up labels drop a trailing "is recommended" (e.g. "Follow-up ultrasound in 12 months."), because the metadata line already says "Recommended …". This is presentation only: the seed fact keeps the verified source wording, and the evidence drawer shows it exactly.
   - The data model shape, verifier, trust pipeline, routes, theme and shell are otherwise unchanged.
+- **Slice 4 implementation notes:**
+  - Extract returns the current trusted state alongside the proposal, so the browser reruns the pure `preview()` as facts are rejected. Apply still sends only `{proposalId, approvedFactIds}` and re-checks for duplicates before writing.
+  - An added document's title is cut from its own page text, using the model's `documentType` only as a search key, with a neutral fallback. The issuer isn't extracted, so the drawer shows "Added: By you, with Add record" instead of inventing one.
+  - Uploads are capped at 10 MB and must start with `%PDF-`. A PDF without a text layer is `unusable` before any AI call. Server logs record reasons and counts only, never document text.
+  - Engine code lives in `lib/engine/changes.ts` (`describeChanges`, `affectedKeys`, `changesSummary`) and `lib/engine/apply.ts` (`preview`, `apply`, `validateApproval`), rather than separate `preview.ts`/`dedupe` files per the tree. The added-document metadata is in `lib/extraction/documentMeta.ts`.
+  - The API-unavailable UI path was verified by intercepting the extract request in the browser (a real outage wasn't forced). A real invalid key was verified in slice 2.
+  - Latest-update marks are a tinted left rule plus an "Updated from latest record" label, never green.
 - Small internal helpers added outside the planned tree: `lib/text/dates.ts` (date parse/format) and `lib/store/paths.ts` (seed/runtime locations). `vitest.config.mts` uses the ESM extension.

@@ -6,11 +6,12 @@
  * and the latest item per category. Details live behind interaction (evidence) or in History.
  * Nothing here interprets health, and nothing asserts absence.
  */
-import type { CalculatedClaim, ImagingExam, TrustedState } from "@/lib/model/types";
+import type { CalculatedClaim, ChangeLine, DocumentRecord, ImagingExam, TrustedState } from "@/lib/model/types";
 import { ferritinSeries, followUps, latestMedicationStatus } from "@/lib/engine/derive";
+import { changesSummary } from "@/lib/engine/changes";
 
 /** stateKey: the derived chronology claim for this follow-up (match found, or no later result), if any */
-export type FollowUpItem = { factId: string; stateKey: string | null };
+export type FollowUpItem = { factId: string; stateKey: string | null; updated: boolean };
 
 export type HistoryTopicSummary = {
   topic: "iron" | "imaging";
@@ -24,13 +25,15 @@ export type HistoryTopicSummary = {
 };
 
 export type LatestGroup =
-  | { kind: "measurements"; count: number; countLabel: string; latestFactId: string; claimKeys: string[]; href: string }
-  | { kind: "treatment"; count: number; countLabel: string; latestEventId: string; href: string }
-  | { kind: "imaging"; count: number; countLabel: string; latestExamId: string; href: string };
+  | { kind: "measurements"; count: number; countLabel: string; latestFactId: string; claimKeys: string[]; href: string; updated: boolean }
+  | { kind: "treatment"; count: number; countLabel: string; latestEventId: string; href: string; updated: boolean }
+  | { kind: "imaging"; count: number; countLabel: string; latestExamId: string; href: string; updated: boolean };
 
 export type SnapshotView = {
   patientName: string;
   lastUpdated: string; // ISO date-time
+  /** only after an approved update: the document it came from, and what it changed */
+  latestUpdate: { document: DocumentRecord; changes: ChangeLine[] } | null;
   summary: {
     documentCount: number;
     /** evidence coverage: how many documents of each kind back this record */
@@ -47,6 +50,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 
 export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): SnapshotView {
   const has = (key: string) => claims.some((c) => c.key === key);
+  const affected = new Set(state.latestUpdate?.affected ?? []);
 
   const series = ferritinSeries(state);
   const exams = state.facts
@@ -64,7 +68,7 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
     const fu = list[list.length - 1];
     if (!fu) continue;
     const stateKey = [`followup-match:${fu.id}`, `followup-no-later:${fu.id}`].find(has) ?? null;
-    followUpsOnRecord.push({ factId: fu.id, stateKey });
+    followUpsOnRecord.push({ factId: fu.id, stateKey, updated: stateKey !== null && affected.has(stateKey) });
   }
 
   // Latest in your record — one compact group per category, never one card per value
@@ -78,6 +82,7 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
       latestFactId: latest.id,
       claimKeys: [`range:${latest.id}`].filter(has),
       href: "/history/iron",
+      updated: affected.has(latest.id),
     });
   }
   if (treatments.length > 0) {
@@ -88,6 +93,7 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
       countLabel: plural(treatments.length, "treatment documented", "treatments documented"),
       latestEventId: latest.latest!.id,
       href: `/history/${latest.ep.topic}`,
+      updated: affected.has(latest.latest!.id),
     });
   }
   if (exams.length > 0) {
@@ -98,6 +104,7 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
       countLabel: plural(exams.length, noun, `${noun}s`),
       latestExamId: exams[exams.length - 1].id,
       href: "/history/imaging",
+      updated: affected.has(exams[exams.length - 1].id),
     });
   }
 
@@ -142,6 +149,10 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
   return {
     patientName: state.patient.displayName,
     lastUpdated: state.latestUpdate?.approvedAt ?? state.seededAt,
+    latestUpdate: (() => {
+      const doc = state.latestUpdate ? state.documents.find((d) => d.id === state.latestUpdate!.documentId) : undefined;
+      return doc ? { document: doc, changes: changesSummary(state) } : null;
+    })(),
     summary: {
       documentCount: state.documents.length,
       documentTypes,

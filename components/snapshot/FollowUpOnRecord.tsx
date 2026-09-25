@@ -30,11 +30,11 @@ export default function FollowUpOnRecord({ items, index }: { items: SnapshotView
         <p className={styles.moduleNote}>Carried forward from your documents</p>
       </div>
       <ul className={styles.list}>
-        {items.map(({ factId, stateKey }) => {
+        {items.map(({ factId, stateKey, updated }) => {
           const fu = index.facts[factId] as FollowUp;
           const doc = index.documents[fu.source.documentId];
           return (
-            <li key={factId} className={styles.listItem}>
+            <li key={factId} className={updated ? `${styles.listItem} ${styles.updated}` : styles.listItem}>
               <FactValue factId={fu.id} className={styles.listButton}>
                 <span className={styles.listText}>
                   <span className={styles.listTitle}>{homeLabel(fu.recommendation)}</span>
@@ -50,6 +50,7 @@ export default function FollowUpOnRecord({ items, index }: { items: SnapshotView
               {stateKey && (
                 <div className={styles.listClaim}>
                   <CalculatedLabel claimKey={stateKey} />
+                  {updated && <span className={styles.updatedLabel}>Updated from latest record</span>}
                 </div>
               )}
             </li>

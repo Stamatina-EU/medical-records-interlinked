@@ -12,6 +12,7 @@ import EvidenceProvider from "@/components/evidence/EvidenceProvider";
 import SnapshotHeader from "@/components/snapshot/SnapshotHeader";
 import HealthSummary from "@/components/snapshot/HealthSummary";
 import LatestInRecord from "@/components/snapshot/LatestInRecord";
+import WhatChanged from "@/components/snapshot/WhatChanged";
 import FollowUpOnRecord from "@/components/snapshot/FollowUpOnRecord";
 import HistoryTopics from "@/components/snapshot/HistoryTopics";
 import StateError from "@/components/ui/StateError";
@@ -34,9 +35,10 @@ export default async function HomePage() {
   return (
     <EvidenceProvider index={index}>
       <main className="page">
-        <SnapshotHeader name={view.patientName} lastUpdated={view.lastUpdated} />
+        <SnapshotHeader name={view.patientName} lastUpdated={view.lastUpdated} updatedFrom={view.latestUpdate?.document ?? null} />
         <HealthSummary summary={view.summary} />
-        {/* "What changed" appears here only after a new record is approved (slice 4) — its first appearance is the reveal. */}
+        {/* "What changed" appears only after a new record is approved — its first appearance is the reveal. */}
+        {view.latestUpdate && <WhatChanged document={view.latestUpdate.document} changes={view.latestUpdate.changes} />}
         <LatestInRecord groups={view.latestGroups} index={index} />
         <div className={styles.lowerGrid}>
           <FollowUpOnRecord items={view.followUpsOnRecord} index={index} />

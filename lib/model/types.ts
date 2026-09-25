@@ -123,3 +123,21 @@ export type CalculatedClaim = {
 export type ProposedFact =
   | (Omit<LabMeasurement, "review"> & { review: "PROPOSED" })
   | (Omit<MedicationStatusEvent, "review"> & { review: "PROPOSED" });
+
+/**
+ * A pending proposal: verified facts from one added document, awaiting the patient's review.
+ * Lives only in data/runtime/pending/ (server). Never read by any page; never trusted state.
+ */
+export type Proposal = {
+  proposalId: string;
+  document: DocumentRecord; // origin "added"; written to trusted state only on Apply
+  facts: ProposedFact[];
+  excludedCount: number;
+  createdAt: string;
+};
+
+/** One line of "What changed" / "This would also update…", always traceable to evidence. */
+export type ChangeLine = {
+  text: string;
+  ref: { type: "fact"; id: string } | { type: "claim"; key: string };
+};

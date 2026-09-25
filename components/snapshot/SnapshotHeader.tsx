@@ -1,6 +1,7 @@
-/** Identity — Alex Rowan owns this space. Then, quietly, how the picture was built. */
-import { formatDateTime } from "@/lib/text/dates";
-import { PlusIcon } from "@/components/shell/icons";
+/** Identity — Alex Rowan owns this space. Then when the record was updated, and from what. */
+import type { DocumentRecord } from "@/lib/model/types";
+import { formatDate, formatDateTime } from "@/lib/text/dates";
+import AddRecord from "@/components/add-record/AddRecord";
 import styles from "./snapshot.module.css";
 
 function initials(name: string): string {
@@ -12,9 +13,9 @@ function initials(name: string): string {
     .join("");
 }
 
-type Props = { name: string; lastUpdated: string };
+type Props = { name: string; lastUpdated: string; updatedFrom: DocumentRecord | null };
 
-export default function SnapshotHeader({ name, lastUpdated }: Props) {
+export default function SnapshotHeader({ name, lastUpdated, updatedFrom }: Props) {
   return (
     <header className={styles.identity}>
       <span className={styles.monogram} aria-hidden="true">
@@ -23,14 +24,14 @@ export default function SnapshotHeader({ name, lastUpdated }: Props) {
       <div className={styles.identityText}>
         <h1 className={styles.name}>{name}</h1>
         <p className={styles.provenanceLine}>
-          Record updated {formatDateTime(lastUpdated)}
+          {updatedFrom
+            ? `Updated from ${updatedFrom.title} · ${formatDate(updatedFrom.date)}`
+            : `Record updated ${formatDateTime(lastUpdated)}`}
         </p>
       </div>
-      {/* Add record is wired up in slice 4 (spec.md > Add Record Modal and Processing State). */}
-      <button type="button" className={styles.addRecord} disabled title="Available after the next build step">
-        <PlusIcon />
-        <span>Add record</span>
-      </button>
+      <div className={styles.identityAction}>
+        <AddRecord />
+      </div>
     </header>
   );
 }

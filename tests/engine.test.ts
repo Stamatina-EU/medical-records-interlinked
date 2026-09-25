@@ -138,8 +138,8 @@ describe("home view — summary-first, scalable, evidence-only", () => {
 
   it("'Follow-up on record' lists the latest recommendation per topic with its record chronology", () => {
     expect(view.followUpsOnRecord).toEqual([
-      { factId: "fu-ferritin-2026-02-03", stateKey: "followup-no-later:fu-ferritin-2026-02-03" },
-      { factId: "fu-imaging-2026-03-12", stateKey: null },
+      { factId: "fu-ferritin-2026-02-03", stateKey: "followup-no-later:fu-ferritin-2026-02-03", updated: false },
+      { factId: "fu-imaging-2026-03-12", stateKey: null, updated: false },
     ]);
   });
 

@@ -36,10 +36,17 @@ export default function SourceFactView({ fact, index, onOpenDocument }: Props) {
             <dt>Document</dt>
             <dd>{doc.title}</dd>
           </div>
-          <div>
-            <dt>Issued by</dt>
-            <dd>{doc.issuer}</dd>
-          </div>
+          {doc.issuer ? (
+            <div>
+              <dt>Issued by</dt>
+              <dd>{doc.issuer}</dd>
+            </div>
+          ) : (
+            <div>
+              <dt>Added</dt>
+              <dd>By you, with Add record</dd>
+            </div>
+          )}
           <div>
             <dt>Date</dt>
             <dd>{formatDate(doc.date)}</dd>
