@@ -1,0 +1,32 @@
+# Personal learning context (Devpost Learn) — keep out of commits
+/devpost/learner-profile.md
+
+# Local credentials — never commit
+.env
+.env.*
+.env.local
+!.env.example
+
+# Dependencies and build output
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Mutable runtime state: trusted history, added documents, pending proposals
+/data/runtime/
+
+# Test and tool output
+test-results/
+playwright-report/
+coverage/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log
+
+# Real medical documents for private local testing must NEVER live in this folder.
+# This rule is a last-resort safety net, not permission to store them here.
+/private/
