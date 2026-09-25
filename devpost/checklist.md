@@ -86,7 +86,7 @@ Build mode: fast (concise explanations, no full code walkthroughs; extra trust c
   Learner check: Run `npm run demo:reset`, refresh, then do the demo moment yourself. Add record → choose the demo note → read the review panel. Are both facts shown with the note's own wording and page? Does the preview say what you expect? Try rejecting the ferritin fact and watch the follow-up consequence disappear, then restore it and Apply all. Check the Snapshot: what changed, and is every change marked and clickable to its evidence? Finally, add the same note again and read the "No new history changes found" message.
   Commit: `Add record ingestion, evidence review and approved state update`
 
-- [ ] **5. History shows each topic across time, with the new record visible in it**
+- [x] **5. History shows each topic across time, with the new record visible in it**
   Becomes usable: `/history/iron` shows a hand-drawn SVG chart with per-result range bands, measurement rows with calculated labels and source markers, the oral iron status timeline (Prescribed → Completed after the update), and the documented follow-up with "Matching result found" and plain elapsed time. The topic switcher opens `/history/imaging`, the same template without a chart, with the comparison-backed "last related examination". Latest-update marks appear on the new row, the status and the follow-up. Every item opens the evidence drawer.
   Why now: It's the longitudinal view that makes the update legible across time. It reuses the drawer (3) and the updated state (4), so it's mostly presentation of proven logic.
   PRD ref: `prd.md > History (topic template)`, `prd.md > Latest Update Marking`
@@ -181,4 +181,13 @@ Activity mode:
   - The API-unavailable UI path was verified by intercepting the extract request in the browser (a real outage wasn't forced). A real invalid key was verified in slice 2.
   - Latest-update marks are a tinted left rule plus an "Updated from latest record" label, never green.
 - **Slice 4 review copy (learner decisions):** "Verified against this record" plus "Matched to the source wording shown below." (verification means matched to the source text, not medical truth). "Exclude" / "Excluded · undo" instead of Reject (the internal state stays REJECTED). "Add all to my record" / "Add selected" instead of Apply. "Nothing changes in your record until you choose what to add." Review actions are sticky at the bottom of the mobile sheet. Kernel behavior is unchanged.
+- **Slice 5 implementation notes:**
+  - History is a pure view model (`lib/view/history.ts`), with one template: `components/history/HistorySections.tsx` plus `MeasurementChart.tsx`.
+  - The ferritin chart is a single-series line with one faint band per result showing the range supplied *with that result*. The y-domain comes from the values, so a 30–400 range doesn't flatten 11–32 μg/L; bands that exceed it show a quiet "↑ 400" cap.
+  - The chart has one functional colour, no status colours, a direct label on the latest point only, native per-point tooltips, and the measurement rows as its table view.
+  - The chart is drawn at two native sizes (wide and narrow) so axis text stays about 12px on phones.
+  - Treatment and imaging are chronological timelines, with the latest item filled. Dates beside medication statuses are labelled "documented".
+  - The imaging comparison line appears only where the later report states it.
+  - A matched follow-up shows plain chronology ("dated 7 months after the recommendation"), never a timing judgement.
+  - The History follow-up list keeps the full source wording; the shortened label is a Home-only presentation.
 - Small internal helpers added outside the planned tree: `lib/text/dates.ts` (date parse/format) and `lib/store/paths.ts` (seed/runtime locations). `vitest.config.mts` uses the ESM extension.
