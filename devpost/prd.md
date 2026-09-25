@@ -24,7 +24,7 @@ This POC is **not** a replacement for a national EHR, MyHealth or any other prov
 Source: `scope.md > What "Working" Looks Like`, `scope.md > The Core Loop`.
 
 1. **Arrival.** The app opens on the **Snapshot** for a fictional adult patient. The history already exists, built from the initial synthetic record set (see *Synthetic Demo Record Set*). There's no empty state and no onboarding.
-2. **Understand the current state.** The patient scans the Snapshot: their identity, the latest in their record, the follow-up on record, and the entry points into their history and the Doctor Summary.
+2. **Understand the current state.** The patient scans Home: their identity, their record at a glance (with the Doctor Summary entry), the latest documented item per category, the follow-up on record, and the ways into their history.
 3. **Check a claim.** The patient opens the Iron / Ferritin **History** and clicks a fact. The **evidence drawer** slides in from the right with the exact excerpt, the document, its date and the page.
 4. **See breadth.** The patient briefly opens the Imaging follow-up topic in the same History view. It has no chart.
 5. **Add a record.** The patient clicks **Add record**, picks the synthetic follow-up consultation note (PDF) from their computer, and a neutral processing state appears.
@@ -86,45 +86,46 @@ The feel sits closer to **a calm editorial medical record combined with the clar
 ### Snapshot
 Source: `scope.md > The POC Boundary` ("Health Snapshot").
 
-**Patient-centred and moment-centred, not topic-centred.** The first screen answers: what the latest documented evidence shows, what follow-up is on record, what changed recently, and where to go deeper. The feel is "your current documented health picture, built from evidence you can inspect", not "your medical file". It stays precise, restrained, documentary and source-linked, and it is recognisably about one person. Medical topics (Iron / Ferritin, Imaging) are **History** topics, one level deeper, not the organising principle of this screen. *(Revised after the slice 3 hands-on review; copy not final.)*
+**Summary-first, patient-centred and built to scale.** Home must work for a person with 5 records or 500. It answers "what does my documented record contain right now?" with deterministic summaries, then shows the latest documented item per category. Details belong behind interaction (the evidence drawer) or in History. The feel is a personal app space ("the application contains medical records; it doesn't look like one"). It is precise, restrained, documentary and source-linked, and recognisably about one person. It never interprets health: no "healthy", "normal overall", "needs attention", "concerning", "urgent", "abnormal" or "bad". *(Revised through the slice 3 reviews; copy not final.)*
 
 Top to bottom:
 
 **A. Identity**
-- The patient is the centre of the page: the fictional name with real presence, a small personal framing line (e.g. "Your documented health picture"), and how the picture was built ("Built from N source documents · last updated …").
+- The patient owns the space: monogram, the fictional name with real presence, and "Record updated …".
 - A clear **Add record** action.
 - After an approved update, a small neutral status line in patient language. Preferred when the metadata is available: "Updated from Follow-up consultation note · 25 Sep 2026". Otherwise: "Updated from your latest record". Internal terms like "source fact" never appear here.
 
-**B. Latest in your record**
-- The most recent documented value or status for each part of the picture, e.g. latest ferritin (value, supplied range, date, range status), oral iron status ("Prescribed · documented 3 Feb 2026"), and latest related imaging (date, examination).
-- The latest documented information only, as recorded, not a claim about the patient's state today. Longitudinal claims ("previously outside supplied range", "changed since previous measurement") live in History and, after an update, in "What changed".
+**B. Your record at a glance**
+- What the documented record contains, as deterministic counts from the structured facts, e.g. source documents, topics followed over time, follow-ups on record and treatments documented, plus the date span of the documents. No free-form or AI-written interpretation.
+- The entry point **Open Doctor Summary →** lives here.
 
-**C. What changed** *(formerly "Recent changes")*
-- A true app module, **hidden until the first approved update**, with no empty-state placeholder. Its first appearance is part of the demo payoff: the patient adds evidence, approves it, the documented picture visibly changes, and What changed appears. After that it is a prominent, personal update section. *(Learner decision, confirmed after the app-shell review.)*
+**C. What changed**
+- A true app module, **hidden until the first approved update**, with no empty-state placeholder. It appears between Your record at a glance and Latest in your record. Its first appearance is the demo payoff: the patient adds evidence, approves it, the documented picture visibly changes, and What changed appears. *(Learner decision.)*
 - Heading format: "Updated from [document type] — [document date]". It lists each change, and each item opens the evidence drawer. For example:
   - "New ferritin measurement added"
   - "Matching follow-up result found"
   - "Iron treatment marked Completed · documented 25 Sep 2026"
 
-**D. Follow-up on record**
-- Only recommendations explicitly written in source documents, quoted in the source's own words, with their recommendation date and source. For example: "Repeat ferritin in 3 months." · recommended 3 Feb 2026.
-- Once a matching result exists, the calculated "Matching follow-up result found" appears beneath the recommendation.
+**D. Latest in your record** — compact, grouped, scalable
+- One row per category (Measurements, Treatment / medication, Imaging), with a deterministic count, the latest documented item (which opens its evidence) and a **View** link into History. Never one card per value.
+- Latest documented information only, as recorded, not a claim about the patient's state today. Longitudinal claims live in History and What changed.
+- If many values sit outside their supplied ranges, Home may show a deterministic count (e.g. "N measurements outside their supplied ranges"), never one card per value and never judgement words. *(Not shown in this POC by learner decision: that historical information belongs in History and, where relevant, What changed.)*
+
+**E. Follow-up on record**
+- An open list (separators, no card) of recommendations explicitly written in source documents, carried forward with their recommendation date and source, e.g. "Repeat ferritin in 3 months." · Recommended 3 Feb 2026 · from your consultation note.
+- Once a matching result exists, the derived "Matching follow-up result found" appears beneath the recommendation.
 - Never "To do", "Needs attention" or "To check". This section is documentary, not advice.
 
-**E. Your history**
-- A quieter entry point into the detailed topic views: Iron / Ferritin and Imaging follow-up, each with factual counts and a date span, linking to History.
-
-**F. Doctor Summary entry point**
-- A quiet line near the bottom leading to **View Doctor Summary**. The summary content isn't duplicated here.
-
-No "Needs attention" section, and no prioritisation language.
+**F. Your history**
+- Navigable destinations (Iron / Ferritin, Imaging follow-up) with factual counts, date spans and very quiet traces, leading into History.
 
 Acceptance criteria:
-- [ ] On first load, the Snapshot shows Identity, Latest in your record, Follow-up on record, Your history and the Doctor Summary entry point. What changed is absent.
-- [ ] Latest in your record shows the latest ferritin value, its supplied range and date, the documented medication status with its documentation date, and the latest related imaging, with no interpretive words (good, bad, low, healthy, etc.).
-- [ ] Follow-up on record shows only recommendations quoted from source documents, each opening its evidence.
-- [ ] Each Your history topic opens History on that topic.
-- [ ] After the live update is approved, What changed appears with the document type and date. Each item opens the evidence drawer.
+- [ ] On first load, Home shows Identity, Your record at a glance (with Open Doctor Summary), Latest in your record, Follow-up on record and Your history. What changed is absent.
+- [ ] Your record at a glance shows only deterministic counts and the document date span, with no interpretive words.
+- [ ] Latest in your record shows one grouped row per category, each with a count, the latest documented item (the medication with its documentation date) and a View link. Each latest item opens its evidence.
+- [ ] Follow-up on record shows only recommendations from source documents, each opening its evidence.
+- [ ] Each Your history destination opens History on that topic.
+- [ ] After the live update is approved, What changed appears between the summary and Latest in your record, with the document type and date. Each item opens the evidence drawer.
 
 ### History (topic template)
 Source: `scope.md > The POC Boundary` ("Iron / Ferritin topic," "Imaging follow-up topic").

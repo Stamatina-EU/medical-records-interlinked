@@ -86,12 +86,12 @@ describe("derive — after the live note's two facts are approved", () => {
   it("moves the medication to Completed and the latest ferritin to 32", () => {
     expect(latestMedicationStatus(after, "ep-oral-iron")?.status).toBe("Completed");
     const view = snapshotView(after, derive(after));
-    expect(view.rightNow.ferritinId).toBe("doc-07-lab-1");
-    expect(view.rightNow.medicationEventId).toBe("doc-07-med-1");
+    const g = Object.fromEntries(view.latestGroups.map((x) => [x.kind, x]));
+    expect(g.measurements.kind === "measurements" && [g.measurements.count, g.measurements.latestFactId]).toEqual([3, "doc-07-lab-1"]);
+    expect(g.treatment.kind === "treatment" && g.treatment.latestEventId).toBe("doc-07-med-1");
     expect(view.followUpsOnRecord.find((f) => f.factId === "fu-ferritin-2026-02-03")?.matchKey).toBe(
       "followup-match:fu-ferritin-2026-02-03",
     );
-    expect(view.history.find((h) => h.topic === "iron")?.count).toBe(3);
   });
 
   it("without the ferritin fact there is no follow-up match (consequences depend on evidence)", () => {
@@ -100,14 +100,30 @@ describe("derive — after the live note's two facts are approved", () => {
   });
 });
 
-describe("snapshot view — patient-centred, evidence-only", () => {
+describe("home view — summary-first, scalable, evidence-only", () => {
   const view = snapshotView(seed, derive(seed));
 
-  it("'Right now' shows the latest documented ferritin, medication status and related imaging", () => {
-    expect(view.rightNow.ferritinId).toBe("lab-ferritin-2026-01-27");
-    expect(view.rightNow.medicationEventId).toBe("med-oral-iron-2026-02-03-prescribed");
-    // "related" only because the 12 Mar 2026 report explicitly compares with the earlier exam
-    expect(view.rightNow.relatedImagingId).toBe("img-thyroid-2026-03-12");
+  it("summarises what the record contains with deterministic counts only", () => {
+    expect(view.summary).toEqual({
+      documentCount: 6,
+      topicCount: 2,
+      followUpCount: 2,
+      treatmentCount: 1,
+      firstDocumentDate: "2025-03-14",
+      lastDocumentDate: "2026-03-12",
+    });
+  });
+
+  it("groups 'Latest in your record' by category — one group each, never one card per value", () => {
+    expect(view.latestGroups.map((g) => [g.kind, g.count, g.countLabel])).toEqual([
+      ["measurements", 2, "2 ferritin results"],
+      ["treatment", 1, "1 treatment documented"],
+      ["imaging", 2, "2 thyroid ultrasounds"],
+    ]);
+    const g = Object.fromEntries(view.latestGroups.map((x) => [x.kind, x]));
+    expect(g.measurements.kind === "measurements" && g.measurements.latestFactId).toBe("lab-ferritin-2026-01-27");
+    expect(g.treatment.kind === "treatment" && g.treatment.latestEventId).toBe("med-oral-iron-2026-02-03-prescribed");
+    expect(g.imaging.kind === "imaging" && g.imaging.latestExamId).toBe("img-thyroid-2026-03-12");
   });
 
   it("'Follow-up on record' lists the latest documented recommendation per topic, with no match yet", () => {
@@ -122,6 +138,5 @@ describe("snapshot view — patient-centred, evidence-only", () => {
       ["iron", 2, "2025-03-14", "2026-01-27"],
       ["imaging", 2, "2025-09-10", "2026-03-12"],
     ]);
-    expect(view.documentCount).toBe(6);
   });
 });

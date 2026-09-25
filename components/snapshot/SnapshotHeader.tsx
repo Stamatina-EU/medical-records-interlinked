@@ -12,9 +12,9 @@ function initials(name: string): string {
     .join("");
 }
 
-type Props = { name: string; lastUpdated: string; documentCount: number };
+type Props = { name: string; lastUpdated: string };
 
-export default function SnapshotHeader({ name, lastUpdated, documentCount }: Props) {
+export default function SnapshotHeader({ name, lastUpdated }: Props) {
   return (
     <header className={styles.identity}>
       <span className={styles.monogram} aria-hidden="true">
@@ -23,7 +23,7 @@ export default function SnapshotHeader({ name, lastUpdated, documentCount }: Pro
       <div className={styles.identityText}>
         <h1 className={styles.name}>{name}</h1>
         <p className={styles.provenanceLine}>
-          Built from {documentCount} source document{documentCount === 1 ? "" : "s"} · updated {formatDateTime(lastUpdated)}
+          Record updated {formatDateTime(lastUpdated)}
         </p>
       </div>
       {/* Add record is wired up in slice 4 (spec.md > Add Record Modal and Processing State). */}

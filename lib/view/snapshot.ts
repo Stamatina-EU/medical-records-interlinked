@@ -1,11 +1,10 @@
 /**
- * Snapshot view model — patient-centred, moment-centred. Pure.
- * Spec: `spec.md > Snapshot Page`; PRD: `prd.md > Snapshot`.
+ * Home view model — summary-first, patient-centred, and built to scale from 5 records to 500.
+ * Pure. Spec: `spec.md > Snapshot Page`; PRD: `prd.md > Snapshot`.
  *
- * The first screen answers: what the latest documented evidence shows, what follow-up is on record,
- * what changed recently, and where to go deeper. Medical topics (Iron / Ferritin, Imaging)
- * are one level down, under "Your history".
- * Nothing here asserts absence: an item appears only when a fact or claim supports it.
+ * Home answers "what does my documented record contain right now?" with deterministic counts
+ * and the latest item per category. Details live behind interaction (evidence) or in History.
+ * Nothing here interprets health, and nothing asserts absence.
  */
 import type { CalculatedClaim, ImagingExam, TrustedState } from "@/lib/model/types";
 import { ferritinSeries, followUps, latestMedicationStatus } from "@/lib/engine/derive";
@@ -21,41 +20,44 @@ export type HistoryTopicSummary = {
   firstDate: string | null;
   lastDate: string | null;
   extra: string | null;
-  /** documented points for a small visual timeline: values (iron) or dates only (imaging) */
+  /** documented points for a very quiet visual timeline: values (iron) or dates only (imaging) */
   points: { date: string; value: number | null }[];
 };
+
+export type LatestGroup =
+  | { kind: "measurements"; count: number; countLabel: string; latestFactId: string; claimKeys: string[]; href: string }
+  | { kind: "treatment"; count: number; countLabel: string; latestEventId: string; href: string }
+  | { kind: "imaging"; count: number; countLabel: string; latestExamId: string; href: string };
 
 export type SnapshotView = {
   patientName: string;
   lastUpdated: string; // ISO date-time
-  documentCount: number;
-  rightNow: {
-    ferritinId: string | null;
-    ferritinClaimKeys: string[];
-    medicationEventId: string | null;
-    relatedImagingId: string | null;
+  summary: {
+    documentCount: number;
+    topicCount: number;
+    followUpCount: number;
+    treatmentCount: number;
+    firstDocumentDate: string | null;
+    lastDocumentDate: string | null;
   };
+  latestGroups: LatestGroup[];
   followUpsOnRecord: FollowUpItem[];
   history: HistoryTopicSummary[];
 };
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): SnapshotView {
   const has = (key: string) => claims.some((c) => c.key === key);
 
   const series = ferritinSeries(state);
-  const latest = series[series.length - 1] ?? null;
-  // "Latest in your record" shows only the latest documented facts; longitudinal claims (previously outside,
-  // changed since previous) live in History and, after an update, in "What changed".
-  const ferritinClaimKeys = latest ? [`range:${latest.id}`].filter(has) : [];
-
-  const episode = state.episodes[0] ?? null;
-  const med = episode ? latestMedicationStatus(state, episode.id) : null;
-
   const exams = state.facts
     .filter((f): f is ImagingExam => f.kind === "imaging_exam")
     .sort((a, b) => a.performedOn.localeCompare(b.performedOn));
-  // "Related" only when the report itself explicitly references an earlier examination
-  const related = [...exams].reverse().find((e) => e.comparesToDocumentId !== null) ?? null;
+  const treatments = state.episodes
+    .map((ep) => ({ ep, latest: latestMedicationStatus(state, ep.id) }))
+    .filter((t) => t.latest !== null)
+    .sort((a, b) => a.latest!.documentedOn.localeCompare(b.latest!.documentedOn));
 
   // Follow-up on record: the most recent documented recommendation per topic
   const followUpsOnRecord: FollowUpItem[] = [];
@@ -67,8 +69,43 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
     followUpsOnRecord.push({ factId: fu.id, matchKey: has(key) ? key : null });
   }
 
+  // Latest in your record — one compact group per category, never one card per value
+  const latestGroups: LatestGroup[] = [];
+  if (series.length > 0) {
+    const latest = series[series.length - 1];
+    latestGroups.push({
+      kind: "measurements",
+      count: series.length,
+      countLabel: plural(series.length, "ferritin result", "ferritin results"),
+      latestFactId: latest.id,
+      claimKeys: [`range:${latest.id}`].filter(has),
+      href: "/history/iron",
+    });
+  }
+  if (treatments.length > 0) {
+    const latest = treatments[treatments.length - 1];
+    latestGroups.push({
+      kind: "treatment",
+      count: treatments.length,
+      countLabel: plural(treatments.length, "treatment documented", "treatments documented"),
+      latestEventId: latest.latest!.id,
+      href: `/history/${latest.ep.topic}`,
+    });
+  }
+  if (exams.length > 0) {
+    const noun = exams[0].examName.toLowerCase();
+    latestGroups.push({
+      kind: "imaging",
+      count: exams.length,
+      countLabel: plural(exams.length, noun, `${noun}s`),
+      latestExamId: exams[exams.length - 1].id,
+      href: "/history/imaging",
+    });
+  }
+
   const history: HistoryTopicSummary[] = [];
   if (series.length > 0) {
+    const med = treatments.find((t) => t.ep.topic === "iron");
     history.push({
       topic: "iron",
       title: "Iron / Ferritin",
@@ -76,7 +113,7 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
       countNoun: series.length === 1 ? "ferritin result" : "ferritin results",
       firstDate: series[0].measuredOn,
       lastDate: series[series.length - 1].measuredOn,
-      extra: episode && med ? episode.name.split(" (")[0] : null,
+      extra: med ? med.ep.name.split(" (")[0] : null,
       points: series.map((m) => ({ date: m.measuredOn, value: m.value })),
     });
   }
@@ -93,16 +130,20 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
     });
   }
 
+  const docDates = state.documents.map((d) => d.date).sort();
+
   return {
     patientName: state.patient.displayName,
     lastUpdated: state.latestUpdate?.approvedAt ?? state.seededAt,
-    documentCount: state.documents.length,
-    rightNow: {
-      ferritinId: latest?.id ?? null,
-      ferritinClaimKeys,
-      medicationEventId: med?.id ?? null,
-      relatedImagingId: related?.id ?? null,
+    summary: {
+      documentCount: state.documents.length,
+      topicCount: history.length,
+      followUpCount: followUpsOnRecord.length,
+      treatmentCount: treatments.length,
+      firstDocumentDate: docDates[0] ?? null,
+      lastDocumentDate: docDates[docDates.length - 1] ?? null,
     },
+    latestGroups,
     followUpsOnRecord,
     history,
   };

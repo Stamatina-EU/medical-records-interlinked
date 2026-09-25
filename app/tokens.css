@@ -6,19 +6,21 @@
  * --font-ui-family and --font-evidence-family; components only use --font-ui / --font-evidence.
  */
 :root {
-  --paper: #f7f4ee;
+  /* Flat, very pale seafoam atmosphere (no gradient); content surfaces stay warm white. */
+  --paper: #e9f2ef;
+  --nav-bg: #dfebe7;
   --surface: #ffffff;
   --surface-raised: #fffdf9;
-  --surface-sunk: #efebe3;
+  --surface-sunk: #d4e4df;
   --ink: #1f2328;
   --ink-muted: #5b6068;
   --ink-faint: #8a8f96;
-  --rule: #e6e1d7;
-  --rule-strong: #d3ccbf;
+  --rule: #e3e3dc;
+  --rule-strong: #c9d6d1;
 
   --accent: #2f6f73;
   --accent-hover: #24585b;
-  --accent-wash: #e6efee;
+  --accent-wash: #d2e6e2;
   --accent-ink: #1d4a4d;
 
   --evidence-paper: #fffdf7;

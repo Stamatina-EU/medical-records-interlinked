@@ -1,21 +1,20 @@
 /**
- * Home (the Snapshot) — Alex Rowan's personal space inside MyHeDo.
- * "Your current documented health picture, built from evidence you can inspect."
+ * Home (the Snapshot) — Alex Rowan's personal space inside MyHeDo. Summary-first and scalable.
  * Spec: `spec.md > Snapshot Page`; PRD: `prd.md > Snapshot`.
- * Order: Identity → Latest in your record → What changed → Follow-up on record | Your history.
+ * Order: Identity → Your record at a glance → (What changed, only after an approved update) →
+ *        Latest in your record → Follow-up on record | Your history.
  */
-import Link from "next/link";
 import { readState, StateCorruptedError } from "@/lib/store/stateStore";
 import { derive } from "@/lib/engine/derive";
 import { buildEvidenceIndex } from "@/lib/evidence/index";
 import { snapshotView } from "@/lib/view/snapshot";
 import EvidenceProvider from "@/components/evidence/EvidenceProvider";
 import SnapshotHeader from "@/components/snapshot/SnapshotHeader";
+import HealthSummary from "@/components/snapshot/HealthSummary";
 import LatestInRecord from "@/components/snapshot/LatestInRecord";
 import FollowUpOnRecord from "@/components/snapshot/FollowUpOnRecord";
 import HistoryTopics from "@/components/snapshot/HistoryTopics";
 import StateError from "@/components/ui/StateError";
-import { SummaryIcon } from "@/components/shell/icons";
 import styles from "@/components/snapshot/snapshot.module.css";
 
 export const dynamic = "force-dynamic";
@@ -35,21 +34,13 @@ export default async function HomePage() {
   return (
     <EvidenceProvider index={index}>
       <main className="page">
-        <SnapshotHeader name={view.patientName} lastUpdated={view.lastUpdated} documentCount={view.documentCount} />
-        <LatestInRecord view={view.rightNow} index={index} />
+        <SnapshotHeader name={view.patientName} lastUpdated={view.lastUpdated} />
+        <HealthSummary summary={view.summary} />
         {/* "What changed" appears here only after a new record is approved (slice 4) — its first appearance is the reveal. */}
+        <LatestInRecord groups={view.latestGroups} index={index} />
         <div className={styles.lowerGrid}>
           <FollowUpOnRecord items={view.followUpsOnRecord} index={index} />
-          <div className={styles.sideColumn}>
-            <HistoryTopics topics={view.history} />
-            <Link href="/summary" className={`${styles.surface} ${styles.summaryEntry}`}>
-              <SummaryIcon />
-              <span>
-                <span className={styles.summaryTitle}>Doctor Summary</span>
-                <span className={styles.summaryText}>A concise, source-linked view to show or discuss with a new doctor</span>
-              </span>
-            </Link>
-          </div>
+          <HistoryTopics topics={view.history} />
         </div>
       </main>
     </EvidenceProvider>

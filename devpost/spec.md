@@ -188,13 +188,13 @@ Carried forward from `prd.md > Look and Feel` and `scope.md > Inspiration & Iden
 
 ### Snapshot Page
 Implements `prd.md > Snapshot`. Route `/` (`app/page.tsx`, dynamic).
-It is patient- and moment-centred, composed from a pure view model (`lib/view/snapshot.ts`). *(Revised after the slice 3 hands-on review.)*
-- **Identity** (`SnapshotHeader`): monogram, name with real presence, a framing line, "Built from N source documents · last updated …" (the latest approved-at, or the seed date), **Add record**, and after an update "Updated from {document type} · {date}".
-- **Latest in your record** (`RightNow`): latest ferritin (value, supplied range, date, range-status claim), the latest explicit medication status with "documented {date}", and the latest related imaging (only an exam that explicitly references an earlier one).
-- **What changed:** rendered only when `latestUpdate` exists (slice 4). Lists the change descriptions produced by the engine, and each opens the drawer.
-- **Follow-up on record** (`FollowUpOnRecord`): the latest documented recommendation per topic, quoted in the source's words, with the "Matching follow-up result found" claim when it exists.
-- **Your history** (`HistoryTopics`): quiet links to `/history/iron` and `/history/imaging`, with factual counts and date spans.
-- **View Doctor Summary** line.
+It is summary-first and scalable, composed from a pure view model (`lib/view/snapshot.ts`) that returns deterministic counts and the latest item per category. *(Revised through the slice 3 reviews.)*
+- **Identity** (`SnapshotHeader`): monogram, name, "Record updated …", **Add record**, and after an update "Updated from {document type} · {date}".
+- **Your record at a glance** (`HealthSummary`): counts of source documents, topics followed over time, follow-ups on record and treatments documented, the document date span, and **Open Doctor Summary →**.
+- **What changed:** rendered only when `latestUpdate` exists (slice 4), between the summary and Latest in your record. It lists the change descriptions produced by the engine, and each opens the drawer.
+- **Latest in your record** (`LatestInRecord`): one grouped row per category (measurements, treatment / medication, imaging), each with a count, the latest documented item (opening its evidence) and a View link into History.
+- **Follow-up on record** (`FollowUpOnRecord`): an open list of the latest documented recommendation per topic, with the "Matching follow-up result found" derived claim when it exists.
+- **Your history** (`HistoryTopics`): destinations to `/history/iron` and `/history/imaging`, with factual counts, date spans and very quiet traces.
 
 ### History Page (Topic Template)
 Implements `prd.md > History (topic template)`. Route `/history/[topic]` with topic `iron` | `imaging` (`app/history/[topic]/page.tsx`, dynamic). The `History` nav item goes to `/history/iron`.
@@ -513,7 +513,7 @@ medical-history/                     # repo root (current folder)
 │       └── documents/[id]/route.ts  # Document Route
 ├── components/
 │   ├── shell/                       # AppNav (sidebar + mobile top bar/tab bar), icons, shell.module.css
-│   ├── snapshot/                    # SnapshotHeader, RightNow, WhatChanged, FollowUpOnRecord, HistoryTopics
+│   ├── snapshot/                    # SnapshotHeader, HealthSummary, WhatChanged (slice 4), LatestInRecord, FollowUpOnRecord, HistoryTopics
 │   ├── history/                     # TopicSwitcher, MeasurementChart, MeasurementRows,
 │   │                                #   MedicationTimeline, FollowUpBlock, ImagingTimeline
 │   ├── evidence/                    # EvidenceProvider, EvidenceDrawer, SourceFactView,
