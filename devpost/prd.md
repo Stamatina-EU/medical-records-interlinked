@@ -3,14 +3,14 @@ doc: prd
 status: approved
 ---
 
-# Medical History — Product Requirements
+# MyHeDo — Product Requirements
 
 An evidence-linked medical history for an adult patient about to see a new doctor. It focuses on medical documents that aren't already represented in a structured health record. A new record proposes changes, the patient approves the evidence, code derives the consequences, and every claim stays traceable to its source.
 Source: `scope.md > The Unique Kernel`, `scope.md > Who It's For`, `scope.md > Context and Positioning`.
 
 This POC is **not** a replacement for a national EHR, MyHealth or any other provider-backed record system. It isn't an EHR or government health-system integration, and it isn't a general patient portal. Its differentiator is the trust pipeline: unstructured external document → proposed facts → deterministic source verification → patient approval → evidence-linked longitudinal update.
 
-**Working label:** "Medical History" (or "Evidence-linked Medical History" where more context is needed). No product brand is locked. The final name is chosen before `6-ship`.
+**Working brand:** **MyHeDo** — "My health, documented." A working hackathon brand chosen by the learner during the build (it replaces the earlier label "Medical History"), not a legally cleared trademark. Always written "MyHeDo", never abbreviated to an acronym.
 
 **Governing principles** (from `scope.md > The Unique Kernel` and `scope.md > The POC Boundary`):
 - **No medical claim without provenance.** Every source fact is traceable to an exact supporting excerpt. Every calculated claim is traceable to the structured facts that produced it, and through them to their excerpts.
@@ -24,13 +24,13 @@ This POC is **not** a replacement for a national EHR, MyHealth or any other prov
 Source: `scope.md > What "Working" Looks Like`, `scope.md > The Core Loop`.
 
 1. **Arrival.** The app opens on the **Snapshot** for a fictional adult patient. The history already exists, built from the initial synthetic record set (see *Synthetic Demo Record Set*). There's no empty state and no onboarding.
-2. **Understand the current state.** The patient scans the Snapshot: the Iron / Ferritin section, the Imaging follow-up section and the Doctor Summary entry point.
+2. **Understand the current state.** The patient scans the Snapshot: their identity, the latest in their record, the follow-up on record, and the entry points into their history and the Doctor Summary.
 3. **Check a claim.** The patient opens the Iron / Ferritin **History** and clicks a fact. The **evidence drawer** slides in from the right with the exact excerpt, the document, its date and the page.
 4. **See breadth.** The patient briefly opens the Imaging follow-up topic in the same History view. It has no chart.
 5. **Add a record.** The patient clicks **Add record**, picks the synthetic follow-up consultation note (PDF) from their computer, and a neutral processing state appears.
 6. **Review the proposal.** A review panel lists the **extracted source facts**, each with its excerpt. Below them, it previews the **derived consequences** ("This would also update…"). The patient clicks **Apply all**, or rejects individual source facts and applies the rest.
 7. **Trusted state updates.** Code applies the approved source facts, recomputes the calculated state, and saves the result.
-8. **See what changed.** The Snapshot shows **Recent changes**. Affected items in Snapshot and History carry a subtle "latest update" treatment.
+8. **See what changed.** The Snapshot shows **What changed**. Affected items in Snapshot and History carry a subtle "latest update" treatment.
 9. **Prepare for the doctor.** The patient opens the **Doctor Summary**. It now reflects the approved evidence, and every line has a source marker that opens the evidence drawer.
 
 **Success** means the new record changed the longitudinal history only after approval, and every claim can still be clicked back to its evidence.
@@ -40,7 +40,7 @@ Source: `scope.md > What "Working" Looks Like`, `scope.md > The Core Loop`.
 ## Screens and Layout
 Source: `scope.md > The POC Boundary`.
 
-**Three primary views**, reached through a simple top navigation: **Snapshot · History · Doctor Summary**.
+**Three primary destinations** in one consistent app navigation: **Home (the Snapshot) · History · Doctor Summary**. On desktop they sit in a sidebar that carries the MyHeDo identity. On mobile there's a top bar with the brand and a bottom tab bar with comfortable touch targets.
 
 | Surface | Type | Purpose |
 |---|---|---|
@@ -50,7 +50,7 @@ Source: `scope.md > The POC Boundary`.
 | Add record | Modal / panel | File picker and the start of processing |
 | Processing | Temporary state | Neutral progress while the record is read |
 | Review panel | Modal / panel | Approve or reject extracted source facts |
-| Evidence drawer | Right-side drawer | Provenance for any fact or calculated claim |
+| Evidence drawer | Right-side drawer (desktop) / full-height sheet (mobile) | Provenance for any fact or calculated claim |
 | Source document viewer | Modal | The full synthetic document, opened from the drawer |
 | Demo reset | Demo/dev-only control | Not part of the patient-facing interface |
 
@@ -86,39 +86,45 @@ The feel sits closer to **a calm editorial medical record combined with the clar
 ### Snapshot
 Source: `scope.md > The POC Boundary` ("Health Snapshot").
 
-A calm current-state view, top to bottom:
+**Patient-centred and moment-centred, not topic-centred.** The first screen answers: what the latest documented evidence shows, what follow-up is on record, what changed recently, and where to go deeper. The feel is "your current documented health picture, built from evidence you can inspect", not "your medical file". It stays precise, restrained, documentary and source-linked, and it is recognisably about one person. Medical topics (Iron / Ferritin, Imaging) are **History** topics, one level deeper, not the organising principle of this screen. *(Revised after the slice 3 hands-on review; copy not final.)*
 
-**A. Header**
-- Fictional patient name, "Documented health history", last-updated date and time
-- A clear **Add record** action
+Top to bottom:
+
+**A. Identity**
+- The patient is the centre of the page: the fictional name with real presence, a small personal framing line (e.g. "Your documented health picture"), and how the picture was built ("Built from N source documents · last updated …").
+- A clear **Add record** action.
 - After an approved update, a small neutral status line in patient language. Preferred when the metadata is available: "Updated from Follow-up consultation note · 25 Sep 2026". Otherwise: "Updated from your latest record". Internal terms like "source fact" never appear here.
 
-**B. Recent changes**
-- Appears only when there's a latest update. Before the live update it's **absent**, with no empty placeholder.
-- Heading format: "Updated from [document type] — [document date]", e.g. "Updated from Follow-up consultation note — 25 Sep 2026".
-- Lists each change. Each item opens the evidence drawer.
+**B. Latest in your record**
+- The most recent documented value or status for each part of the picture, e.g. latest ferritin (value, supplied range, date, range status), oral iron status ("Prescribed · documented 3 Feb 2026"), and latest related imaging (date, examination).
+- The latest documented information only, as recorded, not a claim about the patient's state today. Longitudinal claims ("previously outside supplied range", "changed since previous measurement") live in History and, after an update, in "What changed".
+
+**C. What changed** *(formerly "Recent changes")*
+- A true app module, **hidden until the first approved update**, with no empty-state placeholder. Its first appearance is part of the demo payoff: the patient adds evidence, approves it, the documented picture visibly changes, and What changed appears. After that it is a prominent, personal update section. *(Learner decision, confirmed after the app-shell review.)*
+- Heading format: "Updated from [document type] — [document date]". It lists each change, and each item opens the evidence drawer. For example:
   - "New ferritin measurement added"
   - "Matching follow-up result found"
-  - "Iron treatment marked Completed"
+  - "Iron treatment marked Completed · documented 25 Sep 2026"
 
-**C. Iron / Ferritin** (primary topic)
-- Latest ferritin value and unit, the supplied laboratory range, the previous value (a simple history cue), the medication status *if documented*, and the documented follow-up state.
-- The whole section opens History → Iron / Ferritin.
+**D. Follow-up on record**
+- Only recommendations explicitly written in source documents, quoted in the source's own words, with their recommendation date and source. For example: "Repeat ferritin in 3 months." · recommended 3 Feb 2026.
+- Once a matching result exists, the calculated "Matching follow-up result found" appears beneath the recommendation.
+- Never "To do", "Needs attention" or "To check". This section is documentary, not advice.
 
-**D. Imaging follow-up** (secondary topic)
-- A short factual line, e.g. "Follow-up documented after previous imaging · Last related examination: [date]". No chart.
-- Opens History → Imaging follow-up.
+**E. Your history**
+- A quieter entry point into the detailed topic views: Iron / Ferritin and Imaging follow-up, each with factual counts and a date span, linking to History.
 
-**E. Doctor Summary entry point**
-- A secondary action near the bottom: **View Doctor Summary**. The summary content isn't duplicated here.
+**F. Doctor Summary entry point**
+- A quiet line near the bottom leading to **View Doctor Summary**. The summary content isn't duplicated here.
 
-No "Needs attention" section, and no prioritisation language. Labels stay factual: "Documented follow-up," "Recent changes."
+No "Needs attention" section, and no prioritisation language.
 
 Acceptance criteria:
-- [ ] On first load, the Snapshot shows the header, Iron / Ferritin, Imaging follow-up and the Doctor Summary entry point. Recent changes is absent.
-- [ ] Iron / Ferritin shows the latest value, the supplied range, the previous value, the documented medication status and the follow-up state, with no interpretive words (good, bad, low, healthy, etc.).
-- [ ] Clicking the Iron / Ferritin section opens History on that topic. Clicking Imaging follow-up opens History on that topic.
-- [ ] After the live update is approved, Recent changes appears with the document type and date. Each item opens the evidence drawer.
+- [ ] On first load, the Snapshot shows Identity, Latest in your record, Follow-up on record, Your history and the Doctor Summary entry point. What changed is absent.
+- [ ] Latest in your record shows the latest ferritin value, its supplied range and date, the documented medication status with its documentation date, and the latest related imaging, with no interpretive words (good, bad, low, healthy, etc.).
+- [ ] Follow-up on record shows only recommendations quoted from source documents, each opening its evidence.
+- [ ] Each Your history topic opens History on that topic.
+- [ ] After the live update is approved, What changed appears with the document type and date. Each item opens the evidence drawer.
 
 ### History (topic template)
 Source: `scope.md > The POC Boundary` ("Iron / Ferritin topic," "Imaging follow-up topic").
@@ -127,7 +133,7 @@ One reusable topic-detail view. A simple topic switcher inside History selects I
 
 **Iron / Ferritin shows:**
 - **Measurements over time:** a simple chart, plus rows with date, value, unit, the supplied range *for that result* and a source marker. Different labs may supply different ranges, and each row keeps its own.
-  - Calculated labels where applicable: "outside supplied laboratory range," "inside supplied laboratory range," "changed since previous measurement," "previously outside supplied range." Each is visibly marked as **calculated**.
+  - Calculated labels where applicable: "outside supplied laboratory range," "inside supplied laboratory range," "changed since previous measurement," "previously outside supplied range." Each is visibly marked as **derived** (the user-facing word for the CALCULATED evidence type).
 - **Medication episode:** oral iron, shown as a small status timeline, e.g. Prescribed (date, source) → Completed (date, source). Each state comes from an explicit source.
 - **Documented follow-up:** the recommendation text, e.g. "Repeat ferritin in 3 months", with its date and source. When a later matching result exists, the section shows "Matching result found: Ferritin 32 μg/L — 25 Sep 2026". Elapsed time may be shown as plain chronology ("5 months after recommendation").
 
@@ -144,7 +150,7 @@ Acceptance criteria:
 ### Evidence Drawer
 Source: `scope.md > The Unique Kernel`.
 
-A right-side drawer that keeps the patient in context. It's used by every view.
+A right-side drawer on desktop and a full-height sheet on mobile, keeping the patient in context. It's used by every view. On Home, sources appear as quiet references; the detailed provenance lives here.
 
 **For a source fact:**
 - The fact and value, e.g. "Ferritin 32 μg/L"
@@ -224,7 +230,7 @@ Source: `scope.md > What "Working" Looks Like` (step 8).
 
 - The most recently approved record is the **latest update**. Items it affected stay marked until another record is approved. There's no time-based highlighting.
 - Treatment: a small "Added from latest record" or "Updated from latest record" label, a subtle tint or left rule, and the source date nearby. **No success-green.**
-- The marking appears on the Snapshot's Recent changes and on the affected items in Snapshot, History and Doctor Summary.
+- The marking appears on the Snapshot's What changed section and on the affected items in Snapshot, History and Doctor Summary.
 
 Acceptance criteria:
 - [ ] After approval, the new ferritin row, the medication status and the follow-up state each show the latest-update label.
@@ -287,7 +293,7 @@ Acceptance criteria:
 
 ## States and Boundaries
 
-- **First load / normal use.** The pre-built history appears immediately. There's no empty state, and Recent changes is absent.
+- **First load / normal use.** The pre-built history appears immediately. There's no empty state, and What changed is absent.
 - **Processing.** A neutral progress state. The history underneath is unchanged.
 - **Proposal ready.** The review panel shows. Nothing is trusted yet.
 - **Extraction unusable or schema-invalid.** It can't proceed to review. The patient sees a calm, factual message, e.g. "This record couldn't be read into structured facts. Your history hasn't changed." Nothing is imported.
@@ -295,7 +301,7 @@ Acceptance criteria:
 - **All facts rejected.** Apply is disabled. Cancel or close imports nothing, including the document, and the history is unchanged.
 - **Cancelled or closed review.** Nothing is imported.
 - **Refresh or close during review.** The temporary proposal is discarded, and the history is unchanged.
-- **After approval.** The updated state, the latest-update marking and Recent changes appear everywhere.
+- **After approval.** The updated state, the latest-update marking and What changed appear everywhere.
 - **Persistence.** Only approved source facts, documents with at least one approved fact, and the latest-update marker persist across refresh and reopening. PROPOSED and REJECTED are never persisted.
 - **Boundaries.** One fictional patient, with no accounts, profiles or sharing.
 
@@ -320,19 +326,20 @@ Acceptance criteria:
 - **Doctor Summary provenance uses compact source markers on every line.** It stays concise, and provenance is never hidden.
 - **Latest-update marking works by update batch, not by time.** It's deterministic and reliable for the demo.
 - **No "Needs attention" section and no traffic-light colours.** Both would imply medical prioritisation or judgement.
-- **Neutral working label "Medical History."** Naming shouldn't delay or distort the MVP.
+- **Working brand: MyHeDo, "My health, documented."** Chosen once the product was visible, as planned. It's a hackathon working brand, not a cleared trademark, and is never abbreviated to an acronym.
+- **A responsive personal app, not a document.** The application contains medical records but doesn't look like one. Only the Doctor Summary is deliberately a typeset clinical brief.
 - **Demo reset stays out of the product UI.** It's demo infrastructure, not a feature.
 
 ---
 
 ## What We're Building
-- The Snapshot, History (two topics through one template) and Doctor Summary, with top navigation
+- Home (the Snapshot), History (two topics through one template) and Doctor Summary, in a responsive app shell (sidebar on desktop, tab bar on mobile)
 - The evidence drawer for source facts and calculated claims, plus a source document viewer modal
 - An initial synthetic record set (5–6 documents) pre-structured into Document, Observation, MedicationEpisode and FollowUp
 - Add record through a file picker → live AI extraction from one follow-up consultation note → validation
 - A review panel: reviewable source facts, a live "This would also update…" preview, Apply all / Apply selected / Cancel
 - Deterministic state update, recomputation of calculated claims, and persistence of approved state
-- Latest-update marking and the Recent changes section
+- Latest-update marking and the What changed section
 - A Doctor Summary composed from approved structured facts, with source markers
 - Unusable-extraction and nothing-new states
 - A hidden demo reset

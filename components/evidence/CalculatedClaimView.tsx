@@ -1,7 +1,8 @@
 "use client";
 /**
  * Drawer view for a CALCULATED claim: "How this was determined" + the structured input facts.
- * A calculated claim never shows a single excerpt as though a document stated it.
+ * A derived (CALCULATED) claim never shows a single excerpt as though a document stated it.
+ * User-facing wording is "Derived"; `CalculatedClaim` stays the internal data-model term.
  */
 import type { CalculatedClaim, FollowUp, LabMeasurement } from "@/lib/model/types";
 import type { EvidenceIndex } from "@/lib/evidence/index";
@@ -28,14 +29,14 @@ export default function CalculatedClaimView({ claim, index, onOpenFact }: Props)
   const note = chronology(claim, index);
   return (
     <div>
-      <p className={styles.kind}>Calculated</p>
+      <p className={styles.kind}>Derived</p>
       <h2 className={styles.factLabel}>{claim.text}</h2>
 
       <h3 className={styles.sectionHeading}>How this was determined</h3>
       <p className={styles.rule}>{claim.ruleDescription}</p>
       {note && <p className={styles.rule}>{note}</p>}
 
-      <h3 className={styles.sectionHeading}>Calculated from</h3>
+      <h3 className={styles.sectionHeading}>Derived from</h3>
       <ul className={styles.inputs}>
         {claim.inputFactIds.map((id) => {
           const f = index.facts[id];

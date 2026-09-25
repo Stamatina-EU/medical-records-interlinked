@@ -1,155 +1,434 @@
-/* Snapshot — an organised record, not a dashboard: rows, rules, alignment. */
+/*
+ * Home — a personal app space that contains medical records without looking like one.
+ * Person first; then the latest documented picture; then what changed; then what is carried
+ * forward and where to go deeper. Intentional surfaces with hierarchy — not a grid of cards.
+ */
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: var(--space-5);
-  padding-bottom: var(--space-5);
-  border-bottom: 1px solid var(--ink);
+/* ── Shared surfaces & module heads ───────────────────────────────── */
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
 }
 
-.kicker {
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+.module {
+  margin-top: var(--space-6);
+}
+
+.moduleHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.moduleTitle {
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.moduleNote {
+  font-size: var(--text-sm);
   color: var(--ink-muted);
+}
+
+.eyebrow {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+.inlineLink {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+/* ── Identity ─────────────────────────────────────────────────────── */
+.identity {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-3) 0 var(--space-2);
+}
+
+.monogram {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--accent-wash);
+  color: var(--accent-ink);
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  justify-content: center;
+  font-family: var(--font-evidence);
+  font-size: 1.75rem;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 0 0 1px rgba(47, 111, 115, 0.12);
 }
 
-.synthetic {
-  text-transform: none;
-  letter-spacing: 0;
-  border: 1px solid var(--rule-strong);
-  border-radius: var(--radius);
-  padding: 0 6px;
-  font-size: 0.6875rem;
+.framing {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
 }
 
 .name {
-  font-size: var(--text-xl);
+  font-size: 2.625rem;
   font-weight: 600;
-  margin-top: var(--space-2);
-  line-height: 1.2;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin: 2px 0 6px;
 }
 
-.updated {
+.provenanceLine {
   font-size: var(--text-sm);
   color: var(--ink-muted);
-  margin-top: var(--space-1);
 }
 
 .addRecord {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0 var(--space-5);
   background: var(--accent);
   color: #fff;
   border: 1px solid var(--accent);
-  border-radius: var(--radius);
-  padding: var(--space-2) var(--space-5);
+  border-radius: 999px;
   font-weight: 600;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   cursor: pointer;
   white-space: nowrap;
+  box-shadow: var(--shadow-2);
 }
 .addRecord:hover:not(:disabled) {
   background: var(--accent-hover);
 }
 .addRecord:disabled {
-  opacity: 0.45;
+  opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-.section {
-  margin-top: var(--space-7);
+/* ── Latest in your record (asymmetric: primary + supporting) ─────── */
+.latestGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: var(--space-4);
 }
 
-.secondary {
-  margin-top: var(--space-6);
-}
-
-.sectionHead {
+.primary {
+  padding: var(--space-5) var(--space-6) var(--space-4);
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--rule-strong);
+  flex-direction: column;
+  align-items: flex-start;
+  box-shadow: var(--shadow-2);
 }
 
-.sectionTitle {
+.displayValue {
+  font-size: var(--text-display);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin-top: var(--space-2);
+}
+
+.displayUnit {
+  font-size: var(--text-lg);
+  font-weight: 400;
+  color: var(--ink-muted);
+  letter-spacing: 0;
+  margin-left: 8px;
+}
+
+.keep {
+  white-space: nowrap;
+}
+
+.primaryMeta {
+  font-size: var(--text-base);
+  color: var(--ink-muted);
+  margin-top: var(--space-2);
+}
+
+.claimRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin-top: var(--space-3);
+}
+
+.primaryFoot {
+  margin-top: auto;
+  padding-top: var(--space-5);
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--rule);
+  margin-block-start: var(--space-5);
+}
+
+.supporting {
+  display: flex;
+  flex-direction: column;
+}
+
+.supportItem {
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.supportItem + .supportItem {
+  border-top: 1px solid var(--rule);
+}
+
+.supportValue {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.supportMeta {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+/* ── What changed (styles kept for slice 4; not rendered before the first approved update) ─────────────────────────────────────────────────── */
+.changed {
+  margin-top: var(--space-6);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-4);
+  align-items: start;
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface-raised);
+}
+
+.changedMark {
+  width: 10px;
+  height: 10px;
+  margin-top: 7px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+}
+
+.changedTitle {
   font-size: var(--text-md);
   font-weight: 600;
 }
 
-.secondary .sectionTitle {
-  font-size: var(--text-base);
-}
-
-.sectionLink {
+.changedText {
   font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin-top: 2px;
+  max-width: 62ch;
 }
 
-.rows {
-  margin: 0;
-}
-
-.row {
+/* ── Lower area: carried forward | destinations ───────────────────── */
+.lowerGrid {
   display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: var(--space-4);
-  padding: var(--space-4) 0;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.sideColumn {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Follow-up on record */
+/* An open app list: spacing and separators, no card surface */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rule-strong);
   border-bottom: 1px solid var(--rule);
 }
 
-.row dt {
-  color: var(--ink-muted);
-  font-size: var(--text-sm);
-  padding-top: 2px;
-}
-
-.row dd {
-  margin: 0;
-}
-
-.line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-2) var(--space-3);
-}
-
-.value {
-  font-size: var(--text-lg);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.meta {
-  font-size: var(--text-sm);
-  color: var(--ink-muted);
-}
-
-.claims {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-5);
-  margin-top: var(--space-2);
-}
-
-.summaryLink {
-  margin-top: var(--space-7);
-  padding-top: var(--space-4);
+.listItem + .listItem {
   border-top: 1px solid var(--rule);
-  font-size: var(--text-sm);
 }
 
-@media (max-width: 640px) {
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
+/* .list scope beats the generic FactValue reset (padding: 0) */
+.list .listButton {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-1) var(--space-4) 0;
+  min-height: 64px;
+}
+.list .listButton:hover .listTitle {
+  color: var(--accent-ink);
+}
+
+.listText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.listTitle {
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.listMeta {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+.listChevron {
+  color: var(--ink-faint);
+}
+.listButton:hover .listChevron {
+  color: var(--accent);
+}
+
+.listClaim {
+  padding: 0 0 var(--space-3);
+}
+
+/* Your history — destinations */
+.destinations {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.destination {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-4) var(--space-4) var(--space-5);
+  min-height: 76px;
+  color: var(--ink);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.destination:hover {
+  color: var(--ink);
+  border-color: var(--rule-strong);
+  box-shadow: var(--shadow-2);
+}
+
+.destText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.destTitle {
+  font-weight: 600;
+  font-size: var(--text-md);
+}
+
+.destMeta {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+/* Extremely quiet: a navigation cue, not a chart. */
+.trace {
+  color: var(--ink-faint);
+  opacity: 0.55;
+  flex: none;
+}
+
+.destChevron {
+  color: var(--ink-faint);
+}
+.destination:hover .destChevron {
+  color: var(--accent);
+}
+
+/* Doctor Summary entry */
+.summaryEntry {
+  margin-top: var(--space-5);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-3);
+  align-items: start;
+  padding: var(--space-4) var(--space-5);
+  color: var(--accent-ink);
+  background: var(--accent-wash);
+  border-color: transparent;
+  box-shadow: none;
+}
+.summaryEntry:hover {
+  color: var(--accent-ink);
+  border-color: rgba(47, 111, 115, 0.25);
+}
+
+.summaryTitle {
+  display: block;
+  font-weight: 600;
+}
+
+.summaryText {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+/* ── Mobile: one application, single column, comfortable targets ─── */
+@media (max-width: 860px) {
+  .identity {
+    grid-template-columns: auto 1fr;
+    gap: var(--space-4);
   }
-  .row {
+  .monogram {
+    width: 60px;
+    height: 60px;
+    font-size: 1.375rem;
+  }
+  .name {
+    font-size: 2rem;
+  }
+  .addRecord {
+    grid-column: 1 / -1;
+    justify-content: center;
+    width: 100%;
+    margin-top: var(--space-2);
+  }
+
+  .latestGrid,
+  .lowerGrid {
     grid-template-columns: 1fr;
-    gap: var(--space-1);
+  }
+
+  .primary {
+    padding: var(--space-5);
+  }
+
+  .displayValue {
+    font-size: 2.75rem;
+  }
+
+  .moduleHead {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .sideColumn .module:first-child {
+    margin-top: var(--space-6);
   }
 }

@@ -28,8 +28,6 @@ a {
 }
 a:hover {
   color: var(--accent-hover);
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
 button {
@@ -55,10 +53,17 @@ p {
   margin: 0;
 }
 
+/* Content area inside the app shell */
 .page {
-  max-width: var(--measure);
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: var(--space-6) var(--space-5) var(--space-7);
+  padding: var(--space-6) var(--space-6) var(--space-7);
+}
+
+@media (max-width: 860px) {
+  .page {
+    padding: var(--space-5) var(--space-4) var(--space-7);
+  }
 }
 
 .visually-hidden {

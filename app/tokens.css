@@ -1,21 +1,25 @@
 /*
  * Design tokens — spec.md > Look and Feel.
+ * MyHeDo is a personal app that CONTAINS medical records; it should not look like one.
  * Colour signals INTERFACE STATE, never medical judgement: no red / amber / green anywhere.
  * Fonts are swappable in one place: app/layout.tsx maps next/font families to
  * --font-ui-family and --font-evidence-family; components only use --font-ui / --font-evidence.
  */
 :root {
-  --paper: #faf8f4;
+  --paper: #f7f4ee;
   --surface: #ffffff;
+  --surface-raised: #fffdf9;
+  --surface-sunk: #efebe3;
   --ink: #1f2328;
   --ink-muted: #5b6068;
   --ink-faint: #8a8f96;
-  --rule: #e4e0d8;
-  --rule-strong: #cfc9bd;
+  --rule: #e6e1d7;
+  --rule-strong: #d3ccbf;
 
   --accent: #2f6f73;
   --accent-hover: #24585b;
-  --accent-wash: #e8f0ef;
+  --accent-wash: #e6efee;
+  --accent-ink: #1d4a4d;
 
   --evidence-paper: #fffdf7;
   --evidence-border: #e6dfcf;
@@ -24,12 +28,13 @@
   --font-ui: var(--font-ui-family), "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-evidence: var(--font-evidence-family), Georgia, "Times New Roman", serif;
 
-  --text-xs: 0.75rem;
-  --text-sm: 0.8125rem;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
   --text-base: 0.9375rem;
   --text-md: 1.0625rem;
   --text-lg: 1.375rem;
   --text-xl: 1.75rem;
+  --text-display: 3.25rem;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -39,8 +44,16 @@
   --space-6: 32px;
   --space-7: 48px;
 
-  --measure: 880px;
-  --radius: 3px;
+  --radius: 6px;
+  --radius-lg: 14px;
+  --shadow-1: 0 1px 2px rgba(31, 35, 40, 0.04), 0 1px 1px rgba(31, 35, 40, 0.03);
+  --shadow-2: 0 1px 2px rgba(31, 35, 40, 0.05), 0 8px 24px -12px rgba(31, 35, 40, 0.16);
   --focus: 0 0 0 2px var(--paper), 0 0 0 4px var(--accent);
-  --drawer-width: 440px;
+
+  --sidebar-width: 248px;
+  --content-max: 1040px;
+  --tabbar-height: 64px;
+  --topbar-height: 56px;
+  --drawer-width: 460px;
+  --touch: 44px;
 }

@@ -86,8 +86,12 @@ describe("derive — after the live note's two facts are approved", () => {
   it("moves the medication to Completed and the latest ferritin to 32", () => {
     expect(latestMedicationStatus(after, "ep-oral-iron")?.status).toBe("Completed");
     const view = snapshotView(after, derive(after));
-    expect(view.iron.latestId).toBe("doc-07-lab-1");
-    expect(view.iron.previousId).toBe("lab-ferritin-2026-01-27");
+    expect(view.rightNow.ferritinId).toBe("doc-07-lab-1");
+    expect(view.rightNow.medicationEventId).toBe("doc-07-med-1");
+    expect(view.followUpsOnRecord.find((f) => f.factId === "fu-ferritin-2026-02-03")?.matchKey).toBe(
+      "followup-match:fu-ferritin-2026-02-03",
+    );
+    expect(view.history.find((h) => h.topic === "iron")?.count).toBe(3);
   });
 
   it("without the ferritin fact there is no follow-up match (consequences depend on evidence)", () => {
@@ -96,10 +100,28 @@ describe("derive — after the live note's two facts are approved", () => {
   });
 });
 
-describe("snapshot view — imaging relationship comes only from an explicit comparison", () => {
-  it("uses the exam that explicitly references the earlier one, and the follow-up from that earlier report", () => {
-    const view = snapshotView(seed, derive(seed));
-    expect(view.imaging.lastRelatedExamId).toBe("img-thyroid-2026-03-12");
-    expect(view.imaging.followUpId).toBe("fu-imaging-2025-09-10");
+describe("snapshot view — patient-centred, evidence-only", () => {
+  const view = snapshotView(seed, derive(seed));
+
+  it("'Right now' shows the latest documented ferritin, medication status and related imaging", () => {
+    expect(view.rightNow.ferritinId).toBe("lab-ferritin-2026-01-27");
+    expect(view.rightNow.medicationEventId).toBe("med-oral-iron-2026-02-03-prescribed");
+    // "related" only because the 12 Mar 2026 report explicitly compares with the earlier exam
+    expect(view.rightNow.relatedImagingId).toBe("img-thyroid-2026-03-12");
+  });
+
+  it("'Follow-up on record' lists the latest documented recommendation per topic, with no match yet", () => {
+    expect(view.followUpsOnRecord).toEqual([
+      { factId: "fu-ferritin-2026-02-03", matchKey: null },
+      { factId: "fu-imaging-2026-03-12", matchKey: null },
+    ]);
+  });
+
+  it("'Your history' summarises topics with factual counts and date spans only", () => {
+    expect(view.history.map((h) => [h.topic, h.count, h.firstDate, h.lastDate])).toEqual([
+      ["iron", 2, "2025-03-14", "2026-01-27"],
+      ["imaging", 2, "2025-09-10", "2026-03-12"],
+    ]);
+    expect(view.documentCount).toBe(6);
   });
 });

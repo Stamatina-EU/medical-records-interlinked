@@ -3,12 +3,12 @@ doc: spec
 status: approved
 ---
 
-# Medical History — Technical Spec
+# MyHeDo — Technical Spec
 
 *Positioning (`scope.md > Context and Positioning`): a trust layer for medical documents outside structured health records. It is not an EHR, an EHR or government health-system integration, or a patient portal. This note doesn't change the architecture below.*
 
 Implements `prd.md` (approved) within `scope.md > The POC Boundary`.
-Working label: **Medical History**. No brand is locked (`prd.md > Product Decisions`).
+Working brand: **MyHeDo** — "My health, documented." A hackathon working brand, not a cleared trademark, and never abbreviated (`prd.md > Product Decisions`).
 
 ---
 
@@ -47,7 +47,7 @@ The AI's only job is step 2: **it proposes, it never decides.** Changing the mod
 ## The Core Journey Through the System
 PRD ref: `prd.md > The Core Journey`.
 
-1. **Arrival.** The browser opens `http://localhost:3000`. The server reads `data/runtime/state.json`, initialising it from the seed if it's missing. The Snapshot page asks the **engine** (pure calculation code) for the calculated claims, then renders them. Recent changes is absent because `latestUpdate` is empty.
+1. **Arrival.** The browser opens `http://localhost:3000`. The server reads `data/runtime/state.json`, initialising it from the seed if it's missing. The Snapshot page asks the **engine** (pure calculation code) for the calculated claims, then renders them. What changed is absent because `latestUpdate` is empty.
 2. **Understand the current state.** The Snapshot sections render from approved facts and calculated claims.
 3. **Check a claim.** The patient clicks the Iron / Ferritin section and goes to `/history/iron`. Clicking a fact opens the **Evidence Drawer**. It already has the fact, its document and its excerpt, because the page sent them along. "Open source document" loads `/api/documents/{id}` in the browser's built-in PDF viewer, at `#page=N`.
 4. **See breadth.** The topic switcher goes to `/history/imaging`, the same template with no chart.
@@ -55,7 +55,7 @@ PRD ref: `prd.md > The Core Journey`.
 6. **Server work.** PDF → page text → OpenAI model → schema check → per-fact **verification** → duplicate check → consequence preview. The result is saved as a **pending proposal**, a temporary file on the server, and returned to the browser.
 7. **Review.** The **Review Panel** shows the verified facts, a "left out" note if any facts failed, and "This would also update…". Rejecting a fact reruns the preview in the browser using the same pure engine code.
 8. **Apply.** The browser sends only `{proposalId, approvedFactIds}` to `POST /api/records/apply`. The server reloads the pending proposal from its *own* temporary file. It never trusts fact contents sent back from the browser. It then applies the approved facts, stores the document, sets `latestUpdate`, saves `state.json` and deletes the pending proposal.
-9. **See what changed.** The pages refresh from the new state. Recent changes and the latest-update marks come from `latestUpdate`.
+9. **See what changed.** The pages refresh from the new state. What changed and the latest-update marks come from `latestUpdate`.
 10. **Doctor Summary.** `/summary` runs the **Summary Composer** on the current state. Every line carries source markers that open the same drawer.
 
 ```
@@ -174,7 +174,7 @@ Carried forward from `prd.md > Look and Feel` and `scope.md > Inspiration & Iden
 
 **Evidence vs derivation:**
 - **Source facts** carry a source marker. Their excerpts render in Source Serif 4 on `--evidence-paper`, with a slight inset border.
-- **Calculated claims** carry a small "Calculated" label with a dotted underline. Their drawer opens "How this was determined."
+- **Calculated claims** are shown to users as **"Derived"**: the claim text with a dotted underline and a quiet italic "· derived" marker. The drawer kicker reads "Derived" and the inputs section is headed "Derived from". It still opens "How this was determined." `CalculatedClaim` / CALCULATED remain the internal data-model terms.
 
 **Latest update:** a 2px `--accent` left rule plus `--accent-wash` tint, and a small "Added from latest record" or "Updated from latest record" label with the date. No green.
 
@@ -188,11 +188,13 @@ Carried forward from `prd.md > Look and Feel` and `scope.md > Inspiration & Iden
 
 ### Snapshot Page
 Implements `prd.md > Snapshot`. Route `/` (`app/page.tsx`, dynamic).
-- **Header:** fictional patient name, "Documented health history", last updated (the latest approved-at, or the seed date), **Add record**, and after an update "Updated from {document type} · {date}".
-- **Recent Changes:** rendered only when `latestUpdate` exists. Lists the change descriptions produced by the engine. Each opens the drawer.
-- **Iron / Ferritin section:** latest value, supplied range, previous value, medication status (only if an explicit status event exists), follow-up state. Links to `/history/iron`.
-- **Imaging section:** one factual line (follow-up documented, last related examination date). Links to `/history/imaging`.
-- **View Doctor Summary** link.
+It is patient- and moment-centred, composed from a pure view model (`lib/view/snapshot.ts`). *(Revised after the slice 3 hands-on review.)*
+- **Identity** (`SnapshotHeader`): monogram, name with real presence, a framing line, "Built from N source documents · last updated …" (the latest approved-at, or the seed date), **Add record**, and after an update "Updated from {document type} · {date}".
+- **Latest in your record** (`RightNow`): latest ferritin (value, supplied range, date, range-status claim), the latest explicit medication status with "documented {date}", and the latest related imaging (only an exam that explicitly references an earlier one).
+- **What changed:** rendered only when `latestUpdate` exists (slice 4). Lists the change descriptions produced by the engine, and each opens the drawer.
+- **Follow-up on record** (`FollowUpOnRecord`): the latest documented recommendation per topic, quoted in the source's words, with the "Matching follow-up result found" claim when it exists.
+- **Your history** (`HistoryTopics`): quiet links to `/history/iron` and `/history/imaging`, with factual counts and date spans.
+- **View Doctor Summary** line.
 
 ### History Page (Topic Template)
 Implements `prd.md > History (topic template)`. Route `/history/[topic]` with topic `iron` | `imaging` (`app/history/[topic]/page.tsx`, dynamic). The `History` nav item goes to `/history/iron`.
@@ -206,8 +208,8 @@ Implements `prd.md > History (topic template)`. Route `/history/[topic]` with to
 ### Doctor Summary Page
 Implements `prd.md > Doctor Summary`. Route `/summary` (dynamic). It's a user-controlled, evidence-linked view of the history represented in this product, not a claim to be the doctor's only access to the patient's history. It renders the output of the **Summary Composer** as a typeset brief, with a numbered **Sources** list at the foot (document type · source · date). Each chip opens the drawer for the underlying fact or claim.
 
-### Top Navigation
-Snapshot · History · Doctor Summary (`components/nav/TopNav.tsx`). Shows the working label "Medical History."
+### App Shell and Navigation
+`components/shell/AppNav.tsx` + `shell.module.css`, mounted in `app/layout.tsx`. It's one navigation system with two presentations. Desktop (> 860px) gets a fixed sidebar with the MyHeDo wordmark, the tagline, Home · History · Doctor Summary, and the owning patient ("Alex Rowan · Synthetic demo record"). Mobile gets a top bar with the brand and a bottom tab bar (Home · History · Summary) with 44px+ targets. Line icons are inline SVG (`components/shell/icons.tsx`), and there's no icon library.
 
 ### Evidence Drawer
 Implements `prd.md > Evidence Drawer`. A client component mounted once in the layout (`components/evidence/`) and opened through a small React context (`EvidenceProvider`), so any view can open it with a fact or claim reference.
@@ -336,7 +338,7 @@ Result: `{ verified: SourceFact[], excludedCount: number }`. Verified facts get 
 - **`dedupe(state, facts)`:** same analyte + date + value + unit → duplicate. Same episode + status + documented date → duplicate.
 - **`preview(state, proposedFacts, approvedIds)`:** applies the approved subset to a copy, derives, and returns the human-readable differences. This is where "This would also update…" comes from.
 - **`apply(state, proposal, approvedIds) → newState`:** adds the document and the approved facts (as `APPROVED`). A medication status event's `documentedOn` is the verified document date. and sets `latestUpdate = { documentId, approvedFactIds, affected: [...fact IDs and claim keys that are new or changed], approvedAt }`.
-- **`changesSummary(state)`:** the Recent changes lines, derived from `latestUpdate`.
+- **`changesSummary(state)`:** the What changed lines, derived from `latestUpdate`.
 
 ### Summary Composer
 Implements `prd.md > Doctor Summary`. `lib/summary/compose.ts` is pure and deterministic, with **no AI**. It turns state and derived claims into `SummarySection[]` of `Statement { parts: text[], refs: (factId | claimKey)[] }` using fixed English templates. Its rules:
@@ -498,7 +500,7 @@ The finding wording for the imaging documents is written to be neutral and non-a
 ```
 medical-history/                     # repo root (current folder)
 ├── app/
-│   ├── layout.tsx                   # fonts, TopNav, EvidenceProvider + drawer host
+│   ├── layout.tsx                   # fonts, app shell (AppNav) around every page
 │   ├── tokens.css                   # colour/type/spacing tokens (Look and Feel)
 │   ├── globals.css                  # base typography, rules, focus states
 │   ├── page.tsx                     # Snapshot Page (dynamic)
@@ -510,8 +512,8 @@ medical-history/                     # repo root (current folder)
 │       ├── records/cancel/route.ts  # Cancel Route
 │       └── documents/[id]/route.ts  # Document Route
 ├── components/
-│   ├── nav/TopNav.tsx
-│   ├── snapshot/                    # Header, RecentChanges, IronSection, ImagingSection
+│   ├── shell/                       # AppNav (sidebar + mobile top bar/tab bar), icons, shell.module.css
+│   ├── snapshot/                    # SnapshotHeader, RightNow, WhatChanged, FollowUpOnRecord, HistoryTopics
 │   ├── history/                     # TopicSwitcher, MeasurementChart, MeasurementRows,
 │   │                                #   MedicationTimeline, FollowUpBlock, ImagingTimeline
 │   ├── evidence/                    # EvidenceProvider, EvidenceDrawer, SourceFactView,

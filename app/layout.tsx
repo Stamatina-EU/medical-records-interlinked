@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
-import TopNav from "@/components/nav/TopNav";
+import AppNav from "@/components/shell/AppNav";
+import shell from "@/components/shell/shell.module.css";
+import { readState } from "@/lib/store/stateStore";
 import "./globals.css";
 
 /*
@@ -21,16 +23,29 @@ const evidenceFont = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Medical History",
-  description: "Evidence-linked medical history — proof of concept with synthetic data only.",
+  title: "MyHeDo — My health, documented.",
+  description: "An evidence-linked personal health record — proof of concept with synthetic data only.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const dynamic = "force-dynamic";
+
+async function patientName(): Promise<string> {
+  try {
+    return (await readState()).patient.displayName;
+  } catch {
+    return "";
+  }
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const name = await patientName();
   return (
     <html lang="en" className={`${uiFont.variable} ${evidenceFont.variable}`}>
       <body>
-        <TopNav />
-        {children}
+        <div className={shell.shell}>
+          <AppNav patientName={name} />
+          <div className={shell.main}>{children}</div>
+        </div>
       </body>
     </html>
   );

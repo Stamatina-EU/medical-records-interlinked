@@ -5,18 +5,16 @@
   cursor: pointer;
   text-align: left;
   color: var(--ink);
-  border-bottom: 1px solid transparent;
 }
 .factValue:hover {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .sourceMarker {
   background: var(--evidence-paper);
   border: 1px solid var(--evidence-border);
   border-radius: var(--radius);
-  padding: 1px 7px;
+  padding: 1px 8px;
   font-size: var(--text-xs);
   color: var(--ink-muted);
   cursor: pointer;
@@ -28,6 +26,30 @@
   color: var(--accent);
 }
 
+/* Quiet source reference for Home: present, tappable, never dominant */
+.sourceRef {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  text-align: left;
+}
+.sourceRef span {
+  border-bottom: 1px solid transparent;
+}
+.sourceRef:hover {
+  color: var(--accent-ink);
+}
+.sourceRef:hover span {
+  border-bottom-color: currentColor;
+}
+
 /* Calculated = derived by code, visibly different from what the record says */
 .calculated {
   display: inline-flex;
@@ -36,21 +58,37 @@
   background: none;
   border: none;
   padding: 0;
+  min-height: 28px;
   cursor: pointer;
   text-align: left;
   font-size: var(--text-sm);
   color: var(--ink-muted);
 }
+/* quiet marker: lowercase, italic, no badge — discoverable, not a system label */
 .calcTag {
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size: var(--text-xs);
+  font-style: italic;
   color: var(--ink-faint);
+}
+.calcTag::before {
+  content: "· ";
+  font-style: normal;
 }
 .calcText {
   border-bottom: 1px dotted var(--ink-faint);
 }
 .calculated:hover .calcText {
-  color: var(--accent);
+  color: var(--accent-ink);
   border-bottom-color: var(--accent);
+}
+
+@media (max-width: 860px) {
+  .sourceRef {
+    min-height: var(--touch);
+    font-size: var(--text-sm);
+  }
+  .calculated {
+    min-height: var(--touch);
+    align-items: center;
+  }
 }
