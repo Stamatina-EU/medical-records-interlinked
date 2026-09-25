@@ -234,7 +234,8 @@ function Review({
         {doc.title} · {formatDate(doc.date)} · {doc.pageCount} page{doc.pageCount === 1 ? "" : "s"}
       </p>
 
-      <h3 className={styles.sectionHeading}>Verified from this record</h3>
+      <h3 className={styles.sectionHeading}>Verified against this record</h3>
+      <p className={styles.sectionNote}>Matched to the source wording shown below.</p>
       <ul className={styles.facts}>
         {proposal.facts.map((f) => {
           const { label, value } = factHeadline(f, state);
@@ -253,7 +254,7 @@ function Review({
                   onClick={() => toggle(f.id)}
                   disabled={phase.kind === "applying"}
                 >
-                  {isRejected ? "Rejected · undo" : "Reject"}
+                  {isRejected ? "Excluded · undo" : "Exclude"}
                 </button>
               </div>
               <blockquote className={styles.excerpt}>{f.source.verifiedExcerpt}</blockquote>
@@ -278,18 +279,20 @@ function Review({
           ))}
         </ul>
       ) : (
-        <p className={styles.messageText}>Nothing — every fact from this record is rejected.</p>
+        <p className={styles.messageText}>Nothing — every fact from this record is excluded.</p>
       )}
 
-      <div className={styles.reviewActions}>
-        <button type="button" className={styles.secondary} onClick={onCancel} disabled={phase.kind === "applying"}>
-          Cancel
-        </button>
-        <button type="button" className={styles.primary} onClick={onApply} disabled={approvedIds.length === 0 || phase.kind === "applying"}>
-          {phase.kind === "applying" ? "Applying…" : rejected.size === 0 ? "Apply all" : "Apply selected"}
-        </button>
+      <div className={styles.reviewFooter}>
+        <div className={styles.reviewActions}>
+          <button type="button" className={styles.secondary} onClick={onCancel} disabled={phase.kind === "applying"}>
+            Cancel
+          </button>
+          <button type="button" className={styles.primary} onClick={onApply} disabled={approvedIds.length === 0 || phase.kind === "applying"}>
+            {phase.kind === "applying" ? "Adding…" : rejected.size === 0 ? "Add all to my record" : "Add selected"}
+          </button>
+        </div>
+        <p className={styles.reviewNote}>Nothing changes in your record until you choose what to add.</p>
       </div>
-      <p className={styles.reviewNote}>Nothing changes in your record until you apply.</p>
     </div>
   );
 }

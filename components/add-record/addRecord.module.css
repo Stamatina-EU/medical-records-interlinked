@@ -136,6 +136,12 @@
   margin: var(--space-5) 0 var(--space-2);
 }
 
+.sectionNote {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin: calc(-1 * var(--space-1)) 0 var(--space-3);
+}
+
 .facts {
   list-style: none;
   margin: 0;
@@ -226,13 +232,17 @@
   gap: var(--space-1);
 }
 
+.reviewFooter {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
+  background: var(--surface);
+}
+
 .reviewActions {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-3);
-  margin-top: var(--space-6);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--rule);
 }
 
 .reviewNote {
@@ -291,8 +301,18 @@
   .panelBody {
     padding: var(--space-4) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom));
   }
+  /* Sticky actions: never scroll to the bottom to find Cancel / Add, however many facts */
+  .reviewFooter {
+    position: sticky;
+    bottom: calc(-1 * (var(--space-6) + env(safe-area-inset-bottom)));
+    margin: var(--space-5) calc(-1 * var(--space-4)) 0;
+    padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 16px -12px rgba(23, 63, 66, 0.35);
+    z-index: 1;
+  }
   .reviewActions {
     flex-direction: column-reverse;
+    gap: var(--space-2);
   }
   .reviewActions button {
     width: 100%;

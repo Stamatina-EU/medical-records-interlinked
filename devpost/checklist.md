@@ -128,7 +128,7 @@ Slice 1 → mechanically verified only · Slice 5 → continue unless a material
 
 - [ ] Trust-pipeline checkpoint (report, no visual review) — after slice 2. It covers the corpus that exists, the `verify:seed` result, preflight results across all runs, the model used, whether both expected facts passed deterministic verification every run, and any verifier or extraction compromise or deviation from spec. Don't proceed silently if the pipeline differs materially from spec.
 - [x] Early usable behavior explored — after slice 3 (Snapshot + evidence drawer): hands-on visual and provenance review. Covers visual direction, typography pairing and drawer feel.
-- [ ] Kernel hands-on review — **STOP** after slice 4. The learner tries Add record → AI proposes → code verifies → patient reviews evidence → Apply → deterministic consequences → trusted state updates, before History and the Doctor Summary are built.
+- [x] Kernel hands-on review — **STOP** after slice 4. The learner tries Add record → AI proposes → code verifies → patient reviews evidence → Apply → deterministic consequences → trusted state updates, before History and the Doctor Summary are built.
 - [ ] Final kick-the-tires exploration and feedback completed — after slice 6, on the production build
 
 ## Final Review
@@ -180,4 +180,5 @@ Activity mode:
   - Engine code lives in `lib/engine/changes.ts` (`describeChanges`, `affectedKeys`, `changesSummary`) and `lib/engine/apply.ts` (`preview`, `apply`, `validateApproval`), rather than separate `preview.ts`/`dedupe` files per the tree. The added-document metadata is in `lib/extraction/documentMeta.ts`.
   - The API-unavailable UI path was verified by intercepting the extract request in the browser (a real outage wasn't forced). A real invalid key was verified in slice 2.
   - Latest-update marks are a tinted left rule plus an "Updated from latest record" label, never green.
+- **Slice 4 review copy (learner decisions):** "Verified against this record" plus "Matched to the source wording shown below." (verification means matched to the source text, not medical truth). "Exclude" / "Excluded · undo" instead of Reject (the internal state stays REJECTED). "Add all to my record" / "Add selected" instead of Apply. "Nothing changes in your record until you choose what to add." Review actions are sticky at the bottom of the mobile sheet. Kernel behavior is unchanged.
 - Small internal helpers added outside the planned tree: `lib/text/dates.ts` (date parse/format) and `lib/store/paths.ts` (seed/runtime locations). `vitest.config.mts` uses the ESM extension.

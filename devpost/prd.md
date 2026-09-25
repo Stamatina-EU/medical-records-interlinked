@@ -28,7 +28,7 @@ Source: `scope.md > What "Working" Looks Like`, `scope.md > The Core Loop`.
 3. **Check a claim.** The patient opens the Iron / Ferritin **History** and clicks a fact. The **evidence drawer** slides in from the right with the exact excerpt, the document, its date and the page.
 4. **See breadth.** The patient briefly opens the Imaging follow-up topic in the same History view. It has no chart.
 5. **Add a record.** The patient clicks **Add record**, picks the synthetic follow-up consultation note (PDF) from their computer, and a neutral processing state appears.
-6. **Review the proposal.** A review panel lists the **extracted source facts**, each with its excerpt. Below them, it previews the **derived consequences** ("This would also update…"). The patient clicks **Apply all**, or rejects individual source facts and applies the rest.
+6. **Review the proposal.** A review panel lists the **extracted source facts**, each with its excerpt. Below them, it previews the **derived consequences** ("This would also update…"). The patient clicks **Add all to my record**, or excludes individual source facts and chooses **Add selected**.
 7. **Trusted state updates.** Code applies the approved source facts, recomputes the calculated state, and saves the result.
 8. **See what changed.** The Snapshot shows **What changed**. Affected items in Snapshot and History carry a subtle "latest update" treatment.
 9. **Prepare for the doctor.** The patient opens the **Doctor Summary**. It now reflects the approved evidence, and every line has a source marker that opens the evidence drawer.
@@ -194,9 +194,9 @@ Source: `scope.md > The POC Boundary` ("One live addition," "Proposed-changes re
   - medication episode → Completed
 - The preview recomputes live as source facts are rejected. Consequences that depend on a rejected fact disappear.
 - Actions:
-  - **Apply all**, or **Apply selected** when something is rejected
+  - **Add all to my record**, or **Add selected** when something is excluded. The user-facing words are "Exclude" / "Excluded · undo"; the internal review state stays REJECTED.
   - **Cancel** discards the whole proposal, and nothing is imported
-  - If every source fact is rejected, Apply / Apply selected is disabled. Cancel stays available and closes the review, importing nothing. The panel's standard close control has the same effect. **No approved source facts → no Apply action → nothing is persisted.**
+  - If every source fact is excluded, Add all / Add selected is disabled. Cancel stays available and closes the review, importing nothing. The panel's standard close control has the same effect. **No approved source facts → no Apply action → nothing is persisted.**
 - The proposal is temporary. PROPOSED and REJECTED exist only inside this review. Refreshing or closing the app during review discards the proposal.
 - Model confidence isn't required in the panel. If it's shown, it's review context only (see *Open Questions*).
 
@@ -340,7 +340,7 @@ Acceptance criteria:
 - The evidence drawer for source facts and calculated claims, plus a source document viewer modal
 - An initial synthetic record set (5–6 documents) pre-structured into Document, Observation, MedicationEpisode and FollowUp
 - Add record through a file picker → live AI extraction from one follow-up consultation note → validation
-- A review panel: reviewable source facts, a live "This would also update…" preview, Apply all / Apply selected / Cancel
+- A review panel: reviewable source facts, a live "This would also update…" preview, Add all to my record / Add selected / Cancel
 - Deterministic state update, recomputation of calculated claims, and persistence of approved state
 - Latest-update marking and the What changed section
 - A Doctor Summary composed from approved structured facts, with source markers

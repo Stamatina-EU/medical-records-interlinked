@@ -226,10 +226,10 @@ If the call fails (network, timeout, API error), it shows "We couldn't read this
 
 ### Review Panel
 Implements `prd.md > Adding a Record and Reviewing Proposed Changes`.
-- **"Verified from this record"**: each verified source fact with its value, excerpt, page and a reject toggle.
+- **"Verified against this record"** (with the note "Matched to the source wording shown below."): each verified source fact with its value, excerpt, page and an Exclude / "Excluded · undo" toggle. "Verified" means the fact matches the uploaded source text, not independent medical verification.
 - **Left-out note** (only if `excludedCount > 0`): "1 extracted item could not be verified against the source document and was left out." Neutral styling.
 - **"This would also update…"**: consequences from the engine's `preview()`, rerun in the browser whenever the reject toggles change.
-- **Actions:** **Apply all** (no rejections) or **Apply selected** (some rejected). Disabled when every fact is rejected. **Cancel** and the close control always discard the proposal: the client calls `/api/records/cancel`, and nothing is imported.
+- **Actions:** **Add all to my record** (nothing excluded) or **Add selected** (some excluded). Disabled when every fact is excluded. On mobile the actions are sticky at the bottom of the sheet. **Cancel** and the close control always discard the proposal: the client calls `/api/records/cancel`, and nothing is imported.
 - **Nothing-new result**: if the server returns `status: "no_changes"`, the panel shows "No new history changes found. Your documented history hasn't changed." with a Close button.
 - **Unusable result**: if the server returns `status: "unusable"`, it shows "This record couldn't be read into structured facts. Your history hasn't changed."
 - Model confidence isn't shown in the POC (`prd.md > Open Questions`, resolved here: the schema doesn't ask for it, which keeps confidence out of the trust path entirely).
