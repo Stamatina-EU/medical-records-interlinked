@@ -14,6 +14,13 @@ export function formatDate(iso: string): string {
   return `${d} ${MONTHS[m - 1]} ${y}`;
 }
 
+/** ISO date-time -> "1 Sep 2026, 12:00" in local time (same month style as formatDate). */
+export function formatDateTime(isoDateTime: string): string {
+  const d = new Date(isoDateTime);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 /** Whole calendar months from `fromIso` to `toIso` (never negative). */
 export function monthsBetween(fromIso: string, toIso: string): number {
   const [y1, m1, d1] = fromIso.split("-").map(Number);

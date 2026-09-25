@@ -1,0 +1,56 @@
+.factValue {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  color: var(--ink);
+  border-bottom: 1px solid transparent;
+}
+.factValue:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.sourceMarker {
+  background: var(--evidence-paper);
+  border: 1px solid var(--evidence-border);
+  border-radius: var(--radius);
+  padding: 1px 7px;
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.6;
+}
+.sourceMarker:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Calculated = derived by code, visibly different from what the record says */
+.calculated {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+.calcTag {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+.calcText {
+  border-bottom: 1px dotted var(--ink-faint);
+}
+.calculated:hover .calcText {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}

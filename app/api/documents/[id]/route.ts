@@ -4,23 +4,19 @@
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { TrustedState } from "@/lib/model/types";
-import { RUNTIME_DOCUMENTS, RUNTIME_STATE, SEED_DOCUMENTS, SEED_STATE } from "@/lib/store/paths";
+import { readState } from "@/lib/store/stateStore";
+import { RUNTIME_DOCUMENTS, SEED_DOCUMENTS } from "@/lib/store/paths";
 
 export const dynamic = "force-dynamic";
 
-async function loadState(): Promise<TrustedState> {
-  try {
-    return JSON.parse(await readFile(RUNTIME_STATE, "utf8"));
-  } catch {
-    return JSON.parse(await readFile(SEED_STATE, "utf8"));
-  }
-}
-
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const state = await loadState();
-  const doc = state.documents.find((d) => d.id === id);
+  let doc;
+  try {
+    doc = (await readState()).documents.find((d) => d.id === id);
+  } catch {
+    return new Response("History unavailable", { status: 500 });
+  }
   if (!doc) return new Response("Not found", { status: 404 });
 
   const dir = doc.origin === "seed" ? SEED_DOCUMENTS : RUNTIME_DOCUMENTS;
