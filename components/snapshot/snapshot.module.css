@@ -92,22 +92,48 @@
   background: var(--accent-hover);
 }
 .addRecord:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
-  box-shadow: none;
 }
 
-/* ── Your record at a glance (deterministic counts about the RECORD) ─── */
+/* ── Your record at a glance — a concise record overview (evidence coverage) ─── */
 .summary {
   margin-top: var(--space-5);
   padding: var(--space-5) var(--space-6);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-4);
 }
 
-.summaryHead {
+.summaryMain {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.coverage {
+  display: flex;
   align-items: flex-start;
-  gap: var(--space-4);
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  font-size: var(--text-base);
+  color: var(--ink-muted);
+}
+.coverage strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.coverageIcon {
+  color: var(--accent);
+  display: inline-flex;
+  padding-top: 2px;
+}
+
+.coverageNote {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  padding-left: 26px;
 }
 
 .summaryLink {
@@ -117,38 +143,6 @@
   align-items: center;
   min-height: var(--touch);
   white-space: nowrap;
-}
-
-.stats {
-  margin: var(--space-4) 0 0;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-top: 1px solid var(--rule);
-}
-
-.stat {
-  display: flex;
-  flex-direction: column-reverse;
-  justify-content: flex-end;
-  gap: 2px;
-  padding: var(--space-4) var(--space-4) 0 0;
-}
-.stat + .stat {
-  padding-left: var(--space-4);
-  border-left: 1px solid var(--rule);
-}
-
-.statValue {
-  margin: 0;
-  font-size: var(--text-xl);
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  line-height: 1.1;
-}
-
-.statLabel {
-  font-size: var(--text-sm);
-  color: var(--ink-muted);
 }
 
 /* ── Latest in your record — grouped, compact, scalable ────────────── */
@@ -182,6 +176,13 @@
 }
 
 .groupBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.groupLatestLine {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -327,7 +328,7 @@
 
 .destination {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-4) var(--space-4) var(--space-4) var(--space-5);
@@ -356,13 +357,6 @@
   font-size: var(--text-sm);
   color: var(--ink-muted);
   white-space: nowrap;
-}
-
-/* Extremely quiet: a navigation cue, not a chart. */
-.trace {
-  color: var(--ink-faint);
-  opacity: 0.55;
-  flex: none;
 }
 
 .destChevron {
@@ -397,30 +391,15 @@
     grid-template-columns: 1fr;
   }
 
-  .moduleHead,
-  .summaryHead {
+  .moduleHead {
     flex-direction: column;
     gap: 2px;
   }
 
   .summary {
-    padding: var(--space-4) var(--space-4) var(--space-2);
-  }
-
-  .stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .stat,
-  .stat + .stat {
-    padding: var(--space-3) var(--space-3) var(--space-3) 0;
-    border-left: none;
-  }
-  .stat:nth-child(even) {
-    padding-left: var(--space-4);
-    border-left: 1px solid var(--rule);
-  }
-  .stat:nth-child(n + 3) {
-    border-top: 1px solid var(--rule);
+    grid-template-columns: 1fr;
+    padding: var(--space-4);
+    gap: var(--space-2);
   }
 
   /* grouped rows become easy-to-tap stacked rows */

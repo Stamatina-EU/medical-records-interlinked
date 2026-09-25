@@ -59,8 +59,12 @@ describe("derive — pre-update seed state", () => {
     expect(byKey["change:lab-ferritin-2026-01-27"].inputFactIds).toEqual(["lab-ferritin-2025-03-14", "lab-ferritin-2026-01-27"]);
   });
 
-  it("finds no matching follow-up result yet", () => {
+  it("finds no matching follow-up result yet, and states that chronology about the record", () => {
     expect(keys(seed).some((k) => k.startsWith("followup-match:"))).toBe(false);
+    expect(byKey["followup-no-later:fu-ferritin-2026-02-03"]).toMatchObject({
+      text: "No later ferritin result found in your record",
+      inputFactIds: ["fu-ferritin-2026-02-03"],
+    });
   });
 
   it("shows the medication as Prescribed from the explicit prescription only", () => {
@@ -81,6 +85,9 @@ describe("derive — after the live note's two facts are approved", () => {
 
   it("finds the matching follow-up result from the recommendation and the later result", () => {
     expect(byKey["followup-match:fu-ferritin-2026-02-03"].inputFactIds).toEqual(["fu-ferritin-2026-02-03", "doc-07-lab-1"]);
+    expect(byKey["followup-match:fu-ferritin-2026-02-03"].text).toBe("Matching follow-up result found · 25 Sep 2026");
+    // the "no later result" state is replaced, never shown alongside the match
+    expect(byKey["followup-no-later:fu-ferritin-2026-02-03"]).toBeUndefined();
   });
 
   it("moves the medication to Completed and the latest ferritin to 32", () => {
@@ -89,7 +96,7 @@ describe("derive — after the live note's two facts are approved", () => {
     const g = Object.fromEntries(view.latestGroups.map((x) => [x.kind, x]));
     expect(g.measurements.kind === "measurements" && [g.measurements.count, g.measurements.latestFactId]).toEqual([3, "doc-07-lab-1"]);
     expect(g.treatment.kind === "treatment" && g.treatment.latestEventId).toBe("doc-07-med-1");
-    expect(view.followUpsOnRecord.find((f) => f.factId === "fu-ferritin-2026-02-03")?.matchKey).toBe(
+    expect(view.followUpsOnRecord.find((f) => f.factId === "fu-ferritin-2026-02-03")?.stateKey).toBe(
       "followup-match:fu-ferritin-2026-02-03",
     );
   });
@@ -103,12 +110,15 @@ describe("derive — after the live note's two facts are approved", () => {
 describe("home view — summary-first, scalable, evidence-only", () => {
   const view = snapshotView(seed, derive(seed));
 
-  it("summarises what the record contains with deterministic counts only", () => {
+  it("summarises what the record contains (evidence coverage) with deterministic counts only", () => {
     expect(view.summary).toEqual({
       documentCount: 6,
-      topicCount: 2,
-      followUpCount: 2,
-      treatmentCount: 1,
+      documentTypes: [
+        { label: "imaging reports", count: 2 },
+        { label: "lab reports", count: 2 },
+        { label: "consultation note", count: 1 },
+        { label: "prescription", count: 1 },
+      ],
       firstDocumentDate: "2025-03-14",
       lastDocumentDate: "2026-03-12",
     });
@@ -126,10 +136,10 @@ describe("home view — summary-first, scalable, evidence-only", () => {
     expect(g.imaging.kind === "imaging" && g.imaging.latestExamId).toBe("img-thyroid-2026-03-12");
   });
 
-  it("'Follow-up on record' lists the latest documented recommendation per topic, with no match yet", () => {
+  it("'Follow-up on record' lists the latest recommendation per topic with its record chronology", () => {
     expect(view.followUpsOnRecord).toEqual([
-      { factId: "fu-ferritin-2026-02-03", matchKey: null },
-      { factId: "fu-imaging-2026-03-12", matchKey: null },
+      { factId: "fu-ferritin-2026-02-03", stateKey: "followup-no-later:fu-ferritin-2026-02-03" },
+      { factId: "fu-imaging-2026-03-12", stateKey: null },
     ]);
   });
 

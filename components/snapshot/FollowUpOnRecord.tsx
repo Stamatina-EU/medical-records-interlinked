@@ -10,6 +10,15 @@ import { ChevronIcon } from "@/components/shell/icons";
 import { CalculatedLabel, FactValue } from "@/components/ui/EvidenceLinks";
 import styles from "./snapshot.module.css";
 
+/**
+ * Home label only: drop a trailing "is recommended" ("Follow-up ultrasound in 12 months is
+ * recommended." -> "Follow-up ultrasound in 12 months."). The metadata line already says
+ * "Recommended …", and the exact source wording stays in the evidence drawer.
+ */
+function homeLabel(recommendation: string): string {
+  return recommendation.replace(/\s+is recommended\.?\s*$/i, ".");
+}
+
 export default function FollowUpOnRecord({ items, index }: { items: SnapshotView["followUpsOnRecord"]; index: EvidenceIndex }) {
   if (items.length === 0) return null;
   return (
@@ -21,14 +30,14 @@ export default function FollowUpOnRecord({ items, index }: { items: SnapshotView
         <p className={styles.moduleNote}>Carried forward from your documents</p>
       </div>
       <ul className={styles.list}>
-        {items.map(({ factId, matchKey }) => {
+        {items.map(({ factId, stateKey }) => {
           const fu = index.facts[factId] as FollowUp;
           const doc = index.documents[fu.source.documentId];
           return (
             <li key={factId} className={styles.listItem}>
               <FactValue factId={fu.id} className={styles.listButton}>
                 <span className={styles.listText}>
-                  <span className={styles.listTitle}>{fu.recommendation}</span>
+                  <span className={styles.listTitle}>{homeLabel(fu.recommendation)}</span>
                   <span className={styles.listMeta}>
                     Recommended {formatDate(fu.recommendedOn)}
                     {doc ? ` · from your ${doc.title.toLowerCase()}` : ""}
@@ -38,9 +47,9 @@ export default function FollowUpOnRecord({ items, index }: { items: SnapshotView
                   <ChevronIcon />
                 </span>
               </FactValue>
-              {matchKey && (
+              {stateKey && (
                 <div className={styles.listClaim}>
-                  <CalculatedLabel claimKey={matchKey} />
+                  <CalculatedLabel claimKey={stateKey} />
                 </div>
               )}
             </li>

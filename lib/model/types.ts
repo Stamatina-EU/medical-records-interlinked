@@ -108,7 +108,8 @@ export type CalculatedClaimKind =
   | "range_status"
   | "changed_since_previous"
   | "previously_outside_range"
-  | "followup_match";
+  | "followup_match"
+  | "followup_no_later_result";
 
 export type CalculatedClaim = {
   key: string;

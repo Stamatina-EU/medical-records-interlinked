@@ -40,6 +40,11 @@
   color: var(--ink-muted);
   text-align: left;
 }
+/* the MyHeDo source signature: teal document mark + quiet reference */
+.sourceRef svg {
+  color: var(--accent);
+  flex: none;
+}
 .sourceRef span {
   border-bottom: 1px solid transparent;
 }

@@ -96,7 +96,7 @@ Top to bottom:
 - After an approved update, a small neutral status line in patient language. Preferred when the metadata is available: "Updated from Follow-up consultation note · 25 Sep 2026". Otherwise: "Updated from your latest record". Internal terms like "source fact" never appear here.
 
 **B. Your record at a glance**
-- What the documented record contains, as deterministic counts from the structured facts, e.g. source documents, topics followed over time, follow-ups on record and treatments documented, plus the date span of the documents. No free-form or AI-written interpretation.
+- A concise record overview, not a set of metrics: the date span of the documents and the **evidence coverage** ("6 source documents · 2 imaging reports, 2 lab reports, 1 consultation note, 1 prescription"), because every item on Home links back to one of them. It doesn't repeat counts shown in the sections below, and there's no AI-written interpretation.
 - The entry point **Open Doctor Summary →** lives here.
 
 **C. What changed**
@@ -107,22 +107,24 @@ Top to bottom:
   - "Iron treatment marked Completed · documented 25 Sep 2026"
 
 **D. Latest in your record** — compact, grouped, scalable
-- One row per category (Measurements, Treatment / medication, Imaging), with a deterministic count, the latest documented item (which opens its evidence) and a **View** link into History. Never one card per value.
+- One row per category (Measurements, Treatment / medication, Imaging), with a deterministic count, the latest documented item (which opens its evidence), its **source reference** and a **View** link into History. Never one card per value.
+- **Source reference (MyHeDo's visual signature):** a quiet, tappable line with a teal document mark, e.g. "Lab report · 27 Jan 2026 · p. 2". It opens the evidence drawer or sheet. The page is the fact's verified page, shown only when the document has more than one page, and never invented.
 - Latest documented information only, as recorded, not a claim about the patient's state today. Longitudinal claims live in History and What changed.
 - If many values sit outside their supplied ranges, Home may show a deterministic count (e.g. "N measurements outside their supplied ranges"), never one card per value and never judgement words. *(Not shown in this POC by learner decision: that historical information belongs in History and, where relevant, What changed.)*
 
 **E. Follow-up on record**
 - An open list (separators, no card) of recommendations explicitly written in source documents, carried forward with their recommendation date and source, e.g. "Repeat ferritin in 3 months." · Recommended 3 Feb 2026 · from your consultation note.
-- Once a matching result exists, the derived "Matching follow-up result found" appears beneath the recommendation.
+- Beneath the ferritin recommendation, a **derived chronology state**: before a later ferritin result exists, "No later ferritin result found in your record". Once an approved later result exists, it becomes "Matching follow-up result found · 25 Sep 2026". It's scoped to the record (it doesn't say whether a test happened elsewhere), and it never says "due", "overdue", "late", "missed" or "should have been done". *(Learner decision; this transition is part of the slice 4 demo.)*
 - Never "To do", "Needs attention" or "To check". This section is documentary, not advice.
 
 **F. Your history**
-- Navigable destinations (Iron / Ferritin, Imaging follow-up) with factual counts, date spans and very quiet traces, leading into History.
+- Navigable destinations (Iron / Ferritin, Imaging follow-up) with factual counts and date spans, leading into History. There are no decorative charts or sparklines on Home; longitudinal visualisation belongs in History.
 
 Acceptance criteria:
 - [ ] On first load, Home shows Identity, Your record at a glance (with Open Doctor Summary), Latest in your record, Follow-up on record and Your history. What changed is absent.
-- [ ] Your record at a glance shows only deterministic counts and the document date span, with no interpretive words.
-- [ ] Latest in your record shows one grouped row per category, each with a count, the latest documented item (the medication with its documentation date) and a View link. Each latest item opens its evidence.
+- [ ] Your record at a glance shows only the document date span and evidence coverage, with no interpretive words.
+- [ ] Latest in your record shows one grouped row per category, each with a count, the latest documented item (the medication with its documentation date), a source reference and a View link. The latest item and its source reference both open its evidence.
+- [ ] Before the live update, the ferritin follow-up shows "No later ferritin result found in your record". After approval it shows "Matching follow-up result found · 25 Sep 2026". Both are derived and open "How this was determined".
 - [ ] Follow-up on record shows only recommendations from source documents, each opening its evidence.
 - [ ] Each Your history destination opens History on that topic.
 - [ ] After the live update is approved, What changed appears between the summary and Latest in your record, with the document type and date. Each item opens the evidence drawer.

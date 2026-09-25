@@ -190,11 +190,11 @@ Carried forward from `prd.md > Look and Feel` and `scope.md > Inspiration & Iden
 Implements `prd.md > Snapshot`. Route `/` (`app/page.tsx`, dynamic).
 It is summary-first and scalable, composed from a pure view model (`lib/view/snapshot.ts`) that returns deterministic counts and the latest item per category. *(Revised through the slice 3 reviews.)*
 - **Identity** (`SnapshotHeader`): monogram, name, "Record updated …", **Add record**, and after an update "Updated from {document type} · {date}".
-- **Your record at a glance** (`HealthSummary`): counts of source documents, topics followed over time, follow-ups on record and treatments documented, the document date span, and **Open Doctor Summary →**.
+- **Your record at a glance** (`HealthSummary`): the document date span, evidence coverage (source-document count by type) and **Open Doctor Summary →**.
 - **What changed:** rendered only when `latestUpdate` exists (slice 4), between the summary and Latest in your record. It lists the change descriptions produced by the engine, and each opens the drawer.
-- **Latest in your record** (`LatestInRecord`): one grouped row per category (measurements, treatment / medication, imaging), each with a count, the latest documented item (opening its evidence) and a View link into History.
-- **Follow-up on record** (`FollowUpOnRecord`): an open list of the latest documented recommendation per topic, with the "Matching follow-up result found" derived claim when it exists.
-- **Your history** (`HistoryTopics`): destinations to `/history/iron` and `/history/imaging`, with factual counts, date spans and very quiet traces.
+- **Latest in your record** (`LatestInRecord`): one grouped row per category (measurements, treatment / medication, imaging), each with a count, the latest documented item (opening its evidence), a `SourceRef` ("Lab report · 27 Jan 2026 · p. 2", with the verified page only for multi-page documents) and a View link into History.
+- **Follow-up on record** (`FollowUpOnRecord`): an open list of the latest documented recommendation per topic, with its derived chronology state: `followup_no_later_result` ("No later ferritin result found in your record", input: the recommendation) before a later result exists, then `followup_match` ("Matching follow-up result found · {date}", inputs: the recommendation + the result).
+- **Your history** (`HistoryTopics`): destinations to `/history/iron` and `/history/imaging`, with factual counts and date spans (no sparklines on Home).
 
 ### History Page (Topic Template)
 Implements `prd.md > History (topic template)`. Route `/history/[topic]` with topic `iron` | `imaging` (`app/history/[topic]/page.tsx`, dynamic). The `History` nav item goes to `/history/iron`.

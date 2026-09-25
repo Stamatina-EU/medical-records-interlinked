@@ -9,7 +9,7 @@ import type { EvidenceIndex } from "@/lib/evidence/index";
 import type { LatestGroup } from "@/lib/view/snapshot";
 import { formatDate } from "@/lib/text/dates";
 import { ChevronIcon } from "@/components/shell/icons";
-import { CalculatedLabel, FactValue } from "@/components/ui/EvidenceLinks";
+import { CalculatedLabel, FactValue, SourceRef } from "@/components/ui/EvidenceLinks";
 import styles from "./snapshot.module.css";
 
 const TITLES: Record<LatestGroup["kind"], string> = {
@@ -80,7 +80,10 @@ export default function LatestInRecord({ groups, index }: { groups: LatestGroup[
               <p className={styles.groupCount}>{g.countLabel}</p>
             </div>
             <div className={styles.groupBody}>
-              <Latest group={g} index={index} />
+              <div className={styles.groupLatestLine}>
+                <Latest group={g} index={index} />
+              </div>
+              <SourceRef factId={g.kind === "measurements" ? g.latestFactId : g.kind === "treatment" ? g.latestEventId : g.latestExamId} />
             </div>
             <Link href={g.href} className={styles.groupLink} aria-label={VIEW_LABEL[g.kind]}>
               <span className={styles.groupLinkText}>View</span>

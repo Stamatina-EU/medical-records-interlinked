@@ -41,21 +41,37 @@ export function SourceMarker({ factId }: { factId: string }) {
   );
 }
 
-export function SourceRef({ factId, prefix = "From" }: { factId: string; prefix?: string }) {
+const DOC_TYPE_SHORT: Record<string, string> = {
+  lab_report: "Lab report",
+  imaging_report: "Imaging report",
+  consultation_note: "Consultation note",
+  prescription: "Prescription",
+};
+
+/**
+ * The MyHeDo source signature: "Lab report · 27 Jan 2026 · p. 2". Quiet, consistent, tappable;
+ * opens the evidence drawer / sheet. The page is the VERIFIED page of the fact, shown only when
+ * the document has more than one page (where it genuinely helps).
+ */
+export function SourceRef({ factId }: { factId: string }) {
   const { open, index } = useEvidence();
   const fact = index.facts[factId];
   const doc = fact ? index.documents[fact.source.documentId] : undefined;
   if (!fact || !doc) return null;
+  const type = DOC_TYPE_SHORT[doc.documentType] ?? doc.title;
+  const date = documentShortLabel(doc).split(" · ")[1];
+  const page = doc.pageCount > 1 ? ` · p. ${fact.source.page}` : "";
   return (
     <button
       type="button"
       className={styles.sourceRef}
       onClick={() => open({ type: "fact", id: factId })}
-      aria-label={`Show evidence: ${documentShortLabel(doc)}, page ${fact.source.page}`}
+      aria-label={`Show evidence: ${type}, ${date}, page ${fact.source.page}`}
     >
       <DocIcon />
       <span>
-        {prefix} {doc.title.toLowerCase()} · {documentShortLabel(doc).split(" · ")[1]}
+        {type} · {date}
+        {page}
       </span>
     </button>
   );

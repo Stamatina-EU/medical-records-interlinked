@@ -9,7 +9,8 @@
 import type { CalculatedClaim, ImagingExam, TrustedState } from "@/lib/model/types";
 import { ferritinSeries, followUps, latestMedicationStatus } from "@/lib/engine/derive";
 
-export type FollowUpItem = { factId: string; matchKey: string | null };
+/** stateKey: the derived chronology claim for this follow-up (match found, or no later result), if any */
+export type FollowUpItem = { factId: string; stateKey: string | null };
 
 export type HistoryTopicSummary = {
   topic: "iron" | "imaging";
@@ -20,8 +21,6 @@ export type HistoryTopicSummary = {
   firstDate: string | null;
   lastDate: string | null;
   extra: string | null;
-  /** documented points for a very quiet visual timeline: values (iron) or dates only (imaging) */
-  points: { date: string; value: number | null }[];
 };
 
 export type LatestGroup =
@@ -34,9 +33,8 @@ export type SnapshotView = {
   lastUpdated: string; // ISO date-time
   summary: {
     documentCount: number;
-    topicCount: number;
-    followUpCount: number;
-    treatmentCount: number;
+    /** evidence coverage: how many documents of each kind back this record */
+    documentTypes: { label: string; count: number }[];
     firstDocumentDate: string | null;
     lastDocumentDate: string | null;
   };
@@ -65,8 +63,8 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
     const list = followUps(state, topic);
     const fu = list[list.length - 1];
     if (!fu) continue;
-    const key = `followup-match:${fu.id}`;
-    followUpsOnRecord.push({ factId: fu.id, matchKey: has(key) ? key : null });
+    const stateKey = [`followup-match:${fu.id}`, `followup-no-later:${fu.id}`].find(has) ?? null;
+    followUpsOnRecord.push({ factId: fu.id, stateKey });
   }
 
   // Latest in your record — one compact group per category, never one card per value
@@ -114,7 +112,6 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
       firstDate: series[0].measuredOn,
       lastDate: series[series.length - 1].measuredOn,
       extra: med ? med.ep.name.split(" (")[0] : null,
-      points: series.map((m) => ({ date: m.measuredOn, value: m.value })),
     });
   }
   if (exams.length > 0) {
@@ -126,20 +123,28 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
       firstDate: exams[0].performedOn,
       lastDate: exams[exams.length - 1].performedOn,
       extra: null,
-      points: exams.map((e) => ({ date: e.performedOn, value: null })),
     });
   }
 
   const docDates = state.documents.map((d) => d.date).sort();
+  const TYPE_LABELS: Record<string, [string, string]> = {
+    lab_report: ["lab report", "lab reports"],
+    imaging_report: ["imaging report", "imaging reports"],
+    consultation_note: ["consultation note", "consultation notes"],
+    prescription: ["prescription", "prescriptions"],
+  };
+  const typeCounts = new Map<string, number>();
+  for (const d of state.documents) typeCounts.set(d.documentType, (typeCounts.get(d.documentType) ?? 0) + 1);
+  const documentTypes = [...typeCounts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([type, count]) => ({ label: (TYPE_LABELS[type] ?? [type, type])[count === 1 ? 0 : 1], count }));
 
   return {
     patientName: state.patient.displayName,
     lastUpdated: state.latestUpdate?.approvedAt ?? state.seededAt,
     summary: {
       documentCount: state.documents.length,
-      topicCount: history.length,
-      followUpCount: followUpsOnRecord.length,
-      treatmentCount: treatments.length,
+      documentTypes,
       firstDocumentDate: docDates[0] ?? null,
       lastDocumentDate: docDates[docDates.length - 1] ?? null,
     },

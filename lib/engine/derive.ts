@@ -12,6 +12,7 @@ import type {
   MedicationStatusEvent,
   TrustedState,
 } from "@/lib/model/types";
+import { formatDate } from "@/lib/text/dates";
 
 export function ferritinSeries(state: TrustedState): LabMeasurement[] {
   return state.facts
@@ -91,19 +92,30 @@ export function derive(state: TrustedState): CalculatedClaim[] {
     }
   }
 
-  // Matching follow-up result found — chronology only, no judgement of timing
+  // Follow-up chronology — facts about the RECORD only, never timing judgements
+  // (no "due", "overdue", "late", "missed").
   for (const fu of followUps(state, "iron")) {
     if (!("analyte" in fu.target) || fu.target.analyte !== "ferritin") continue;
     const match = series.find((m) => m.measuredOn > fu.recommendedOn);
-    if (!match) continue;
-    claims.push({
-      key: `followup-match:${fu.id}`,
-      kind: "followup_match",
-      text: "Matching follow-up result found",
-      ruleDescription:
-        "An earlier record documented a recommendation to repeat ferritin, and a later approved ferritin result exists. This states chronology only — not whether the follow-up was on time.",
-      inputFactIds: [fu.id, match.id],
-    });
+    if (match) {
+      claims.push({
+        key: `followup-match:${fu.id}`,
+        kind: "followup_match",
+        text: `Matching follow-up result found · ${formatDate(match.measuredOn)}`,
+        ruleDescription:
+          "An earlier record documented a recommendation to repeat ferritin, and a later approved ferritin result exists. This states chronology only — not whether the follow-up was on time.",
+        inputFactIds: [fu.id, match.id],
+      });
+    } else {
+      claims.push({
+        key: `followup-no-later:${fu.id}`,
+        kind: "followup_no_later_result",
+        text: "No later ferritin result found in your record",
+        ruleDescription:
+          "Every approved ferritin result in your record was checked, and none is dated after this recommendation. This describes your record only — it does not say whether a test happened elsewhere, and it is not a judgement about timing.",
+        inputFactIds: [fu.id],
+      });
+    }
   }
 
   return claims;
