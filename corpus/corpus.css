@@ -1,0 +1,48 @@
+/* Styling for the SYNTHETIC demo documents. Rendered to PDF by scripts/build-corpus.ts. */
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 10.5pt; color: #1b1b1b; }
+
+.page {
+  width: 210mm;
+  height: 297mm;
+  padding: 18mm 18mm 16mm;
+  position: relative;
+  page-break-after: always;
+  overflow: hidden;
+}
+.page:last-child { page-break-after: auto; }
+
+.masthead { display: flex; justify-content: space-between; align-items: flex-end;
+  border-bottom: 2px solid var(--brand, #333); padding-bottom: 6mm; margin-bottom: 7mm; }
+.org { font-size: 15pt; font-weight: bold; color: var(--brand, #333); letter-spacing: 0.2px; }
+.org-sub { font-size: 8.5pt; color: #555; margin-top: 1mm; }
+.doc-title { font-size: 12pt; text-transform: uppercase; letter-spacing: 1px; color: #333; text-align: right; }
+
+.meta { width: 100%; border-collapse: collapse; margin-bottom: 7mm; font-size: 9.5pt; }
+.meta td { padding: 1.2mm 0; vertical-align: top; }
+.meta td.k { color: #555; width: 42mm; }
+
+h2 { font-size: 10.5pt; text-transform: uppercase; letter-spacing: 0.8px; color: var(--brand, #333);
+  margin: 7mm 0 2.5mm; border-bottom: 1px solid #ccc; padding-bottom: 1.5mm; }
+p { margin: 0 0 2.5mm; line-height: 1.45; }
+
+table.results { width: 100%; border-collapse: collapse; font-size: 10pt; }
+table.results th { text-align: left; font-weight: normal; color: #555; font-size: 8.5pt;
+  text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #999; padding: 1.5mm 2mm 1.5mm 0; }
+table.results td { padding: 2mm 2mm 2mm 0; border-bottom: 1px solid #e2e2e2; }
+table.results td.num { font-family: "Courier New", monospace; }
+
+.note { font-size: 8.5pt; color: #555; margin-top: 4mm; }
+.signoff { margin-top: 10mm; font-size: 9.5pt; color: #333; }
+
+.synthetic { position: absolute; left: 18mm; right: 18mm; bottom: 9mm; border-top: 1px solid #bbb;
+  padding-top: 2mm; font-size: 7.5pt; color: #666; display: flex; justify-content: space-between; }
+
+/* Issuer looks — all names are invented */
+.northfield { --brand: #2d4a6b; }
+.riverside  { --brand: #3d5a3a; }
+.harbourview { --brand: #5a3d52; font-family: Georgia, "Times New Roman", serif; }
+.clinic     { --brand: #4a4a4a; font-family: Georgia, "Times New Roman", serif; }
+.pharmacy   { --brand: #2f5d62; }
