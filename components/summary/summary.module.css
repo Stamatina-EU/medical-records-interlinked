@@ -1,0 +1,172 @@
+/*
+ * Doctor Summary — the one deliberately typeset clinical brief inside the app:
+ * a single paper sheet, ~68ch measure, serif section titles over thin rules, compact sans body,
+ * small source chips, and a numbered source list at the foot.
+ */
+.sheet {
+  max-width: 820px;
+  margin: 0 auto;
+  background: var(--surface-raised);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  box-shadow: var(--shadow-2);
+  padding: var(--space-7) 64px var(--space-6);
+}
+
+.head {
+  padding-bottom: var(--space-4);
+  border-bottom: 2px solid var(--ink);
+}
+
+.kicker {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.patient {
+  font-family: var(--font-evidence);
+  font-size: 2rem;
+  font-weight: 600;
+  margin-top: var(--space-2);
+  line-height: 1.15;
+}
+
+.synthetic {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--ink-muted);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  padding: 1px 6px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.meta {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin-top: var(--space-2);
+}
+
+.scope {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin-top: var(--space-2);
+  max-width: 68ch;
+}
+
+.section {
+  margin-top: var(--space-5);
+}
+
+.sectionTitle {
+  font-family: var(--font-evidence);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--rule-strong);
+  margin-bottom: var(--space-2);
+}
+
+.statements {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.statement {
+  max-width: 68ch;
+  font-size: var(--text-base);
+  line-height: 1.6;
+  padding: var(--space-1) 0;
+}
+
+.derivedText {
+  color: var(--ink-muted);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: 1px;
+  margin-left: 2px;
+  padding: 0 7px;
+  min-height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--evidence-border);
+  background: var(--evidence-paper);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+.chip:hover {
+  border-color: var(--accent);
+}
+
+.chipDerived {
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink-muted);
+}
+
+.updated {
+  /* same quiet trace as Home: a thin accent-wash stripe, no fill */
+  background: linear-gradient(var(--accent-wash), var(--accent-wash)) no-repeat left / 3px 100%;
+  padding-left: var(--space-3);
+}
+
+.updatedLabel {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--accent-ink);
+}
+
+.sources {
+  margin-top: var(--space-6);
+}
+
+.sourceList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+.sourceList li {
+  padding: 3px 0;
+}
+
+.sourceN {
+  display: inline-block;
+  min-width: 24px;
+  font-weight: 600;
+  color: var(--accent-ink);
+}
+
+.sourceLink {
+  color: var(--ink);
+}
+
+@media (max-width: 860px) {
+  .sheet {
+    padding: var(--space-5) var(--space-4);
+    border-radius: 0;
+    margin: 0 calc(-1 * var(--space-4));
+    border-left: none;
+    border-right: none;
+  }
+  .patient {
+    font-size: 1.625rem;
+  }
+  .chip {
+    min-height: 28px;
+    padding: 0 9px;
+  }
+}

@@ -101,7 +101,7 @@ Build mode: fast (concise explanations, no full code walkthroughs; extra trust c
   Learner check: Open History → Iron / Ferritin before and after an update (use `demo:reset` to compare). Does the chart and row layout read as a record across time, and does each row keep its own lab's range? Click "Matching result found" and confirm the drawer shows both the recommendation and the later result. Switch to Imaging follow-up and click "last related examination" to see the comparison sentence.
   Commit: `Add longitudinal History view for both topics`
 
-- [ ] **6. The Doctor Summary reflects the approved evidence, and the whole demo runs from a production build**
+- [x] **6. The Doctor Summary reflects the approved evidence, and the whole demo runs from a production build**
   Becomes usable:
   - `/summary` is a typeset one-page brief with sections A–E. Each appears only when supported, with no absence statements. Every line has a source chip, and chips open the evidence drawer. A numbered Sources list sits at the foot.
   - Before the update it shows the pre-update facts. After approval it shows 32 μg/L, oral iron Completed and the follow-up line, with no regeneration step.
@@ -126,7 +126,7 @@ Build mode: fast (concise explanations, no full code walkthroughs; extra trust c
 
 Slice 1 → mechanically verified only · Slice 5 → continue unless a material issue appears.
 
-- [ ] Trust-pipeline checkpoint (report, no visual review) — after slice 2. It covers the corpus that exists, the `verify:seed` result, preflight results across all runs, the model used, whether both expected facts passed deterministic verification every run, and any verifier or extraction compromise or deviation from spec. Don't proceed silently if the pipeline differs materially from spec.
+- [x] Trust-pipeline checkpoint (report, no visual review) — after slice 2. It covers the corpus that exists, the `verify:seed` result, preflight results across all runs, the model used, whether both expected facts passed deterministic verification every run, and any verifier or extraction compromise or deviation from spec. Don't proceed silently if the pipeline differs materially from spec.
 - [x] Early usable behavior explored — after slice 3 (Snapshot + evidence drawer): hands-on visual and provenance review. Covers visual direction, typography pairing and drawer feel.
 - [x] Kernel hands-on review — **STOP** after slice 4. The learner tries Add record → AI proposes → code verifies → patient reviews evidence → Apply → deterministic consequences → trusted state updates, before History and the Doctor Summary are built.
 - [ ] Final kick-the-tires exploration and feedback completed — after slice 6, on the production build
@@ -191,3 +191,12 @@ Activity mode:
   - A matched follow-up shows plain chronology ("dated 7 months after the recommendation"), never a timing judgement.
   - The History follow-up list keeps the full source wording; the shortened label is a Home-only presentation.
 - Small internal helpers added outside the planned tree: `lib/text/dates.ts` (date parse/format) and `lib/store/paths.ts` (seed/runtime locations). `vitest.config.mts` uses the ESM extension.
+- Bookkeeping: the slice 2 trust-pipeline checkpoint was approved by the learner in-session (5/5 preflight) but its box was never ticked. It is ticked with slice 6; no work changed.
+- Slice 6 notes (Doctor Summary + production-build demo flow):
+  - `lib/summary/compose.ts` is pure templates with no AI. Sections appear only when supported. Every statement carries fact or derived-claim refs. Source numbers follow first citation, and the chips show those numbers ("derived · 2, 4" for calculated lines) and open the same evidence drawer.
+  - "Current medication" appears only when a status is explicitly Current, so the demo shows "Medication / recent treatment" instead. A matched follow-up is stated positively ("A later approved ferritin result has been found (date)"). The unmatched case is omitted, never written as an absence.
+  - The summary header reads "fictional · synthetic demo record" beside the patient name, so a screenshot of the brief can't be mistaken for a real record.
+  - Latest-update marks reuse Home's quiet 3px accent-wash stripe and the shared "Updated from latest record" label.
+  - A small `app/icon.svg` (accent square, document glyph) was added so the production console shows no favicon 404 on camera.
+  - Production dry run: `npm run build` produced all routes dynamic. `npm run start` → reset → Home → Summary (8 chips) → drawer → Add record with the live model → What changed → Summary shows 3 results, 32 μg/L, Completed with earlier Prescribed, and the match. It persists in a fresh browser context. `demo:reset` returns to the seed, with What changed hidden again. No console errors and no mobile horizontal overflow.
+  - Dev gotcha found: `next build` while `next dev` is still running on the same `.next` breaks the dev server (500s), and stopping the shell can leave Next's node child holding port 3000. Stop the dev server fully before building. The README's run steps use the production build only.
