@@ -27,9 +27,10 @@ export function extractionConfig(): { model: string; effort: Effort } {
 /** The call could not be completed (network, auth, rate limit, server error): the UI offers "Try again". */
 export class ExtractionUnavailableError extends Error {}
 
+/** `code` is fixed and content-free; `reason` is a short developer note that never quotes the document or model output. */
 export type ExtractionCallResult =
   | { status: "ok"; extraction: Extraction; model: string }
-  | { status: "unusable"; reason: string; model: string };
+  | { status: "unusable"; code: "refused" | "incomplete" | "invalid_output"; reason: string; model: string };
 
 export async function extractFacts(pages: string[]): Promise<ExtractionCallResult> {
   const { model, effort } = extractionConfig();
@@ -38,7 +39,7 @@ export async function extractFacts(pages: string[]): Promise<ExtractionCallResul
   try {
     client = new OpenAI({ timeout: 60_000, maxRetries: 2 }); // reads OPENAI_API_KEY
   } catch (err) {
-    throw new ExtractionUnavailableError(`OpenAI client could not start: ${(err as Error).message}`);
+    throw new ExtractionUnavailableError(`OpenAI client could not start (${(err as Error).name})`);
   }
 
   try {
@@ -55,21 +56,23 @@ export async function extractFacts(pages: string[]): Promise<ExtractionCallResul
     const refused = response.output.some(
       (item) => item.type === "message" && item.content.some((c) => c.type === "refusal"),
     );
-    if (refused) return { status: "unusable", reason: "the model declined to process this document", model: used };
+    if (refused) return { status: "unusable", code: "refused", reason: "the model declined to process this document", model: used };
     if (response.status === "incomplete") {
       const why = response.incomplete_details?.reason ?? "unknown reason";
-      return { status: "unusable", reason: `the model's answer was incomplete (${why})`, model: used };
+      return { status: "unusable", code: "incomplete", reason: `the model's answer was incomplete (${why})`, model: used };
     }
     if (!response.output_parsed) {
-      return { status: "unusable", reason: "the model's answer did not match the schema", model: used };
+      return { status: "unusable", code: "invalid_output", reason: "the model's answer did not match the schema", model: used };
     }
     return { status: "ok", extraction: response.output_parsed, model: used };
   } catch (err) {
     if (err instanceof OpenAI.APIError) {
       // Covers connection errors, timeouts, auth, rate limits and 5xx — all retryable from the user's view.
-      throw new ExtractionUnavailableError(`${err.constructor.name}: ${err.message}`);
+      // Only the error class and HTTP status: provider messages can echo request details.
+      throw new ExtractionUnavailableError(`${err.constructor.name}${err.status ? ` (HTTP ${err.status})` : ""}`);
     }
     // Anything else (e.g. output that failed schema parsing) means the answer cannot be used.
-    return { status: "unusable", reason: `the model's answer could not be parsed (${(err as Error).message})`, model };
+    // The parser's message can quote model output, so it is not kept.
+    return { status: "unusable", code: "invalid_output", reason: `the model's answer could not be parsed (${(err as Error).name})`, model };
   }
 }

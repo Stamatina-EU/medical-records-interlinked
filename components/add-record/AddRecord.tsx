@@ -20,9 +20,19 @@ type Phase =
   | { kind: "processing"; file: File }
   | { kind: "review"; proposal: Proposal; state: TrustedState; rejected: Set<string> }
   | { kind: "applying"; proposal: Proposal; state: TrustedState; rejected: Set<string> }
-  | { kind: "unusable" }
+  // each failure phase mirrors an actual pipeline outcome (lib/extraction/pipeline.ts)
+  | { kind: "unsupported_file"; code: "not_pdf" | "too_large" | "damaged_pdf" }
+  | { kind: "no_text" }
+  | { kind: "no_supported_facts" }
+  | { kind: "no_verified_facts" }
   | { kind: "no_changes" }
-  | { kind: "unavailable"; file: File };
+  | { kind: "processing_failed"; file: File; retryable: boolean };
+
+const UNSUPPORTED_TITLE: Record<Extract<Phase, { kind: "unsupported_file" }>["code"], string> = {
+  not_pdf: "This file isn't a PDF.",
+  too_large: "This file is larger than 10 MB.",
+  damaged_pdf: "This PDF couldn't be opened.",
+};
 
 function factHeadline(f: Proposal["facts"][number], state: TrustedState): { label: string; value: string } {
   if (f.kind === "lab_measurement") {
@@ -48,18 +58,25 @@ export default function AddRecord() {
     body.append("file", file);
     try {
       const res = await fetch("/api/records/extract", { method: "POST", body });
-      const data = await res.json().catch(() => ({ status: "unavailable" }));
+      const data = await res.json().catch(() => ({ status: "processing_failed", retryable: true }));
       if (data.status === "proposal") {
         setPhase({ kind: "review", proposal: data.proposal, state: data.state, rejected: new Set() });
       } else if (data.status === "no_changes") {
         setPhase({ kind: "no_changes" });
-      } else if (data.status === "unusable") {
-        setPhase({ kind: "unusable" });
+      } else if (data.status === "no_text") {
+        setPhase({ kind: "no_text" });
+      } else if (data.status === "no_supported_facts") {
+        setPhase({ kind: "no_supported_facts" });
+      } else if (data.status === "no_verified_facts") {
+        setPhase({ kind: "no_verified_facts" });
+      } else if (data.status === "unsupported_file" && data.code in UNSUPPORTED_TITLE) {
+        setPhase({ kind: "unsupported_file", code: data.code });
       } else {
-        setPhase({ kind: "unavailable", file });
+        setPhase({ kind: "processing_failed", file, retryable: data.retryable !== false });
       }
     } catch {
-      setPhase({ kind: "unavailable", file });
+      // the request itself failed (network): nothing reached the pipeline, so retrying is reasonable
+      setPhase({ kind: "processing_failed", file, retryable: true });
     }
   }, []);
 
@@ -163,8 +180,28 @@ function Panel({
               <p className={styles.messageText}>Extracted facts will be shown for your review before anything changes.</p>
             </div>
           )}
-          {phase.kind === "unusable" && (
-            <Message title="This record couldn't be read into structured facts." text="Your history hasn't changed.">
+          {phase.kind === "unsupported_file" && (
+            <Message title={UNSUPPORTED_TITLE[phase.code]} text="Your history hasn't changed.">
+              <button type="button" className={styles.secondary} onClick={onClose}>
+                Close
+              </button>
+            </Message>
+          )}
+          {phase.kind === "no_text" && (
+            <Message
+              title="This record doesn't contain readable text."
+              text="This prototype currently works with text-based PDFs. Scanned documents would require OCR, which is outside this proof of concept."
+            >
+              <button type="button" className={styles.secondary} onClick={onClose}>
+                Close
+              </button>
+            </Message>
+          )}
+          {phase.kind === "no_supported_facts" && (
+            <Message
+              title="No supported history changes were found in this record."
+              text="This prototype currently extracts a limited set of demonstrated facts. Your history hasn't changed."
+            >
               <button type="button" className={styles.secondary} onClick={onClose}>
                 Close
               </button>
@@ -177,13 +214,25 @@ function Panel({
               </button>
             </Message>
           )}
-          {phase.kind === "unavailable" && (
-            <Message title="We couldn't read this record just now." text="Your history hasn't changed.">
-              <button type="button" className={styles.primary} onClick={() => onRetry(phase.file)}>
-                Try again
-              </button>
+          {phase.kind === "no_verified_facts" && (
+            <Message
+              title="No verified history changes were found in this record."
+              text="Possible facts were found, but they couldn't be verified against the source wording. Your history hasn't changed."
+            >
               <button type="button" className={styles.secondary} onClick={onClose}>
-                Cancel
+                Close
+              </button>
+            </Message>
+          )}
+          {phase.kind === "processing_failed" && (
+            <Message title="We couldn't process this record." text="Your history hasn't changed.">
+              {phase.retryable && (
+                <button type="button" className={styles.primary} onClick={() => onRetry(phase.file)}>
+                  Try again
+                </button>
+              )}
+              <button type="button" className={styles.secondary} onClick={onClose}>
+                {phase.retryable ? "Cancel" : "Close"}
               </button>
             </Message>
           )}

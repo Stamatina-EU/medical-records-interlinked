@@ -238,7 +238,7 @@ export function verifyImagingFact(
 export type Exclusion = { kind: "lab" | "medication"; reason: string };
 
 export type VerificationOutcome =
-  | { status: "unusable"; reason: string }
+  | { status: "unusable"; code: "no_candidate_facts" | "document_date_unverified" | "none_verified"; reason: string }
   | {
       status: "ok";
       documentDate: string;
@@ -254,10 +254,13 @@ export function verifyExtraction(
   ctx: { documentId: string; episodes: MedicationEpisode[] },
 ): VerificationOutcome {
   const doc = extraction.document;
+  if (extraction.labMeasurements.length === 0 && extraction.medicationStatements.length === 0) {
+    return { status: "unusable", code: "no_candidate_facts", reason: "the model proposed no facts of a supported type" };
+  }
   const docLoc = locateExcerpt(pages, doc.page, doc.excerpt);
-  if (!docLoc.ok) return { status: "unusable", reason: `document date: ${docLoc.reason}` };
+  if (!docLoc.ok) return { status: "unusable", code: "document_date_unverified", reason: `document date: ${docLoc.reason}` };
   const docDate = verifyDocumentDate(doc.documentDate, docLoc.verifiedExcerpt);
-  if (!docDate.ok) return { status: "unusable", reason: `document date: ${docDate.reason}` };
+  if (!docDate.ok) return { status: "unusable", code: "document_date_unverified", reason: `document date: ${docDate.reason}` };
 
   const verified: ProposedFact[] = [];
   const exclusions: Exclusion[] = [];
@@ -300,7 +303,7 @@ export function verifyExtraction(
   });
 
   if (verified.length === 0) {
-    return { status: "unusable", reason: "no extracted fact could be verified against the source" };
+    return { status: "unusable", code: "none_verified", reason: "no extracted fact could be verified against the source" };
   }
   return {
     status: "ok",

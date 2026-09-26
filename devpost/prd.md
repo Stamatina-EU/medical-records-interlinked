@@ -299,7 +299,7 @@ Acceptance criteria:
 - **First load / normal use.** The pre-built history appears immediately. There's no empty state, and What changed is absent.
 - **Processing.** A neutral progress state. The history underneath is unchanged.
 - **Proposal ready.** The review panel shows. Nothing is trusted yet.
-- **Extraction unusable or schema-invalid.** It can't proceed to review. The patient sees a calm, factual message, e.g. "This record couldn't be read into structured facts. Your history hasn't changed." Nothing is imported.
+- **Extraction can't proceed to review.** The patient sees a calm, factual message that matches what actually happened: no readable text ("This record doesn't contain readable text."), text read but no supported fact proposed ("No supported history changes were found in this record."), supported facts proposed but none verified against the source ("No verified history changes were found in this record."), or the AI/structured output failed ("We couldn't process this record.", with Try again where it may help). Nothing is imported.
 - **Valid record, nothing new** (e.g. the same note added again after it's been approved). The message is neutral: "No new history changes found. Your documented history hasn't changed." There's no warning or failure language. **The document isn't persisted.** This isn't a document archive.
 - **All facts rejected.** Apply is disabled. Cancel or close imports nothing, including the document, and the history is unchanged.
 - **Cancelled or closed review.** Nothing is imported.

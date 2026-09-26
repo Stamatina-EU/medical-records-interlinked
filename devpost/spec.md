@@ -222,7 +222,7 @@ The pages pass the drawer everything it needs (facts, documents, calculated clai
 ### Add Record Modal and Processing State
 Implements `prd.md > Adding a Record and Reviewing Proposed Changes`. A file input limited to `application/pdf` (drag-and-drop only if it's essentially free). On selection it posts `multipart/form-data` to `/api/records/extract` and shows: "Reading this record… Extracted facts will be shown for your review before anything changes." No sparkle styling.
 
-If the call fails (network, timeout, API error), it shows "We couldn't read this record just now. Your history hasn't changed." with **Try again**, which resends the same file, and **Cancel**.
+If the AI call fails (network, timeout, API error, truncated or malformed structured output), it shows "We couldn't process this record. Your history hasn't changed." with **Try again**, which resends the same file, and **Cancel**. A model refusal shows the same message with **Close** only.
 
 ### Review Panel
 Implements `prd.md > Adding a Record and Reviewing Proposed Changes`.
@@ -231,7 +231,13 @@ Implements `prd.md > Adding a Record and Reviewing Proposed Changes`.
 - **"This would also update…"**: consequences from the engine's `preview()`, rerun in the browser whenever the reject toggles change.
 - **Actions:** **Add all to my record** (nothing excluded) or **Add selected** (some excluded). Disabled when every fact is excluded. On mobile the actions are sticky at the bottom of the sheet. **Cancel** and the close control always discard the proposal: the client calls `/api/records/cancel`, and nothing is imported.
 - **Nothing-new result**: if the server returns `status: "no_changes"`, the panel shows "No new history changes found. Your documented history hasn't changed." with a Close button.
-- **Unusable result**: if the server returns `status: "unusable"`, it shows "This record couldn't be read into structured facts. Your history hasn't changed."
+- **Failure states, one per real pipeline outcome** (`lib/extraction/pipeline.ts`):
+  - `no_text`: "This record doesn't contain readable text." / "This prototype currently works with text-based PDFs. Scanned documents would require OCR, which is outside this proof of concept."
+  - `no_supported_facts` (no supported fact type was proposed): "No supported history changes were found in this record." / "This prototype currently extracts a limited set of demonstrated facts. Your history hasn't changed."
+  - `no_verified_facts` (supported facts were proposed, but every one failed deterministic verification, including an unverifiable document date): "No verified history changes were found in this record." / "Possible facts were found, but they couldn't be verified against the source wording. Your history hasn't changed."
+  - `processing_failed`: "We couldn't process this record." / "Your history hasn't changed." (Try again when retryable)
+  - `no_changes`: "No new history changes found."
+  - `unsupported_file` (not a PDF, over 10 MB, or a PDF that can't be opened): a one-line factual title plus "Your history hasn't changed."
 - Model confidence isn't shown in the POC (`prd.md > Open Questions`, resolved here: the schema doesn't ask for it, which keeps confidence out of the trust path entirely).
 
 ### Latest Update Mark
@@ -239,11 +245,11 @@ Implements `prd.md > Latest Update Marking`. A small presentational component. I
 
 ### Extract Route
 `POST /api/records/extract` (`app/api/records/extract/route.ts`). Orchestrates the server steps in order:
-1. **PDF Text Reader** → pages. No text, or an unreadable file → `unusable`.
-2. **Extraction Client** → proposed facts. API error → HTTP 502, and the client shows the retry state. A refusal, `max_tokens` or a null parse → `unusable`.
+1. **PDF Text Reader** → pages. Not a PDF, too large, or can't be opened → `unsupported_file`. No text layer → `no_text` (the AI is never called).
+2. **Extraction Client** → proposed facts. API error → `processing_failed` (`ai_unavailable`, HTTP 502, retryable). A refusal (`ai_refused`, not retryable), `max_output_tokens` (`ai_incomplete`) or a null/invalid parse (`ai_invalid_output`) → `processing_failed`.
 3. **Fact Verifier** → verified and excluded facts.
 4. **Engine dedupe:** drops verified facts that already exist in the approved state.
-5. If no verified facts remain because all failed → `unusable`. If they were all duplicates → `no_changes`.
+5. No proposed facts of a supported type → `no_supported_facts` (`no_candidate_facts`). Supported facts proposed but an unverifiable document date (`document_date_unverified`) or every fact failing verification (`none_verified`) → `no_verified_facts`. If the verified facts were all duplicates → `no_changes`. Outcomes and server logs carry only a status and a fixed reason code, never document text, model output or extracted values.
 6. Otherwise, the **Proposal Store** saves `{proposalId, pdf, documentMeta, verifiedFacts, excludedCount}`, and the route returns it with `preview()`.
 
 The trusted state isn't touched at any point.
@@ -309,7 +315,7 @@ The system prompt tells the model to:
 | Date | lab | `measuredOn` parses and appears in the excerpt, or equals the verified document date. |
 | Medication identity | medication | The excerpt contains an accepted **oral iron episode alias** (`oral iron`, `ferrous sulfate`, `iron tablets`, `iron supplement`), and the model's `medicationName` maps to that episode. A generic phrase such as "treatment completed," with no alias, fails. |
 | Status cue | medication | The same **sentence** of the excerpt that contains the alias also contains a cue for the claimed status: completed → `completed`/`finished`; stopped → `stopped`/`discontinued`; current → `currently taking`/`continues to take`; prescribed → `prescribed`. |
-| Document date | document | The excerpt is on the page and contains the date. If this fails, the whole extraction is `unusable`, because facts can't be dated. |
+| Document date | document | The excerpt is on the page and contains the date. If this fails, the whole extraction is `no_verified_facts` (`document_date_unverified`), because facts can't be dated. |
 
 Result: `{ verified: SourceFact[], excludedCount: number }`. Verified facts get new IDs and review status `PROPOSED`, in memory only. Their `source.verifiedExcerpt` is the canonical page text.
 
@@ -565,7 +571,7 @@ medical-history/                     # repo root (current folder)
 
 ### OpenAI API (the only external service)
 - **Call:** `client.responses.parse({ model, instructions, input: pageLabelledText, text: { format: zodTextFormat(ExtractionSchema, "extraction") }, reasoning: { effort }, max_output_tokens: 16000 })`
-- **Response:** `output_parsed`, which is null if parsing failed. Check first: a `refusal` content item, or `status: "incomplete"` (e.g. `incomplete_details.reason: "max_output_tokens"`) → `unusable`.
+- **Response:** `output_parsed`, which is null if parsing failed. Check first: a `refusal` content item, or `status: "incomplete"` (e.g. `incomplete_details.reason: "max_output_tokens"`) → `processing_failed`.
 - **Auth:** `OPENAI_API_KEY` from `.env.local` (the SDK's default variable), read only by server code.
 - **Model:** `EXTRACTION_MODEL`, default `gpt-6-luna`, switchable to `gpt-6-sol` (or `gpt-6-astra`).
 - **Cost:** well under a cent per extraction on `gpt-6-luna` ($0.10 / $0.50 per million input/output tokens), or about a cent on `gpt-6-sol` ($2 / $10). Preflight × 5 plus demo takes cost a few cents at most.
@@ -581,8 +587,8 @@ Next.js, unpdf, zod, Vitest, tsx, next/font (fonts bundled at build), and Playwr
 
 ## Important Failure Modes
 
-- **The OpenAI call fails or times out during the demo** → "We couldn't read this record just now. Your history hasn't changed." **Try again** resends the same file. The trusted state stays untouched. No cached or replayed extraction, ever.
-- **The model returns something unusable** (refusal, truncation, schema mismatch, unverifiable document date, or *every* fact failing verification) → "This record couldn't be read into structured facts. Your history hasn't changed." Nothing proceeds to review.
+- **The OpenAI call fails or times out during the demo** → "We couldn't process this record. Your history hasn't changed." **Try again** resends the same file. The trusted state stays untouched. No cached or replayed extraction, ever.
+- **The model returns something unusable** (refusal, truncation, schema mismatch) → "We couldn't process this record." **No supported fact proposed** → "No supported history changes were found in this record." **Supported facts proposed but none verified** (unverifiable document date, or *every* fact failing verification) → "No verified history changes were found in this record." **No text layer** → "This record doesn't contain readable text." Nothing proceeds to review in any of these cases.
 - **Some facts fail verification** → only verified facts appear. The note reads "1 extracted item could not be verified against the source document and was left out." Consequences are computed only from what remains.
 - **The same note is added again after approval** → "No new history changes found. Your documented history hasn't changed." Nothing persisted.
 - **A stale page after approval** (Next.js caching) → prevented by marking the state-reading pages dynamic. The apply response also triggers `router.refresh()`.
@@ -611,7 +617,7 @@ Next.js, unpdf, zod, Vitest, tsx, next/font (fonts bundled at build), and Playwr
 - **Next.js + TypeScript, one local app, server-side API calls, no deployment.** Simplest shape that keeps the key off the browser.
 - **Two data layers:** a committed seed and a gitignored runtime. Reset restores from the seed. Credentials and runtime data are never committed.
 - **A production build for recording**, if practical. It is: see *Where It Runs*.
-- **Per-fact independent verification.** Only verified facts reach review, and a partial failure doesn't invalidate the rest. All failing → unusable. *"Patients review evidence that code could verify."*
+- **Per-fact independent verification.** Only verified facts reach review, and a partial failure doesn't invalidate the rest. All failing → `no_verified_facts`. *"Patients review evidence that code could verify."*
 - **No fake fallback.** Never replay a cached extraction as live. A live preflight and a normal retry path instead.
 - **OpenAI as the provider, `gpt-6-luna` by default,** for speed and cost on a narrow task. The model and effort are configurable server-side, with `gpt-6-sol` as the switch if preflight shows unreliability. Changing the provider or model never changes the schema or pipeline. *(Provider changed from Anthropic to OpenAI before slice 2 by learner decision.)*
 
