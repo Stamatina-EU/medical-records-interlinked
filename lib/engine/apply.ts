@@ -8,6 +8,7 @@
  */
 import type { ChangeLine, Proposal, SourceFact, TrustedState } from "@/lib/model/types";
 import { affectedKeys, describeChanges } from "@/lib/engine/changes";
+import { MEDICATION_EPISODES } from "@/lib/extraction/lexicon";
 
 export type ApprovalCheck = { ok: true; approved: Proposal["facts"] } | { ok: false; reason: string };
 
@@ -31,9 +32,14 @@ function withFacts(state: TrustedState, proposal: Proposal, approvedIds: string[
     .filter((f) => approved.has(f.id))
     .map((f) => ({ ...f, review: "APPROVED" }) as SourceFact);
   if (facts.length === 0) return state;
+  // The first approved status of a supported medication creates its episode (empty-history bootstrap).
+  const newEpisodes = MEDICATION_EPISODES.filter(
+    (ep) => !state.episodes.some((e) => e.id === ep.id) && facts.some((f) => f.kind === "medication_status" && f.episodeId === ep.id),
+  );
   return {
     ...state,
     documents: [...state.documents, proposal.document],
+    episodes: [...state.episodes, ...newEpisodes],
     facts: [...state.facts, ...facts],
   };
 }

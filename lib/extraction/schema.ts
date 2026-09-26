@@ -28,7 +28,7 @@ export const ExtractionSchema = z.object({
         excerpt: z.string().describe("One sentence or line copied word for word from that page that states this result."),
       }),
     )
-    .describe("Laboratory measurements explicitly stated in the document."),
+    .describe("Ferritin measurements explicitly stated in the document. Empty if the document does not name ferritin."),
   medicationStatements: z
     .array(
       z.object({
@@ -40,7 +40,7 @@ export const ExtractionSchema = z.object({
         excerpt: z.string().describe("One sentence copied word for word from that page that states this status."),
       }),
     )
-    .describe("Medication status statements explicitly made in the document."),
+    .describe("Oral iron status statements explicitly made in the document. Empty if the document does not name oral iron."),
 });
 
 export type ExtractionOutput = z.infer<typeof ExtractionSchema>;

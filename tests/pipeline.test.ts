@@ -102,6 +102,38 @@ describe("2A. text read, no supported fact type proposed", () => {
   });
 });
 
+describe("2A. an unrelated document never reaches 'none verified'", () => {
+  // A synthetic imaging report that names neither ferritin nor oral iron stands in for an
+  // unrelated real lab report (the private document itself is never used in tests).
+  const unrelatedPdf = new Uint8Array(readFileSync(path.join(root, "data/seed/documents/d2-imaging-report-2025-09-10.pdf")));
+  const otherTest = { analyteName: "Albumin", value: 41, unit: "g/L", referenceRangeText: "35–50 g/L", measuredOn: "2025-09-10", page: 1, excerpt: "Albumin 41 g/L 35–50" };
+
+  it("other lab tests only → no_supported_facts, even with an unverifiable document date", async () => {
+    const o = await run(unrelatedPdf, async () =>
+      ok({ document: { documentType: "Lab report", documentDate: "2025-09-10", page: 1, excerpt: "not in the document" }, labMeasurements: [otherTest], medicationStatements: [] }),
+    );
+    expect(o).toEqual({ status: "no_supported_facts", code: "no_candidate_facts" });
+  });
+
+  it("a false-positive 'ferritin' / 'oral iron' candidate in a document that never names them → no_supported_facts", async () => {
+    const o = await run(unrelatedPdf, async () =>
+      ok({
+        document: { documentType: "Lab report", documentDate: "2025-09-10", page: 1, excerpt: "not in the document" },
+        labMeasurements: [otherTest, { ...good.labMeasurements[0], measuredOn: "2025-09-10" }],
+        medicationStatements: [good.medicationStatements[0]],
+      }),
+    );
+    expect(o).toEqual({ status: "no_supported_facts", code: "no_candidate_facts" });
+  });
+
+  it("other tests proposed alongside the demo note's real facts are ignored, not counted as left out", async () => {
+    const o = await run(demoPdf, async () => ok({ ...good, labMeasurements: [...good.labMeasurements, otherTest] }));
+    if (o.status !== "proposal") throw new Error(`expected a proposal, got ${o.status}`);
+    expect(o.proposal.facts).toHaveLength(2);
+    expect(o.proposal.excludedCount).toBe(0);
+  });
+});
+
 describe("2B. supported facts proposed, none verified", () => {
   it("one supported fact that fails verification → no_verified_facts, not no_supported_facts", async () => {
     const o = await run(demoPdf, async () => ok({ ...good, labMeasurements: [failingLab], medicationStatements: [] }));

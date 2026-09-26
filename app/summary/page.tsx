@@ -39,7 +39,8 @@ export default async function DoctorSummaryPage() {
               {summary.patientName} <span className={styles.synthetic}>fictional · synthetic demo record</span>
             </h1>
             <p className={styles.meta}>
-              Prepared in MyHeDo from {summary.documentCount} source documents · latest source dated {formatDate(summary.latestSourceDate)}
+              Prepared in MyHeDo from {summary.documentCount} source documents
+              {summary.latestSourceDate && ` · latest source dated ${formatDate(summary.latestSourceDate)}`}
             </p>
             <p className={styles.scope}>
               A concise, evidence-linked view of the documented history held in MyHeDo. Every statement links to its source;

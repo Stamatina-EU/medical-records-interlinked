@@ -254,8 +254,20 @@ export function verifyExtraction(
   ctx: { documentId: string; episodes: MedicationEpisode[] },
 ): VerificationOutcome {
   const doc = extraction.document;
-  if (extraction.labMeasurements.length === 0 && extraction.medicationStatements.length === 0) {
-    return { status: "unusable", code: "no_candidate_facts", reason: "the model proposed no facts of a supported type" };
+  // Subject gate: a candidate counts as a supported fact only if it names a supported subject
+  // (ferritin / a supported medication episode) AND the document text itself names that subject.
+  // Anything else is out of scope, not a failed verification, and is silently ignored.
+  const docText = normalize(pages.join("\n"));
+  const labs = extraction.labMeasurements.filter((lab) => {
+    const analyte = analyteFor(lab.analyteName);
+    return analyte !== null && ANALYTE_ALIASES[analyte].some((a) => containsPhrase(docText, a));
+  });
+  const meds = extraction.medicationStatements.filter((med) => {
+    const ep = episodeFor(med.medicationName, ctx.episodes);
+    return ep !== null && (MEDICATION_ALIASES[ep] ?? []).some((a) => containsPhrase(docText, a));
+  });
+  if (labs.length === 0 && meds.length === 0) {
+    return { status: "unusable", code: "no_candidate_facts", reason: "no candidate names a supported subject found in the document" };
   }
   const docLoc = locateExcerpt(pages, doc.page, doc.excerpt);
   if (!docLoc.ok) return { status: "unusable", code: "document_date_unverified", reason: `document date: ${docLoc.reason}` };
@@ -265,7 +277,7 @@ export function verifyExtraction(
   const verified: ProposedFact[] = [];
   const exclusions: Exclusion[] = [];
 
-  extraction.labMeasurements.forEach((lab, i) => {
+  labs.forEach((lab, i) => {
     const loc = locateExcerpt(pages, lab.page, lab.excerpt);
     if (!loc.ok) return void exclusions.push({ kind: "lab", reason: loc.reason });
     const check = verifyLabFact(lab, loc.verifiedExcerpt, doc.documentDate);
@@ -286,7 +298,7 @@ export function verifyExtraction(
     });
   });
 
-  extraction.medicationStatements.forEach((med, i) => {
+  meds.forEach((med, i) => {
     const loc = locateExcerpt(pages, med.page, med.excerpt);
     if (!loc.ok) return void exclusions.push({ kind: "medication", reason: loc.reason });
     const check = verifyMedicationFact(med, loc.verifiedExcerpt, ctx.episodes);

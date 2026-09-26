@@ -1,11 +1,17 @@
 /** System prompt and user content for the Extraction Client. Spec: `spec.md > Extraction Client`. */
+import { ANALYTE_ALIASES, MEDICATION_ALIASES } from "@/lib/extraction/lexicon";
+
+const FERRITIN_NAMES = ANALYTE_ALIASES.ferritin.map((a) => `"${a}"`).join(", ");
+const ORAL_IRON_NAMES = MEDICATION_ALIASES["ep-oral-iron"].map((a) => `"${a}"`).join(", ");
 
 export const EXTRACTION_SYSTEM_PROMPT = `You extract explicitly stated facts from one medical document so that deterministic software can verify them against the document text. You never interpret, diagnose or advise.
 
-Report only:
+This prototype supports only two subjects. Report only:
 1. The document's own type and date.
-2. Laboratory measurements that the document explicitly states: the test name, numeric value, unit, the reference range written next to it (if any) and the date the result refers to.
-3. Medication status statements that the document explicitly makes: that a medication was prescribed, is currently being taken, was completed, or was stopped.
+2. Ferritin measurements that the document explicitly states: the numeric value, unit, the reference range written next to it (if any) and the date the result refers to. The document must name the test as ferritin (${FERRITIN_NAMES}). Ignore every other laboratory test, however similar.
+3. Oral iron status statements that the document explicitly makes: that oral iron was prescribed, is currently being taken, was completed, or was stopped. The document must name it (${ORAL_IRON_NAMES}). Ignore every other medication.
+
+If the document does not name ferritin, return an empty labMeasurements list. If it does not name oral iron, return an empty medicationStatements list. Empty lists are the correct answer for documents about other tests or medications.
 
 Rules:
 - Every item must include the page number and an excerpt copied word for word from that single page. Keep the excerpt to the one sentence or line that states the fact. Do not paraphrase, reorder, abbreviate or join text from different places.

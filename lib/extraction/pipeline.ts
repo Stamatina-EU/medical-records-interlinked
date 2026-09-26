@@ -14,6 +14,7 @@ import { ExtractionUnavailableError, type ExtractionCallResult } from "@/lib/ext
 import { verifyExtraction } from "@/lib/extraction/verify";
 import { dedupe } from "@/lib/engine/dedupe";
 import { addedDocumentRecord, nextDocumentId } from "@/lib/extraction/documentMeta";
+import { knownEpisodes } from "@/lib/extraction/lexicon";
 
 export const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -65,7 +66,7 @@ export async function runExtractionPipeline(bytes: Uint8Array, state: TrustedSta
   }
 
   const documentId = nextDocumentId(state);
-  const outcome = verifyExtraction(pages, call.extraction, { documentId, episodes: state.episodes });
+  const outcome = verifyExtraction(pages, call.extraction, { documentId, episodes: knownEpisodes(state.episodes) });
   if (outcome.status === "unusable") {
     return outcome.code === "no_candidate_facts"
       ? { status: "no_supported_facts", code: outcome.code }

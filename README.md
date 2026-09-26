@@ -80,6 +80,8 @@ Open http://localhost:3000. For development with hot reload, use `npm run dev`.
 5. Open **History** for the ferritin chart (each result against its own supplied range) and the imaging timeline.
 6. Open **Doctor Summary** for a concise, source-numbered brief to show or discuss with a doctor.
 
+**Why the demo starts with history.** The demo begins with a synthetic existing history (six documents) so that one new record can show longitudinal consequences: a change since the previous result, a matching follow-up, a medication status over time. The same trust pipeline also bootstraps an empty record. In a new record, the verified facts from the first supported document, once approved, create the first measurement, topic and medication episode (covered by `tests/bootstrap.test.ts`). Comparisons across time appear once there is history to compare.
+
 ## Reset and checks
 
 | Command | What it does |

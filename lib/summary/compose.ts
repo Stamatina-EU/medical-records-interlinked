@@ -73,7 +73,7 @@ export function composeDoctorSummary(state: TrustedState, claims: CalculatedClai
   const exams = state.facts
     .filter((f): f is ImagingExam => f.kind === "imaging_exam")
     .sort((a, b) => a.performedOn.localeCompare(b.performedOn));
-  const latestSourceDate = state.documents.map((d) => d.date).reduce((a, b) => (b > a ? b : a));
+  const latestSourceDate = state.documents.map((d) => d.date).reduce((a, b) => (b > a ? b : a), "");
 
   // The ferritin count + latest selection is one derived claim, shared by the picture and section A.
   const lastM = series[series.length - 1];
