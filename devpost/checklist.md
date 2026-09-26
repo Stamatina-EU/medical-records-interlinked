@@ -134,6 +134,9 @@ Slice 1 → mechanically verified only · Slice 5 → continue unless a material
 ## Final Review
 
 - [ ] Final review complete — feedback resolved and learner confirms ready to ship
+- [ ] Provenance fix: "Ferritin has been measured N times" cites every counted measurement (all N source facts), so the 27 Jan 2026 laboratory report appears in Sources; regression test added
+- [ ] Copy: medication line reads "— Completed. Status documented in … dated 25 Sep 2026. Earlier: Prescribed, documented 3 Feb 2026." (semantics unchanged)
+- [ ] Timestamp clarity: header reads "latest source dated <newest document date>" instead of the render time
 
 ## Code Tour and App Map
 
@@ -200,3 +203,7 @@ Activity mode:
   - A small `app/icon.svg` (accent square, document glyph) was added so the production console shows no favicon 404 on camera.
   - Production dry run: `npm run build` produced all routes dynamic. `npm run start` → reset → Home → Summary (8 chips) → drawer → Add record with the live model → What changed → Summary shows 3 results, 32 μg/L, Completed with earlier Prescribed, and the match. It persists in a fresh browser context. `demo:reset` returns to the seed, with What changed hidden again. No console errors and no mobile horizontal overflow.
   - Dev gotcha found: `next build` while `next dev` is still running on the same `.next` breaks the dev server (500s), and stopping the shell can leave Next's node child holding port 3000. Stop the dev server fully before building. The README's run steps use the production build only.
+- Final review round 1 (learner feedback on the Doctor Summary):
+  - Provenance bug: the "measured 3 times" line cited only the first and last results, so the 27 Jan 2026 report was missing from Sources. The count depends on every measurement, so the line now cites all of them. A regression test asserts that the cited lab facts equal exactly the counted set and that each one's document is listed in Sources. The test fails on the old two-source code.
+  - The medication line drops the repeated status word. Earlier statuses read "Prescribed, documented 3 Feb 2026".
+  - `DoctorSummary.asOf` (the render/approval time) was replaced by `latestSourceDate`, the newest document date, so the header can't imply the evidence is current through today.

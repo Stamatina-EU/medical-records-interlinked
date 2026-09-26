@@ -19,7 +19,8 @@ export type SummarySection = { id: string; title: string; statements: Statement[
 export type SourceEntry = { n: number; document: DocumentRecord };
 export type DoctorSummary = {
   patientName: string;
-  asOf: string; // ISO date-time
+  /** date of the most recent source document — not the render time */
+  latestSourceDate: string;
   documentCount: number;
   sections: SummarySection[];
   sources: SourceEntry[];
@@ -55,7 +56,8 @@ export function composeDoctorSummary(state: TrustedState, claims: CalculatedClai
       statements: [
         stmt(
           `Ferritin has been measured ${series.length} times in the documented record, including ${first.value} ${first.unit} on ${formatDate(first.measuredOn)} and ${last.value} ${last.unit} on ${formatDate(last.measuredOn)}.`,
-          [fact(first.id), fact(last.id)],
+          // the count depends on every measurement, so every measurement is cited
+          series.map((m) => fact(m.id)),
         ),
       ],
     });
@@ -85,10 +87,10 @@ export function composeDoctorSummary(state: TrustedState, claims: CalculatedClai
     const doc = state.documents.find((d) => d.id === latest.source.documentId);
     const earlier = events.slice(0, -1);
     const history = earlier.length
-      ? ` Earlier: ${earlier.map((e) => `${e.status.toLowerCase()} (documented ${formatDate(e.documentedOn)})`).join(", ")}.`
+      ? ` Earlier: ${earlier.map((e) => `${e.status}, documented ${formatDate(e.documentedOn)}`).join("; ")}.`
       : "";
     const line = stmt(
-      `${ep.name} — ${latest.status}. ${latest.status} status documented in ${doc ? doc.title.toLowerCase() : "a record"} dated ${formatDate(latest.documentedOn)}.${history}`,
+      `${ep.name} — ${latest.status}. Status documented in ${doc ? doc.title.toLowerCase() : "a record"} dated ${formatDate(latest.documentedOn)}.${history}`,
       [...earlier.map((e) => fact(e.id)), fact(latest.id)],
     );
     (latest.status === "Current" ? current : treatment).push(line);
@@ -155,7 +157,7 @@ export function composeDoctorSummary(state: TrustedState, claims: CalculatedClai
 
   return {
     patientName: state.patient.displayName,
-    asOf: state.latestUpdate?.approvedAt ?? state.seededAt,
+    latestSourceDate: state.documents.map((d) => d.date).reduce((a, b) => (b > a ? b : a)),
     documentCount: state.documents.length,
     sections,
     sources: docOrder.map((id, i) => ({ n: i + 1, document: state.documents.find((d) => d.id === id)! })),

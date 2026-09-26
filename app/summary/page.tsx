@@ -8,7 +8,7 @@ import { readState, StateCorruptedError } from "@/lib/store/stateStore";
 import { derive } from "@/lib/engine/derive";
 import { buildEvidenceIndex } from "@/lib/evidence/index";
 import { composeDoctorSummary, refKey } from "@/lib/summary/compose";
-import { formatDate, formatDateTime } from "@/lib/text/dates";
+import { formatDate } from "@/lib/text/dates";
 import EvidenceProvider from "@/components/evidence/EvidenceProvider";
 import SourceChip from "@/components/summary/SourceChip";
 import StateError from "@/components/ui/StateError";
@@ -38,7 +38,7 @@ export default async function DoctorSummaryPage() {
               {summary.patientName} <span className={styles.synthetic}>fictional · synthetic demo record</span>
             </h1>
             <p className={styles.meta}>
-              Prepared in MyHeDo from {summary.documentCount} source documents · as of {formatDateTime(summary.asOf)}
+              Prepared in MyHeDo from {summary.documentCount} source documents · latest source dated {formatDate(summary.latestSourceDate)}
             </p>
             <p className={styles.scope}>
               A concise, evidence-linked view of the documented history held in MyHeDo. Every statement links to its source;

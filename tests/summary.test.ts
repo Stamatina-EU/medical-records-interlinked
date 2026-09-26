@@ -50,6 +50,21 @@ describe.each([
     expect(summary.sources.map((s) => s.n)).toEqual(summary.sources.map((_, i) => i + 1));
   });
 
+  it("a counted statement cites every measurement it counts, and each one's document is in Sources (regression)", () => {
+    const labs = new Map(state.facts.filter((f) => f.kind === "lab_measurement").map((f) => [f.id, f]));
+    const counted = summary.sections.flatMap((s) => s.statements).filter((st) => /measured (\d+) times/.test(st.text));
+    expect(counted.length).toBeGreaterThan(0);
+    const sourceDocs = new Set(summary.sources.map((s) => s.document.id));
+    for (const st of counted) {
+      const n = Number(st.text.match(/measured (\d+) times/)![1]);
+      const cited = st.refs.filter((r) => r.type === "fact" && labs.has(r.id)).map((r) => (r.type === "fact" ? r.id : ""));
+      const counts = [...labs.values()].filter((f) => f.kind === "lab_measurement" && f.analyte === "ferritin").map((f) => f.id);
+      expect(counts.length).toBe(n);
+      expect(new Set(cited)).toEqual(new Set(counts));
+      for (const id of counts) expect(sourceDocs.has(labs.get(id)!.source.documentId)).toBe(true);
+    }
+  });
+
   it("never states absence and never uses a diagnostic label", () => {
     const text = allText(state);
     expect(text).not.toMatch(ABSENCE);
@@ -69,6 +84,8 @@ describe("Doctor Summary content before and after the update", () => {
     expect(text).toContain("compared with the examination of 10 Sep 2025");
     expect(s.sections.flatMap((x) => x.statements).some((st) => st.updated)).toBe(false);
     expect(s.documentCount).toBe(6);
+    expect(s.latestSourceDate).toBe("2026-03-12");
+    expect(text).toContain("Oral iron (ferrous sulfate) — Prescribed. Status documented in prescription dated 3 Feb 2026.");
   });
 
   it("after: 3 results, Completed with the earlier Prescribed, match found, affected lines marked, new document cited", () => {
@@ -76,13 +93,13 @@ describe("Doctor Summary content before and after the update", () => {
     const text = allText(after);
     expect(text).toContain("measured 3 times");
     expect(text).toContain("32 μg/L");
-    expect(text).toMatch(/— Completed\..*Earlier: prescribed/);
+    expect(text).toContain("Oral iron (ferrous sulfate) — Completed. Status documented in follow-up consultation note dated 25 Sep 2026. Earlier: Prescribed, documented 3 Feb 2026.");
     expect(text).toContain("A later approved ferritin result has been found (25 Sep 2026).");
     const updated = s.sections.flatMap((x) => x.statements).filter((st) => st.updated).map((st) => st.text);
     expect(updated.length).toBeGreaterThanOrEqual(3);
     expect(updated.some((t) => t.startsWith("Ferritin — 32"))).toBe(true);
     expect(s.sources.some((src) => src.document.id === "doc-07")).toBe(true);
-    expect(s.asOf).toBe("2026-09-26T10:05:00.000Z");
+    expect(s.latestSourceDate).toBe("2026-09-25");
     expect(s.documentCount).toBe(7);
   });
 
