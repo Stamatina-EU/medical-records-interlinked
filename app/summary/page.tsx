@@ -7,7 +7,7 @@
 import { readState, StateCorruptedError } from "@/lib/store/stateStore";
 import { derive } from "@/lib/engine/derive";
 import { buildEvidenceIndex } from "@/lib/evidence/index";
-import { composeDoctorSummary, refKey } from "@/lib/summary/compose";
+import { composeDoctorSummary, refKey, type Statement } from "@/lib/summary/compose";
 import { formatDate } from "@/lib/text/dates";
 import EvidenceProvider from "@/components/evidence/EvidenceProvider";
 import SourceChip from "@/components/summary/SourceChip";
@@ -25,8 +25,9 @@ export default async function DoctorSummaryPage() {
     throw err;
   }
   const claims = derive(state);
-  const index = buildEvidenceIndex(state, claims);
   const summary = composeDoctorSummary(state, claims);
+  // the summary's own derived claims (counts, "latest") open in the drawer like any other
+  const index = buildEvidenceIndex(state, [...claims, ...summary.claims]);
 
   return (
     <EvidenceProvider index={index}>
@@ -46,24 +47,56 @@ export default async function DoctorSummaryPage() {
             </p>
           </header>
 
-          {summary.sections.map((s) => (
-            <section key={s.id} className={styles.section} aria-labelledby={`s-${s.id}`}>
-              <h2 id={`s-${s.id}`} className={styles.sectionTitle}>
-                {s.title}
-              </h2>
-              <ul className={styles.statements}>
-                {s.statements.map((st) => (
-                  <li key={st.text} className={st.updated ? `${styles.statement} ${styles.updated}` : styles.statement}>
-                    <span className={st.derived ? styles.derivedText : undefined}>{st.text}</span>{" "}
-                    {st.refs.map((r) => (
-                      <SourceChip key={refKey(r)} refItem={r} numbers={summary.sourceNumbers[refKey(r)] ?? []} derived={st.derived} />
+          {summary.sections.map((s) => {
+            // the sentence's last word and its chips never wrap apart, so a lone source number
+            // can't start the next line or appear to belong to the next sentence
+            const sentence = (st: Statement) => {
+              const cut = st.text.lastIndexOf(" ") + 1;
+              return (
+                <span className={st.derived ? styles.derivedText : undefined}>
+                  {st.text.slice(0, cut)}
+                  <span className={styles.keep}>
+                    {st.text.slice(cut)}{" "}
+                    {st.refs.map((r, i) => (
+                      <SourceChip key={refKey(r)} refItem={r} numbers={summary.sourceNumbers[refKey(r)] ?? []} derived={st.derived && i === 0} />
                     ))}
-                    {st.updated && <span className={styles.updatedLabel}>Updated from latest record</span>}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+                  </span>
+                </span>
+              );
+            };
+            // "Current documented picture" reads as one short orientation paragraph
+            if (s.id === "picture") {
+              const updated = s.statements.some((st) => st.updated);
+              return (
+                <section key={s.id} className={styles.section} aria-labelledby={`s-${s.id}`}>
+                  <h2 id={`s-${s.id}`} className={styles.sectionTitle}>
+                    {s.title}
+                  </h2>
+                  <p className={updated ? `${styles.picture} ${styles.updated}` : styles.picture}>
+                    {s.statements.map((st) => (
+                      <span key={st.text}>{sentence(st)} </span>
+                    ))}
+                    {updated && <span className={styles.updatedLabel}>Updated from latest record</span>}
+                  </p>
+                </section>
+              );
+            }
+            return (
+              <section key={s.id} className={styles.section} aria-labelledby={`s-${s.id}`}>
+                <h2 id={`s-${s.id}`} className={styles.sectionTitle}>
+                  {s.title}
+                </h2>
+                <ul className={styles.statements}>
+                  {s.statements.map((st) => (
+                    <li key={st.text} className={st.updated ? `${styles.statement} ${styles.updated}` : styles.statement}>
+                      {sentence(st)}
+                      {st.updated && <span className={styles.updatedLabel}>Updated from latest record</span>}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
 
           <footer className={styles.sources} aria-labelledby="sources-title">
             <h2 id="sources-title" className={styles.sectionTitle}>

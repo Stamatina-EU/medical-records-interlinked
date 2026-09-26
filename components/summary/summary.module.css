@@ -85,6 +85,17 @@
   padding: var(--space-1) 0;
 }
 
+.picture {
+  max-width: 68ch;
+  font-size: var(--text-base);
+  line-height: 1.7;
+  padding: var(--space-1) 0;
+}
+
+.keep {
+  white-space: nowrap;
+}
+
 .derivedText {
   color: var(--ink-muted);
 }

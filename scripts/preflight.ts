@@ -4,7 +4,7 @@
  * Runs the REAL pipeline on the live demo note N times:
  *   PDF text -> OpenAI Responses API (EXTRACTION_MODEL) -> schema -> Fact Verifier -> dedupe vs the SEED state
  * A run passes only if BOTH expected facts are verified: ferritin 32 μg/L (range 15–150, page 2)
- * and oral iron Completed (page 1). Never writes runtime state. Costs well under a cent per run on the default model.
+ * and oral iron Current, shown as "Ongoing" (page 1). Never writes runtime state. Costs well under a cent per run on the default model.
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -61,7 +61,7 @@ async function main() {
           f.kind === "lab_measurement" && f.value === 32 && f.refLow === 15 && f.refHigh === 150 && f.source.page === 2 && f.measuredOn === "2026-09-25",
       );
       const med = fresh.find(
-        (f) => f.kind === "medication_status" && f.episodeId === "ep-oral-iron" && f.status === "Completed" && f.source.page === 1,
+        (f) => f.kind === "medication_status" && f.episodeId === "ep-oral-iron" && f.status === "Current" && f.source.page === 1,
       );
       const ok = Boolean(lab && med);
       if (ok) passed++;

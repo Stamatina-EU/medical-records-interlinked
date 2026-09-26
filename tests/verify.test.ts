@@ -16,7 +16,7 @@ const episodes: MedicationEpisode[] = [{ id: "ep-oral-iron", topic: "iron", name
 
 // The live follow-up note, as extracted (page 1, page 2).
 const livePages = [
-  "Elm Street Primary Care\nGeneral practice (fictional) FOLLOW-UP CONSULTATION NOTE\nPatient Alex Rowan (fictional)\nDate of consultation 25 Sep 2026\nType Follow-up consultation\nREASON FOR VISIT\nFollow-up of iron studies.\nMEDICATION HISTORY\nThe patient completed the prescribed course of oral iron (ferrous sulfate) in May 2026.\nNo other regular medication is recorded at this visit.",
+  "Elm Street Primary Care\nGeneral practice (fictional) FOLLOW-UP CONSULTATION NOTE\nPatient Alex Rowan (fictional)\nDate of consultation 25 Sep 2026\nType Follow-up consultation\nREASON FOR VISIT\nFollow-up of iron studies.\nMEDICATION HISTORY\nThe patient continues to take oral iron (ferrous sulfate) once daily.\nNo other regular medication is recorded at this visit.",
   "Elm Street Primary Care\nAlex Rowan (fictional) · 25 Sep 2026 FOLLOW-UP CONSULTATION NOTE\nRESULTS\nFerritin on 25 Sep 2026: 32 μg/L (reference range 15–150 μg/L).\nPLAN\nResults discussed with the patient.\nNote: “continue routine care”.",
 ];
 
@@ -36,9 +36,9 @@ const goodExtraction: Extraction = {
   medicationStatements: [
     {
       medicationName: "oral iron (ferrous sulfate)",
-      status: "completed",
+      status: "current",
       page: 1,
-      excerpt: "The patient completed the prescribed course of oral iron (ferrous sulfate) in May 2026.",
+      excerpt: "The patient continues to take oral iron (ferrous sulfate) once daily.",
     },
   ],
 };
@@ -154,13 +154,18 @@ describe("medication facts: identity and status cue in the same sentence", () =>
     expect(r.ok).toBe(false);
   });
 
-  it("the live note sentence verifies as Completed", () => {
+  it("the live note sentence is not evidence of Completed", () => {
+    const r = verifyMedicationFact({ medicationName: "oral iron (ferrous sulfate)", status: "completed" }, "The patient continues to take oral iron (ferrous sulfate) once daily.", episodes);
+    expect(r.ok).toBe(false);
+  });
+
+  it("the live note sentence verifies as Current (shown as Ongoing)", () => {
     const r = verifyMedicationFact(
-      { medicationName: "oral iron (ferrous sulfate)", status: "completed" },
-      "The patient completed the prescribed course of oral iron (ferrous sulfate) in May 2026.",
+      { medicationName: "oral iron (ferrous sulfate)", status: "current" },
+      "The patient continues to take oral iron (ferrous sulfate) once daily.",
       episodes,
     );
-    expect(r.ok && [r.episodeId, r.status]).toEqual(["ep-oral-iron", "Completed"]);
+    expect(r.ok && [r.episodeId, r.status]).toEqual(["ep-oral-iron", "Current"]);
   });
 });
 
@@ -175,7 +180,7 @@ describe("verifyExtraction (the live pipeline)", () => {
     const med = r.verified.find((f) => f.kind === "medication_status");
     expect(lab && lab.kind === "lab_measurement" && [lab.value, lab.refLow, lab.refHigh, lab.source.page]).toEqual([32, 15, 150, 2]);
     expect(med && med.kind === "medication_status" && [med.status, med.documentedOn, med.source.page]).toEqual([
-      "Completed",
+      "Current",
       "2026-09-25",
       1,
     ]);

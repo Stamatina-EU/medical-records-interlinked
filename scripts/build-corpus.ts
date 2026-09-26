@@ -4,6 +4,9 @@
  *
  * Uses Playwright driving the locally installed Microsoft Edge (channel "msedge"),
  * so no browser download is needed. See `checklist.md > Revisions`.
+ *
+ * Optional filter: `npm run corpus:build -- live` renders only sources whose file name contains
+ * "live", so the committed seed PDFs are not rewritten when only the live note changes.
  */
 import { chromium } from "playwright";
 import { mkdir, readdir } from "node:fs/promises";
@@ -25,7 +28,8 @@ function outputFor(file: string): string {
 async function main() {
   await mkdir(seedOut, { recursive: true });
   await mkdir(demoOut, { recursive: true });
-  const files = (await readdir(srcDir)).filter((f) => f.endsWith(".html")).sort();
+  const only = process.argv[2];
+  const files = (await readdir(srcDir)).filter((f) => f.endsWith(".html") && (!only || f.includes(only))).sort();
 
   const browser = await chromium.launch({ channel: "msedge" });
   try {

@@ -11,6 +11,7 @@ import { formatDate } from "@/lib/text/dates";
 import { ChevronIcon } from "@/components/shell/icons";
 import { CalculatedLabel, FactValue, SourceRef } from "@/components/ui/EvidenceLinks";
 import styles from "./snapshot.module.css";
+import { statusLabel } from "@/lib/text/status";
 
 const TITLES: Record<LatestGroup["kind"], string> = {
   measurements: "Measurements",
@@ -45,7 +46,7 @@ function Latest({ group, index }: { group: LatestGroup; index: EvidenceIndex }) 
       return (
         <FactValue factId={e.id} className={styles.groupLatest}>
           <strong>
-            {name} · {e.status}
+            {name} · {statusLabel(e.status)}
           </strong>{" "}
           · documented {formatDate(e.documentedOn)}
         </FactValue>

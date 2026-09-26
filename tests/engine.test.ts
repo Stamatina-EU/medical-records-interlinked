@@ -29,12 +29,12 @@ function withLiveUpdate(state: TrustedState): TrustedState {
     id: "doc-07-med-1",
     kind: "medication_status",
     episodeId: "ep-oral-iron",
-    status: "Completed",
+    status: "Current",
     documentedOn: "2026-09-25",
     source: {
       documentId: "doc-07",
       page: 1,
-      verifiedExcerpt: "The patient completed the prescribed course of oral iron (ferrous sulfate) in May 2026.",
+      verifiedExcerpt: "The patient continues to take oral iron (ferrous sulfate) once daily.",
     },
     review: "APPROVED",
   };
@@ -90,8 +90,8 @@ describe("derive — after the live note's two facts are approved", () => {
     expect(byKey["followup-no-later:fu-ferritin-2026-02-03"]).toBeUndefined();
   });
 
-  it("moves the medication to Completed and the latest ferritin to 32", () => {
-    expect(latestMedicationStatus(after, "ep-oral-iron")?.status).toBe("Completed");
+  it("moves the medication to Current (Ongoing) and the latest ferritin to 32", () => {
+    expect(latestMedicationStatus(after, "ep-oral-iron")?.status).toBe("Current");
     const view = snapshotView(after, derive(after));
     const g = Object.fromEntries(view.latestGroups.map((x) => [x.kind, x]));
     expect(g.measurements.kind === "measurements" && [g.measurements.count, g.measurements.latestFactId]).toEqual([3, "doc-07-lab-1"]);

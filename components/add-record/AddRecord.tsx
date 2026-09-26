@@ -13,6 +13,7 @@ import { preview } from "@/lib/engine/apply";
 import { formatDate } from "@/lib/text/dates";
 import { PlusIcon } from "@/components/shell/icons";
 import styles from "./addRecord.module.css";
+import { statusLabel } from "@/lib/text/status";
 
 type Phase =
   | { kind: "idle" }
@@ -33,7 +34,7 @@ function factHeadline(f: Proposal["facts"][number], state: TrustedState): { labe
   }
   const e = f;
   const name = (state.episodes.find((ep) => ep.id === e.episodeId)?.name ?? "Medication").split(" (")[0];
-  return { label: name, value: `${e.status} · documented ${formatDate(e.documentedOn)}` };
+  return { label: name, value: `${statusLabel(e.status)} · documented ${formatDate(e.documentedOn)}` };
 }
 
 export default function AddRecord() {

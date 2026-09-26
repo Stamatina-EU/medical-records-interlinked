@@ -76,7 +76,7 @@ Open http://localhost:3000. For development with hot reload, use `npm run dev`.
 1. **Home** shows a synthetic record seeded from six documents: two ferritin results, an oral-iron prescription, a recheck recommendation and two thyroid ultrasounds. Tap any value to see its source excerpt and page.
 2. Choose **Add record** and pick `demo-files/follow-up-consultation-2026-09-25.pdf`.
 3. Review the proposed facts. Each is marked *Verified against this record* with its matched wording. Exclude any you don't want, then add them.
-4. **What changed** appears on Home: a new ferritin result, the prescription now documented as completed, and a matching result for the earlier recheck recommendation.
+4. **What changed** appears on Home: a new ferritin result, oral iron now documented as ongoing, and a matching result for the earlier recheck recommendation.
 5. Open **History** for the ferritin chart (each result against its own supplied range) and the imaging timeline.
 6. Open **Doctor Summary** for a concise, source-numbered brief to show or discuss with a doctor.
 
@@ -88,7 +88,7 @@ Open http://localhost:3000. For development with hot reload, use `npm run dev`.
 | `npm run preflight` | Runs the demo note through the real AI + verification pipeline 5 times and reports pass/fail per run. Needs the API key, costs well under a cent per run, and never writes state |
 | `npm test` | Unit tests (verifier, engine, apply, history, summary), then `verify:seed` |
 | `npm run verify:seed` | Checks every seed fact with the same deterministic verifier used for live facts |
-| `npm run corpus:build` | Regenerates the synthetic PDFs from `corpus/src/` (uses local Edge via Playwright) |
+| `npm run corpus:build` | Regenerates the synthetic PDFs from `corpus/src/` (uses local Edge via Playwright). `npm run corpus:build -- live` rebuilds only the demo note |
 
 The runtime history lives in `data/runtime/`, which is gitignored. The committed seed is in `data/seed/`.
 

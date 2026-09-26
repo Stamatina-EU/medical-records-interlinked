@@ -11,7 +11,7 @@ import { addedDocumentRecord, nextDocumentId } from "@/lib/extraction/documentMe
 const seed: TrustedState = JSON.parse(readFileSync(path.resolve(__dirname, "../data/seed/state.json"), "utf8"));
 
 const livePages = [
-  "Elm Street Primary Care\nGeneral practice (fictional) FOLLOW-UP CONSULTATION NOTE\nPatient Alex Rowan (fictional)\nDate of consultation 25 Sep 2026\nMEDICATION HISTORY\nThe patient completed the prescribed course of oral iron (ferrous sulfate) in May 2026.",
+  "Elm Street Primary Care\nGeneral practice (fictional) FOLLOW-UP CONSULTATION NOTE\nPatient Alex Rowan (fictional)\nDate of consultation 25 Sep 2026\nMEDICATION HISTORY\nThe patient continues to take oral iron (ferrous sulfate) once daily.",
   "RESULTS\nFerritin on 25 Sep 2026: 32 μg/L (reference range 15–150 μg/L).",
 ];
 
@@ -39,12 +39,12 @@ const proposal: Proposal = {
       id: "doc-07-med-1",
       kind: "medication_status",
       episodeId: "ep-oral-iron",
-      status: "Completed",
+      status: "Current",
       documentedOn: "2026-09-25",
       source: {
         documentId: "doc-07",
         page: 1,
-        verifiedExcerpt: "The patient completed the prescribed course of oral iron (ferrous sulfate) in May 2026.",
+        verifiedExcerpt: "The patient continues to take oral iron (ferrous sulfate) once daily.",
       },
       review: "PROPOSED",
     },
@@ -54,7 +54,7 @@ const proposal: Proposal = {
 const texts = (lines: { text: string }[]) => lines.map((l) => l.text);
 const LAB = "New ferritin measurement added · 32 μg/L · 25 Sep 2026";
 const MATCH = "Matching follow-up result found · 25 Sep 2026";
-const MED = "Oral iron marked Completed · documented 25 Sep 2026";
+const MED = "Oral iron marked Ongoing · documented 25 Sep 2026";
 
 describe("preview — patients approve evidence, code derives consequences", () => {
   it("with everything approved, previews the measurement, the follow-up match and the medication status", () => {
@@ -98,7 +98,7 @@ describe("apply — only approved source facts are written", () => {
   });
 
   it("derived state updates deterministically", () => {
-    expect(latestMedicationStatus(after, "ep-oral-iron")?.status).toBe("Completed");
+    expect(latestMedicationStatus(after, "ep-oral-iron")?.status).toBe("Current");
     const keys = derive(after).map((c) => c.key);
     expect(keys).toContain("followup-match:fu-ferritin-2026-02-03");
     expect(keys).not.toContain("followup-no-later:fu-ferritin-2026-02-03");

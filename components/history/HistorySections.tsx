@@ -8,6 +8,7 @@ import { formatDate } from "@/lib/text/dates";
 import { CalculatedLabel, FactValue, SourceRef } from "@/components/ui/EvidenceLinks";
 import MeasurementChart from "./MeasurementChart";
 import styles from "./history.module.css";
+import { statusLabel } from "@/lib/text/status";
 
 const Updated = () => <span className={styles.updatedLabel}>Updated from latest record</span>;
 
@@ -97,7 +98,7 @@ export function IronHistory({ view }: { view: Extract<HistoryView, { topic: "iro
                 <span className={styles.stepDot} aria-hidden="true" />
                 <div className={styles.rowMain}>
                   <FactValue factId={e.fact.id} className={styles.rowTitle}>
-                    {e.fact.status}
+                    {statusLabel(e.fact.status)}
                   </FactValue>
                   {/* documentedOn = date of the document stating the status, never an effective date */}
                   <p className={styles.rowMeta}>documented {formatDate(e.fact.documentedOn)}</p>

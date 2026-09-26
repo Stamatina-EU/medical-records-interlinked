@@ -104,7 +104,7 @@ Top to bottom:
 - Heading format: "Updated from [document type] — [document date]". It lists each change, and each item opens the evidence drawer. For example:
   - "New ferritin measurement added"
   - "Matching follow-up result found"
-  - "Iron treatment marked Completed · documented 25 Sep 2026"
+  - "Oral iron marked Ongoing · documented 25 Sep 2026" (the documentation date, never a start date)
 
 **D. Latest in your record** — compact, grouped, scalable
 - One row per category (Measurements, Treatment / medication, Imaging), with a deterministic count, the latest documented item (which opens its evidence), its **source reference** and a **View** link into History. Never one card per value.
@@ -137,7 +137,7 @@ One reusable topic-detail view. A simple topic switcher inside History selects I
 **Iron / Ferritin shows:**
 - **Measurements over time:** a simple chart, plus rows with date, value, unit, the supplied range *for that result* and a source marker. Different labs may supply different ranges, and each row keeps its own.
   - Calculated labels where applicable: "outside supplied laboratory range," "inside supplied laboratory range," "changed since previous measurement," "previously outside supplied range." Each is visibly marked as **derived** (the user-facing word for the CALCULATED evidence type).
-- **Medication episode:** oral iron, shown as a small status timeline, e.g. Prescribed (date, source) → Completed (date, source). Each state comes from an explicit source.
+- **Medication episode:** oral iron, shown as a small status timeline, e.g. Prescribed (date, source) → Ongoing (date, source). Each state comes from an explicit source.
 - **Documented follow-up:** the recommendation text, e.g. "Repeat ferritin in 3 months", with its date and source. When a later matching result exists, the section shows "Matching result found: Ferritin 32 μg/L — 25 Sep 2026". Elapsed time may be shown as plain chronology ("5 months after recommendation").
 
 **Imaging follow-up shows** the same template without a chart: the earlier imaging report, its documented follow-up recommendation, and the later related examination. Each item has its date and source. It's **read-only.** No live update logic applies to it.
@@ -186,12 +186,12 @@ Source: `scope.md > The POC Boundary` ("One live addition," "Proposed-changes re
 **Review panel** (a modal or panel, not a new screen):
 - **Reviewable items are extracted source facts only.** For the demo record:
   - Ferritin 32 μg/L, reference range 15–150 μg/L, 25 Sep 2026, with its excerpt and page
-  - Oral iron course: Completed, with its excerpt and page
+  - Oral iron: Ongoing (stored status Current), with its excerpt and page
 - Each source fact can be individually rejected.
 - **"This would also update…"** shows the derived consequences previewed by code. They're not checkboxes:
   - adds the new ferritin measurement to the longitudinal history
   - matching follow-up result found for the earlier documented ferritin recommendation
-  - medication episode → Completed
+  - medication episode → Ongoing
 - The preview recomputes live as source facts are rejected. Consequences that depend on a rejected fact disappear.
 - Actions:
   - **Add all to my record**, or **Add selected** when something is excluded. The user-facing words are "Exclude" / "Excluded · undo"; the internal review state stays REJECTED.
@@ -251,14 +251,14 @@ It's a short, scannable, typeset one-page brief built from the same approved sta
 For this fictional patient:
 - **A. Relevant documented history.** Factual, e.g. "Ferritin has been measured repeatedly across the documented record, including 19.6 μg/L on 27 Jan 2026 and 32 μg/L on 25 Sep 2026." No diagnostic label (e.g. "iron deficiency") unless a source explicitly uses it.
 - **B. Recent investigations.** E.g. "Ferritin — 32 μg/L · Supplied reference range: 15–150 μg/L · 25 Sep 2026."
-- **C. Medication / recent treatment.** E.g. "Oral iron course — Completed. Completion documented in follow-up consultation note dated 25 Sep 2026." A "Current medication" subsection appears only if a source explicitly documents current use.
+- **C. Medication / recent treatment.** E.g. "Oral iron (ferrous sulfate) — Completed. Status documented in follow-up consultation note dated 25 Sep 2026." A "Current medication" subsection appears only if a source explicitly documents current use.
 - **D. Documented follow-up.** E.g. "Ferritin recheck recommended in an earlier record. A later approved ferritin result has been found." This is calculated, so its marker leads to both the recommendation and the result. No "satisfied," "on time" or "late."
 - **E. Imaging follow-up.** A short factual line using only wording the synthetic documents support.
 
 **Provenance:** every line carries a compact source marker, e.g. `[Source 1]` or `[Sources 2, 4]`. Clicking it opens the same evidence drawer. Full excerpts don't appear inline.
 
 Acceptance criteria:
-- [ ] Before the live update, the summary shows the pre-update state, and the new ferritin value and "Completed" are absent.
+- [ ] Before the live update, the summary shows the pre-update state, and the new ferritin value and "Ongoing" are absent.
 - [ ] After approval, sections B, C and D reflect the new facts without any manual regeneration step.
 - [ ] Every statement has a source marker, and every marker opens the evidence drawer.
 - [ ] No section appears empty, and no "none"/absence statement appears.
@@ -276,7 +276,7 @@ All documents are **fully fictional, in English, and clearly marked as synthetic
 
 **Live record (1 document):** a **follow-up consultation note** dated 25 Sep 2026 that explicitly states:
 - "Ferritin on 25 Sep 2026: 32 μg/L (reference range 15–150)" or equivalent
-- that the patient completed the prescribed oral iron course
+- that the patient continues to take oral iron
 
 It does **not** say "follow-up satisfied." That relationship is calculated.
 

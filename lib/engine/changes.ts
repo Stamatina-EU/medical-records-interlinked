@@ -9,6 +9,7 @@
 import type { ChangeLine, LabMeasurement, TrustedState } from "@/lib/model/types";
 import { derive, latestMedicationStatus } from "@/lib/engine/derive";
 import { formatDate } from "@/lib/text/dates";
+import { statusLabel } from "@/lib/text/status";
 
 export function describeChanges(before: TrustedState, after: TrustedState): ChangeLine[] {
   const lines: ChangeLine[] = [];
@@ -39,7 +40,7 @@ export function describeChanges(before: TrustedState, after: TrustedState): Chan
     if (!now || now.id === was?.id) continue;
     const name = ep.name.split(" (")[0];
     lines.push({
-      text: `${name} marked ${now.status} · documented ${formatDate(now.documentedOn)}`,
+      text: `${name} marked ${statusLabel(now.status)} · documented ${formatDate(now.documentedOn)}`,
       ref: { type: "fact", id: now.id },
     });
   }

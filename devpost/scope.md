@@ -66,7 +66,7 @@ A demo that starts from an **existing fictional patient history**, already built
 3. Briefly show a second, non-numeric topic (Imaging follow-up) to show breadth.
 4. Add **one new synthetic medical document.**
 5. The AI processes it live and extracts proposed structured facts.
-6. **The "oh, that's cool" beat:** a compact review panel appears. It lists the extracted source facts (a new ferritin measurement and a documented medication completion), each with its supporting excerpt. Below them, it previews what code would derive: "This would also update… · matching follow-up result found · medication episode → Completed."
+6. **The "oh, that's cool" beat:** a compact review panel appears. It lists the extracted source facts (a new ferritin measurement and documented ongoing oral iron), each with its supporting excerpt. Below them, it previews what code would derive: "This would also update… · matching follow-up result found · medication episode → Ongoing."
 7. The patient approves. Deterministic code updates the trusted state.
 8. The history shows exactly what changed.
 9. Open the Doctor Summary. It now reflects the approved evidence, and every statement traces back to its supporting facts and source excerpts.

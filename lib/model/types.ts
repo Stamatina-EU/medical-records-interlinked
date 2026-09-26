@@ -109,7 +109,11 @@ export type CalculatedClaimKind =
   | "changed_since_previous"
   | "previously_outside_range"
   | "followup_match"
-  | "followup_no_later_result";
+  | "followup_no_later_result"
+  // summary-only, composed in lib/summary/compose.ts for the Doctor Summary (never persisted, not on Home/History)
+  | "series_count"
+  | "below_range_count"
+  | "latest_exam";
 
 export type CalculatedClaim = {
   key: string;

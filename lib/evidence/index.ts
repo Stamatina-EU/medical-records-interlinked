@@ -5,6 +5,7 @@
  */
 import type { CalculatedClaim, DocumentRecord, SourceFact, TrustedState } from "@/lib/model/types";
 import { formatDate } from "@/lib/text/dates";
+import { statusLabel } from "@/lib/text/status";
 
 export type EvidenceIndex = {
   facts: Record<string, SourceFact>;
@@ -37,7 +38,7 @@ export function factHeadline(fact: SourceFact, episodes: Record<string, string>)
     case "medication_status":
       return {
         label: episodes[fact.episodeId] ?? "Medication",
-        value: `${fact.status} · documented ${formatDate(fact.documentedOn)}`,
+        value: `${statusLabel(fact.status)} · documented ${formatDate(fact.documentedOn)}`,
       };
     case "follow_up":
       return { label: "Documented follow-up", value: fact.recommendation };

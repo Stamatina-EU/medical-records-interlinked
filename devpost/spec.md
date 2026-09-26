@@ -201,7 +201,7 @@ Implements `prd.md > History (topic template)`. Route `/history/[topic]` with to
 - **Topic Switcher:** Iron / Ferritin · Imaging follow-up.
 - **Measurement Chart** (iron only): a hand-drawn SVG line with one point per ferritin observation. Each point's supplied range is drawn as a faint band *for that point only*, because ranges differ by lab. No colour coding.
 - **Measurement Rows:** date · value · unit · supplied range · calculated labels · source marker.
-- **Medication Timeline:** the episode's explicit status events in date order (e.g. Prescribed → Completed), each with a source marker.
+- **Medication Timeline:** the episode's explicit status events in date order (e.g. Prescribed → Ongoing), each with a source marker. The stored status `Current` is always shown as "Ongoing", beside its documentation date.
 - **Follow-up Block:** the recommendation text, date and source. If there's a match, "Matching result found: Ferritin 32 μg/L — 25 Sep 2026" as a calculated claim, plus elapsed time as plain chronology.
 - **Imaging Timeline** (imaging only): exams and recommendations as source facts. "Last related examination" is backed by the later report's explicit comparison sentence (a source fact, not an inference). Read-only.
 
@@ -359,7 +359,7 @@ This confirms the learner's preferred approach from `scope.md`: deterministic co
 Implements `prd.md > Demo Reset`. `scripts/demo-reset.ts` (`npm run demo:reset`) deletes `data/runtime/` and copies the seed back. It's **not in the product UI at all**. After running it, refresh the browser.
 
 ### Preflight Script
-`scripts/preflight.ts` (`npm run preflight [runs]`). It runs the real pipeline (PDF Text Reader → Extraction Client → Fact Verifier → dedupe against the *seed* state) on the demo note N times, prints the verified facts and exclusions per run, and passes only if every run yields **both** expected facts: ferritin 32 μg/L and oral iron completed. It never writes runtime state and uses the model set in `.env.local`. It costs a few cents per run.
+`scripts/preflight.ts` (`npm run preflight [runs]`). It runs the real pipeline (PDF Text Reader → Extraction Client → Fact Verifier → dedupe against the *seed* state) on the demo note N times, prints the verified facts and exclusions per run, and passes only if every run yields **both** expected facts: ferritin 32 μg/L and oral iron Current (shown as Ongoing). It never writes runtime state and uses the model set in `.env.local`. It costs a few cents per run.
 
 ### Seed Verifier Script
 `scripts/verify-seed.ts` (`npm run verify:seed`, also run inside `npm test`). The seed is trusted state, so it gets **the same deterministic semantic checks as live facts, with the same seriousness.** For every seed fact, it reads the page text of the fact's PDF and runs:
@@ -478,15 +478,15 @@ Implements `prd.md > Synthetic Demo Record Set`. Every document is fully fiction
 | D4 | Consultation note, GP | 3 Feb 2026 | "Start oral iron… **Repeat ferritin in 3 months.**" (the ferritin follow-up) |
 | D5 | Prescription | 3 Feb 2026 | Oral iron (ferrous sulfate) → **Prescribed** only |
 | D6 | Imaging report, thyroid ultrasound | 12 Mar 2026 | "**Comparison: ultrasound of 10 Sep 2025.**" (explicit relationship) + finding statement |
-| **Live** | **Follow-up consultation note** (2 pages) | **25 Sep 2026** | Page 1: "The patient **completed** the prescribed course of oral iron." Page 2: "Ferritin on 25 Sep 2026: **32 μg/L** (reference range 15–150 μg/L)." It also includes some realistic out-of-scope text (history, examination) and **no** "follow-up satisfied" wording and no new recommendations |
+| **Live** | **Follow-up consultation note** (2 pages) | **25 Sep 2026** | Page 1: "The patient **continues to take** oral iron (ferrous sulfate) once daily." Page 2: "Ferritin on 25 Sep 2026: **32 μg/L** (reference range 15–150 μg/L)." It also includes some realistic out-of-scope text (history, examination) and **no** "follow-up satisfied" wording and no new recommendations |
 
 **Expected demo derivations:**
 - Before the update: D1 is outside its supplied range, D3 is inside its range, and D3 shows "previously outside supplied range." The follow-up has no matching result, and medication is **Prescribed**.
-- After approving both facts: 32 μg/L is inside its supplied range and changed since the previous measurement. A matching follow-up result is found (about 7 months after the recommendation), and medication is **Completed**, sourced to the live note.
+- After approving both facts: 32 μg/L is inside its supplied range and changed since the previous measurement. A matching follow-up result is found (about 7 months after the recommendation), and medication is **Ongoing** (stored as `Current`), sourced to the live note. The "Current medication" summary section appears.
 
 **Corpus wording rules.** These are needed so every fact passes the verifier's subject-and-value checks. `verify:seed` and `preflight` enforce them.
 - Every ferritin result sits in **one line or sentence**: the alias first, then value and unit, then the range, e.g. `Ferritin   32 μg/L   15–150`. No other number + unit falls between the alias and its value.
-- Every medication statement names the medication (`oral iron` / `ferrous sulfate`) **in the same sentence** as its status cue. D5 must contain the word "Prescribed" next to the medication name. The live note says, for example, "The patient completed the prescribed course of oral iron (ferrous sulfate)."
+- Every medication statement names the medication (`oral iron` / `ferrous sulfate`) **in the same sentence** as its status cue. D5 must contain the word "Prescribed" next to the medication name. The live note says "The patient continues to take oral iron (ferrous sulfate) once daily." (it avoids the word "prescribed" so no Prescribed status is proposed from it).
 - The follow-up recommendation in D4 is one sentence containing the cue, the target and the interval: "Repeat ferritin in 3 months."
 - D6's comparison sentence contains the earlier exam's date in a parseable form: "Comparison: thyroid ultrasound of 10 Sep 2025."
 - Each document's date appears in its own header text.

@@ -16,7 +16,7 @@ const proposal: Proposal = {
   createdAt: "2026-09-26T10:00:00.000Z",
   facts: [
     { id: "doc-07-lab-1", kind: "lab_measurement", topic: "iron", analyte: "ferritin", value: 32, unit: "μg/L", refLow: 15, refHigh: 150, refText: "15–150", measuredOn: "2026-09-25", source: { documentId: "doc-07", page: 2, verifiedExcerpt: "Ferritin on 25 Sep 2026: 32 μg/L (reference range 15–150 μg/L)." }, review: "PROPOSED" },
-    { id: "doc-07-med-1", kind: "medication_status", episodeId: "ep-oral-iron", status: "Completed", documentedOn: "2026-09-25", source: { documentId: "doc-07", page: 1, verifiedExcerpt: "The patient completed the prescribed course of oral iron (ferrous sulfate) in May 2026." }, review: "PROPOSED" },
+    { id: "doc-07-med-1", kind: "medication_status", episodeId: "ep-oral-iron", status: "Current", documentedOn: "2026-09-25", source: { documentId: "doc-07", page: 1, verifiedExcerpt: "The patient continues to take oral iron (ferrous sulfate) once daily." }, review: "PROPOSED" },
   ],
 };
 const after = apply(seed, proposal, ["doc-07-lab-1", "doc-07-med-1"], "2026-09-26T10:05:00.000Z");
@@ -36,7 +36,7 @@ describe("History › Iron / Ferritin", () => {
     expect(v.followUps[0]).toMatchObject({ stateKey: "followup-no-later:fu-ferritin-2026-02-03", elapsedMonths: null });
   });
 
-  it("after the update: 3 results, the new one marked; Prescribed → Completed; follow-up matched with plain chronology", () => {
+  it("after the update: 3 results, the new one marked; Prescribed → Current (Ongoing); follow-up matched with plain chronology", () => {
     const v = view(after, "iron");
     if (v.topic !== "iron") throw new Error("wrong topic");
     expect(v.measurements.map((m) => [m.fact.value, m.updated])).toEqual([
@@ -46,7 +46,7 @@ describe("History › Iron / Ferritin", () => {
     ]);
     expect(v.treatment[0].events.map((e) => [e.fact.status, e.updated])).toEqual([
       ["Prescribed", false],
-      ["Completed", true],
+      ["Current", true],
     ]);
     expect(v.followUps[0]).toMatchObject({ stateKey: "followup-match:fu-ferritin-2026-02-03", elapsedMonths: 7, updated: true });
   });
