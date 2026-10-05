@@ -1,8 +1,9 @@
 /**
  * Metadata for an ADDED document. Pure.
- * The displayed title must come from the document itself: the model's `documentType` is only a
- * search key — if it is found in the page text, the title is cut from that text; otherwise a
- * neutral fallback is used. The date is the verified document date.
+ * Title and type come only from the document's own text. The model's `documentType` is just a
+ * search key: if it is found word for word in the page text, the title is cut from that text and
+ * the type is classified from that verified text (or `other`). If it is not found, the suggestion
+ * is ignored entirely: title "Added document", type `other`. The date is the verified document date.
  */
 import type { DocumentRecord, DocumentType, TrustedState } from "@/lib/model/types";
 import { findOriginalSpan, normalize } from "@/lib/text/normalize";
@@ -16,20 +17,17 @@ function titleCase(s: string): string {
     .join(" ");
 }
 
-function classify(text: string): DocumentType {
-  const n = normalize(text);
+/** Classify VERIFIED source text only; anything unrecognised is `other`, never a guessed type. */
+function classify(verifiedText: string): DocumentType {
+  const n = normalize(verifiedText);
   if (n.includes("prescription")) return "prescription";
   if (/(imaging|ultrasound|x-ray|radiolog|mri|ct scan)/.test(n)) return "imaging_report";
   if (/(laborator|lab report|pathology)/.test(n)) return "lab_report";
-  return "consultation_note";
+  if (/(consultation|clinic note|visit note)/.test(n)) return "consultation_note";
+  return "other";
 }
 
-const FALLBACK_TITLE: Record<DocumentType, string> = {
-  prescription: "Prescription",
-  imaging_report: "Imaging Report",
-  lab_report: "Laboratory Report",
-  consultation_note: "Consultation Note",
-};
+export const UNVERIFIED_TITLE = "Added document";
 
 export function nextDocumentId(state: TrustedState): string {
   const nums = state.documents.map((d) => Number(d.id.replace(/^doc-/, ""))).filter((n) => Number.isFinite(n));
@@ -44,11 +42,10 @@ export function addedDocumentRecord(
   documentId: string,
 ): DocumentRecord {
   const span = extractedType.trim() ? findOriginalSpan(pages.join("\n"), extractedType) : null;
-  const type = classify(span ?? extractedType);
   return {
     id: documentId,
-    title: span ? titleCase(span) : FALLBACK_TITLE[type],
-    documentType: type,
+    title: span ? titleCase(span) : UNVERIFIED_TITLE,
+    documentType: span ? classify(span) : "other",
     issuer: "", // not extracted — the drawer shows how the document was added instead
     date: verifiedDate,
     file: `${documentId}.pdf`,

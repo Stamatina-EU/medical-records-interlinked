@@ -69,7 +69,7 @@ npm run build
 npm run start
 ```
 
-Open http://localhost:3000. For development with hot reload, use `npm run dev`.
+Open http://localhost:3000. The server binds to 127.0.0.1 only, so it is not reachable from other devices on your network. For development with hot reload, use `npm run dev`.
 
 ## Try the core journey
 

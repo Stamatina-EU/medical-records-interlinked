@@ -9,6 +9,7 @@
 import type { CalculatedClaim, ChangeLine, DocumentRecord, ImagingExam, TrustedState } from "@/lib/model/types";
 import { ferritinSeries, followUps, latestMedicationStatus } from "@/lib/engine/derive";
 import { changesSummary } from "@/lib/engine/changes";
+import { FERRITIN_SERIES_KEY, IMAGING_KEY, TREATMENTS_KEY } from "@/lib/engine/recordClaims";
 
 /** stateKey: the derived chronology claim for this follow-up (match found, or no later result), if any */
 export type FollowUpItem = { factId: string; stateKey: string | null; updated: boolean };
@@ -24,10 +25,11 @@ export type HistoryTopicSummary = {
   extra: string | null;
 };
 
+/** countClaimKey: the derived record claim behind the row's count and "latest" selection (lib/engine/recordClaims.ts) */
 export type LatestGroup =
-  | { kind: "measurements"; count: number; countLabel: string; latestFactId: string; claimKeys: string[]; href: string; updated: boolean }
-  | { kind: "treatment"; count: number; countLabel: string; latestEventId: string; href: string; updated: boolean }
-  | { kind: "imaging"; count: number; countLabel: string; latestExamId: string; href: string; updated: boolean };
+  | { kind: "measurements"; count: number; countLabel: string; countClaimKey: string; latestFactId: string; claimKeys: string[]; href: string; updated: boolean }
+  | { kind: "treatment"; count: number; countLabel: string; countClaimKey: string; latestEventId: string; href: string; updated: boolean }
+  | { kind: "imaging"; count: number; countLabel: string; countClaimKey: string; latestExamId: string; href: string; updated: boolean };
 
 export type SnapshotView = {
   patientName: string;
@@ -79,6 +81,7 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
       kind: "measurements",
       count: series.length,
       countLabel: plural(series.length, "ferritin result", "ferritin results"),
+      countClaimKey: FERRITIN_SERIES_KEY,
       latestFactId: latest.id,
       claimKeys: [`range:${latest.id}`].filter(has),
       href: "/history/iron",
@@ -91,6 +94,7 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
       kind: "treatment",
       count: treatments.length,
       countLabel: plural(treatments.length, "treatment documented", "treatments documented"),
+      countClaimKey: TREATMENTS_KEY,
       latestEventId: latest.latest!.id,
       href: `/history/${latest.ep.topic}`,
       updated: affected.has(latest.latest!.id),
@@ -102,6 +106,7 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
       kind: "imaging",
       count: exams.length,
       countLabel: plural(exams.length, noun, `${noun}s`),
+      countClaimKey: IMAGING_KEY,
       latestExamId: exams[exams.length - 1].id,
       href: "/history/imaging",
       updated: affected.has(exams[exams.length - 1].id),
@@ -139,6 +144,7 @@ export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): Sn
     imaging_report: ["imaging report", "imaging reports"],
     consultation_note: ["consultation note", "consultation notes"],
     prescription: ["prescription", "prescriptions"],
+    other: ["other document", "other documents"],
   };
   const typeCounts = new Map<string, number>();
   for (const d of state.documents) typeCounts.set(d.documentType, (typeCounts.get(d.documentType) ?? 0) + 1);

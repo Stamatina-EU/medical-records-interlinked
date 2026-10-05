@@ -46,6 +46,7 @@ const DOC_TYPE_SHORT: Record<string, string> = {
   imaging_report: "Imaging report",
   consultation_note: "Consultation note",
   prescription: "Prescription",
+  other: "Document",
 };
 
 /**
@@ -77,19 +78,21 @@ export function SourceRef({ factId }: { factId: string }) {
   );
 }
 
-export function CalculatedLabel({ claimKey }: { claimKey: string }) {
+/** `label` (optional): the wording shown in place of the claim's headline; the drawer still shows the headline. */
+export function CalculatedLabel({ claimKey, label }: { claimKey: string; label?: string }) {
   const { open, index } = useEvidence();
   const claim = index.claims[claimKey];
   if (!claim) return null;
+  const text = label ?? claim.text;
   return (
     <button
       type="button"
       className={styles.calculated}
       onClick={() => open({ type: "claim", key: claimKey })}
-      aria-label={`${claim.text} (derived — show how this was determined)`}
+      aria-label={`${text} (derived — show how this was determined)`}
       title="Derived from your records — show how this was determined"
     >
-      <span className={styles.calcText}>{claim.text}</span>
+      <span className={styles.calcText}>{text}</span>
       <span className={styles.calcTag}>derived</span>
     </button>
   );

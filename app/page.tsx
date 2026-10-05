@@ -7,6 +7,7 @@
 import { readState, StateCorruptedError } from "@/lib/store/stateStore";
 import { derive } from "@/lib/engine/derive";
 import { buildEvidenceIndex } from "@/lib/evidence/index";
+import { recordClaims } from "@/lib/engine/recordClaims";
 import { snapshotView } from "@/lib/view/snapshot";
 import EvidenceProvider from "@/components/evidence/EvidenceProvider";
 import SnapshotHeader from "@/components/snapshot/SnapshotHeader";
@@ -29,7 +30,8 @@ export default async function HomePage() {
     throw err;
   }
   const claims = derive(state);
-  const index = buildEvidenceIndex(state, claims);
+  // record claims (counts, "latest" selection) open in the drawer like any other derived claim
+  const index = buildEvidenceIndex(state, [...claims, ...recordClaims(state)]);
   const view = snapshotView(state, claims);
 
   return (

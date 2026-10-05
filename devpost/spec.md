@@ -107,7 +107,7 @@ Snapshot / History / Summary ◀── State Store + Engine: derive (+ Summary C
 
 ## Where It Runs and How Someone Tries It
 
-**Runtime:** a local Node.js process serving a web app, opened in a desktop browser. Chrome or Edge is recommended, because their built-in PDF viewer supports `#page=N`.
+**Runtime:** a local Node.js process serving a web app, opened in a desktop browser. Both `dev` and `start` bind to `127.0.0.1` only (`-H 127.0.0.1`), so the app is never exposed on the local network. Chrome or Edge is recommended, because their built-in PDF viewer supports `#page=N`.
 
 **Requirements:**
 - Node.js 20+ (v24 is installed)
@@ -394,7 +394,7 @@ Implements `scope.md > The POC Boundary` ("One structured state using four entit
 type DocumentRecord = {
   id: string;                 // "doc-03"
   title: string;              // "Laboratory Report"
-  documentType: "lab_report" | "prescription" | "consultation_note" | "imaging_report";
+  documentType: "lab_report" | "prescription" | "consultation_note" | "imaging_report" | "other"; // added docs: from source text only, else "other" titled "Added document"
   issuer: string;             // fictional clinic/lab name
   date: string;               // ISO date
   file: string;               // PDF filename

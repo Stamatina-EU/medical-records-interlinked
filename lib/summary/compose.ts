@@ -23,6 +23,7 @@ import type {
   TrustedState,
 } from "@/lib/model/types";
 import { ferritinSeries, followUps, medicationEvents } from "@/lib/engine/derive";
+import { ferritinSeriesClaim, latestExamClaim } from "@/lib/engine/recordClaims";
 import { formatDate } from "@/lib/text/dates";
 import { statusLabel } from "@/lib/text/status";
 
@@ -75,18 +76,10 @@ export function composeDoctorSummary(state: TrustedState, claims: CalculatedClai
     .sort((a, b) => a.performedOn.localeCompare(b.performedOn));
   const latestSourceDate = state.documents.map((d) => d.date).reduce((a, b) => (b > a ? b : a), "");
 
-  // The ferritin count + latest selection is one derived claim, shared by the picture and section A.
+  // The ferritin count + latest selection is one shared record claim, used by the picture and section A.
   const lastM = series[series.length - 1];
-  const seriesKey = lastM
-    ? addClaim({
-        key: "summary-series:ferritin",
-        kind: "series_count",
-        text: `${series.length} ferritin ${series.length === 1 ? "measurement" : "measurements"} documented · latest ${lastM.value} ${lastM.unit} on ${formatDate(lastM.measuredOn)}`,
-        ruleDescription:
-          "Counted every approved ferritin result in your record and ordered them by measurement date; the latest is the one with the most recent date. No document states this count or which result is the latest.",
-        inputFactIds: series.map((m) => m.id),
-      })
-    : null;
+  const seriesClaim = ferritinSeriesClaim(state);
+  const seriesKey = seriesClaim ? addClaim(seriesClaim) : null;
 
   // Current documented picture — orientation only; every sentence from the templates below.
   const picture: Statement[] = [];
@@ -135,14 +128,9 @@ export function composeDoctorSummary(state: TrustedState, claims: CalculatedClai
   for (const examName of [...new Set(exams.map((x) => x.examName))]) {
     const ofName = exams.filter((x) => x.examName === examName);
     const latest = ofName[ofName.length - 1];
-    if (ofName.length >= 2) {
-      const key = addClaim({
-        key: `summary-latest-exam:${examName}`,
-        kind: "latest_exam",
-        text: `Latest documented ${lowerFirst(examName)} · ${formatDate(latest.performedOn)}`,
-        ruleDescription: `Ordered every approved ${lowerFirst(examName)} in your record by examination date and took the most recent. No document states which examination is the latest.`,
-        inputFactIds: ofName.map((x) => x.id),
-      });
+    const latestClaim = latestExamClaim(state, examName); // present only when there are ≥ 2
+    if (latestClaim) {
+      const key = addClaim(latestClaim);
       picture.push(stmt(`The latest documented ${lowerFirst(examName)} is dated ${formatDate(latest.performedOn)}.`, [claim(key)], true));
     } else {
       picture.push(stmt(`A ${lowerFirst(examName)} dated ${formatDate(latest.performedOn)} is documented.`, [fact(latest.id)]));

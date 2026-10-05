@@ -8,7 +8,8 @@
  *  - USER CONFIRMED has no representation in this POC
  */
 
-export type DocumentType = "lab_report" | "prescription" | "consultation_note" | "imaging_report";
+/** `other`: an added document whose type cannot be established from its own text. */
+export type DocumentType = "lab_report" | "prescription" | "consultation_note" | "imaging_report" | "other";
 
 export type DocumentRecord = {
   id: string;
@@ -110,10 +111,12 @@ export type CalculatedClaimKind =
   | "previously_outside_range"
   | "followup_match"
   | "followup_no_later_result"
-  // summary-only, composed in lib/summary/compose.ts for the Doctor Summary (never persisted, not on Home/History)
+  // record claims (lib/engine/recordClaims.ts): medical counts / "latest" selection, shared by Home and the Summary
   | "series_count"
-  | "below_range_count"
-  | "latest_exam";
+  | "latest_exam"
+  | "latest_status"
+  // summary-only, composed in lib/summary/compose.ts
+  | "below_range_count";
 
 export type CalculatedClaim = {
   key: string;

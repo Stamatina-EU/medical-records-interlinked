@@ -1,7 +1,10 @@
 /**
  * "Latest in your record" — compact, grouped, scalable. One row per category (measurements,
- * treatment, imaging): a deterministic count, the latest documented item (opens its evidence),
- * and a way deeper into History. Never one card per value.
+ * treatment, imaging), and a way deeper into History. Never one card per value.
+ *
+ * Direct and Derived are kept on separate lines: the first line owns the DERIVED proposition
+ * (count + which item is the latest, opening the record claim with every input); the next line
+ * is the DIRECT source fact itself (value/status/exam and date, opening its source).
  */
 import Link from "next/link";
 import type { ImagingExam, LabMeasurement, MedicationStatusEvent } from "@/lib/model/types";
@@ -19,6 +22,13 @@ const TITLES: Record<LatestGroup["kind"], string> = {
   imaging: "Imaging",
 };
 
+// what the derived first line asserts besides the count
+const LATEST_PHRASE: Record<LatestGroup["kind"], string> = {
+  measurements: "latest in record",
+  treatment: "latest status",
+  imaging: "latest in record",
+};
+
 const VIEW_LABEL: Record<LatestGroup["kind"], string> = {
   measurements: "View measurements",
   treatment: "View treatment history",
@@ -32,7 +42,7 @@ function Latest({ group, index }: { group: LatestGroup; index: EvidenceIndex }) 
       return (
         <>
           <FactValue factId={m.id} className={styles.groupLatest}>
-            Latest: <strong>Ferritin {m.value} {m.unit}</strong> · {formatDate(m.measuredOn)}
+            <strong>Ferritin {m.value} {m.unit}</strong> · {formatDate(m.measuredOn)}
           </FactValue>
           {group.claimKeys.map((k) => (
             <CalculatedLabel key={k} claimKey={k} />
@@ -56,7 +66,7 @@ function Latest({ group, index }: { group: LatestGroup; index: EvidenceIndex }) 
       const x = index.facts[group.latestExamId] as ImagingExam;
       return (
         <FactValue factId={x.id} className={styles.groupLatest}>
-          Latest: <strong>{formatDate(x.performedOn)}</strong> · {x.examName}
+          <strong>{formatDate(x.performedOn)}</strong> · {x.examName}
         </FactValue>
       );
     }
@@ -78,7 +88,9 @@ export default function LatestInRecord({ groups, index }: { groups: LatestGroup[
           <li key={g.kind} className={g.updated ? `${styles.group} ${styles.updated}` : styles.group}>
             <div className={styles.groupHead}>
               <h3 className={styles.groupTitle}>{TITLES[g.kind]}</h3>
-              <p className={styles.groupCount}>{g.countLabel}</p>
+              <p className={styles.groupCount}>
+                <CalculatedLabel claimKey={g.countClaimKey} label={`${g.countLabel} · ${LATEST_PHRASE[g.kind]}`} />
+              </p>
               {g.updated && <p className={styles.updatedLabel}>Updated from latest record</p>}
             </div>
             <div className={styles.groupBody}>

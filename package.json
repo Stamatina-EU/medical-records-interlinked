@@ -4,9 +4,9 @@
   "private": true,
   "description": "Evidence-linked medical history proof of concept (synthetic data only).",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 127.0.0.1",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -H 127.0.0.1",
     "test": "vitest run && npm run verify:seed",
     "verify:seed": "tsx scripts/verify-seed.ts",
     "corpus:build": "tsx scripts/build-corpus.ts",

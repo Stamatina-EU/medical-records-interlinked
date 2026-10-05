@@ -1,4 +1,8 @@
-/** "Your history" — navigable app destinations that lead deeper into the record. */
+/**
+ * "Your history" — navigable app destinations that lead deeper into the record.
+ * Cards carry navigation metadata only (title, date span, related treatment). Medical counts
+ * live in "Latest in your record", where they open their derived claim.
+ */
 import Link from "next/link";
 import type { SnapshotView } from "@/lib/view/snapshot";
 import { formatDate } from "@/lib/text/dates";
@@ -24,9 +28,6 @@ export default function HistoryTopics({ topics }: { topics: SnapshotView["histor
             <Link href={`/history/${t.topic}`} className={`${styles.surface} ${styles.destination}`}>
               <span className={styles.destText}>
                 <span className={styles.destTitle}>{t.title}</span>
-                <span className={styles.destMeta}>
-                  {t.count} {t.countNoun}
-                </span>
                 {t.firstDate && t.lastDate && (
                   <span className={styles.destMeta}>
                     {monthYear(t.firstDate)} – {monthYear(t.lastDate)}

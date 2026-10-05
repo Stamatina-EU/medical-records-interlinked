@@ -149,8 +149,9 @@ describe("added document metadata comes from the document, not the model", () =>
       "",
     ]);
   });
-  it("falls back to a neutral title when the model's type is not in the text", () => {
-    expect(addedDocumentRecord(livePages, "Discharge summary", "2026-09-25", "doc-07").title).toBe("Consultation Note");
+  it("ignores the model's type when it is not in the text: neutral title, type 'other'", () => {
+    const d = addedDocumentRecord(livePages, "Discharge summary", "2026-09-25", "doc-07");
+    expect([d.title, d.documentType]).toEqual(["Added document", "other"]);
   });
   it("assigns the next document id", () => {
     expect(nextDocumentId(seed)).toBe("doc-07");
