@@ -23,7 +23,7 @@ const evidenceFont = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "MyHeDo — My health, documented.",
+  title: "MRI — Medical Records Interlinked",
   description: "An evidence-linked personal health record — proof of concept with synthetic data only.",
 };
 

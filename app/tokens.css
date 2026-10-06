@@ -1,6 +1,6 @@
 /*
  * Design tokens — spec.md > Look and Feel.
- * MyHeDo is a personal app that CONTAINS medical records; it should not look like one.
+ * MRI is a personal app that CONTAINS medical records; it should not look like one.
  * Colour signals INTERFACE STATE, never medical judgement: no red / amber / green anywhere.
  * Fonts are swappable in one place: app/layout.tsx maps next/font families to
  * --font-ui-family and --font-evidence-family; components only use --font-ui / --font-evidence.

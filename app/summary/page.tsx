@@ -1,6 +1,6 @@
 /**
  * Doctor Summary — a concise, user-controlled, evidence-linked view of the history represented
- * in MyHeDo, to show or discuss with a new doctor. The one deliberately typeset clinical brief.
+ * in MRI (Medical Records Interlinked), to show or discuss with a new doctor. The one deliberately typeset clinical brief.
  * It is not a claim to be the doctor's only access to the patient's history.
  * Spec: `spec.md > Doctor Summary Page`; PRD: `prd.md > Doctor Summary`.
  */
@@ -39,11 +39,11 @@ export default async function DoctorSummaryPage() {
               {summary.patientName} <span className={styles.synthetic}>fictional · synthetic demo record</span>
             </h1>
             <p className={styles.meta}>
-              Prepared in MyHeDo from {summary.documentCount} source documents
+              Prepared in Medical Records Interlinked (MRI) from {summary.documentCount} source documents
               {summary.latestSourceDate && ` · latest source dated ${formatDate(summary.latestSourceDate)}`}
             </p>
             <p className={styles.scope}>
-              A concise, evidence-linked view of the documented history held in MyHeDo. Every statement links to its source;
+              A concise, evidence-linked view of the documented history held in this record. Every statement links to its source;
               statements marked “derived” were calculated from the documents, not written in them.
             </p>
           </header>

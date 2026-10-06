@@ -50,7 +50,7 @@ const DOC_TYPE_SHORT: Record<string, string> = {
 };
 
 /**
- * The MyHeDo source signature: "Lab report · 27 Jan 2026 · p. 2". Quiet, consistent, tappable;
+ * The MRI source signature: "Lab report · 27 Jan 2026 · p. 2". Quiet, consistent, tappable;
  * opens the evidence drawer / sheet. The page is the VERIFIED page of the fact, shown only when
  * the document has more than one page (where it genuinely helps).
  */

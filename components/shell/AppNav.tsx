@@ -1,7 +1,7 @@
 "use client";
 /**
  * App navigation — one system, two presentations:
- *  - desktop: a sidebar carrying the MyHeDo identity and the patient who owns the space
+ *  - desktop: a sidebar carrying the MRI identity (mark + descriptor) and the patient who owns the space
  *  - mobile: a top bar with the brand + a bottom tab bar with comfortable touch targets
  * Destinations: Home (the Snapshot) · History · Doctor Summary.
  */
@@ -18,11 +18,10 @@ const ITEMS = [
 
 function Brand() {
   return (
-    <Link href="/" className={styles.brand} aria-label="MyHeDo home">
-      <span className={styles.wordmark}>
-        My<span className={styles.wordmarkAccent}>He</span>Do
-      </span>
-      <span className={styles.tagline}>My health, documented.</span>
+    // Primary mark + descriptor only; the tagline is a presentation line, not part of the nav shell.
+    <Link href="/" className={styles.brand} aria-label="MRI, Medical Records Interlinked, home">
+      <span className={styles.wordmark}>MRI</span>
+      <span className={styles.descriptor}>Medical Records Interlinked</span>
     </Link>
   );
 }

@@ -1,12 +1,14 @@
-# MyHeDo — My health, documented.
+# MRI — Medical Records Interlinked
+
+*Every claim, back to its source.*
 
 **No medical claim without provenance.**
 
-MyHeDo is a hackathon proof of concept for an evidence-linked, longitudinal personal medical history. You add a medical document (a PDF). AI proposes facts from it, deterministic code checks each one against the document's own text, you approve what goes in, and then deterministic code works out what changed. Every value, status and recommendation in the app links back to the exact wording and page it came from.
+MRI stands for Medical Records Interlinked. It is a hackathon proof of concept for an evidence-linked, longitudinal personal medical history. You add a medical document (a PDF). AI proposes facts from it, deterministic code checks each one against the document's own text, you approve what goes in, and then deterministic code works out what changed. Every value, status and recommendation in the app links back to the exact wording and page it came from.
 
 > ⚠️ **Synthetic data only.** Every person, clinic, laboratory, value and document in this repository is fictional ("Alex Rowan" is not a real patient). The app is a proof of concept. It is not a medical device, gives no medical advice, and must not be used with real medical records.
 
-> *MyHeDo* is a working hackathon name, not a registered trademark.
+> *MRI* is a working hackathon name, not a registered trademark.
 
 ## The idea
 
@@ -31,7 +33,7 @@ AI proposes → deterministic code verifies → you approve the evidence
 
 Structured, provider-backed health records already exist. In Greece, for example, the national MyHealth / electronic health record ecosystem holds examinations, prescriptions and diagnoses recorded by healthcare providers.
 
-MyHeDo is **not** a replacement for, or an integration with, any national EHR, patient portal or provider system. It does not give doctors access to anything they could not otherwise see.
+MRI is **not** a replacement for, or an integration with, any national EHR, patient portal or provider system. It does not give doctors access to anything they could not otherwise see.
 
 What this proof of concept demonstrates is narrower: the **trust pipeline** that turns an unstructured external document into verified, patient-approved, evidence-linked updates to a longitudinal history.
 

@@ -3,12 +3,12 @@ doc: spec
 status: approved
 ---
 
-# MyHeDo — Technical Spec
+# MRI — Technical Spec
 
 *Positioning (`scope.md > Context and Positioning`): a trust layer for medical documents outside structured health records. It is not an EHR, an EHR or government health-system integration, or a patient portal. This note doesn't change the architecture below.*
 
 Implements `prd.md` (approved) within `scope.md > The POC Boundary`.
-Working brand: **MyHeDo** — "My health, documented." A hackathon working brand, not a cleared trademark, and never abbreviated (`prd.md > Product Decisions`).
+Working brand: **MRI** (primary mark) · **Medical Records Interlinked** (descriptor) · "Every claim, back to its source." (tagline, not part of the logo lockup or the nav shell). A hackathon working name, not a cleared trademark (`prd.md > Product Decisions`).
 
 ---
 
@@ -209,7 +209,7 @@ Implements `prd.md > History (topic template)`. Route `/history/[topic]` with to
 Implements `prd.md > Doctor Summary`. Route `/summary` (dynamic). It's a user-controlled, evidence-linked view of the history represented in this product, not a claim to be the doctor's only access to the patient's history. It renders the output of the **Summary Composer** as a typeset brief, with a numbered **Sources** list at the foot (document type · source · date). Each chip opens the drawer for the underlying fact or claim.
 
 ### App Shell and Navigation
-`components/shell/AppNav.tsx` + `shell.module.css`, mounted in `app/layout.tsx`. It's one navigation system with two presentations. Desktop (> 860px) gets a fixed sidebar with the MyHeDo wordmark, the tagline, Home · History · Doctor Summary, and the owning patient ("Alex Rowan · Synthetic demo record"). Mobile gets a top bar with the brand and a bottom tab bar (Home · History · Summary) with 44px+ targets. Line icons are inline SVG (`components/shell/icons.tsx`), and there's no icon library.
+`components/shell/AppNav.tsx` + `shell.module.css`, mounted in `app/layout.tsx`. It's one navigation system with two presentations. Desktop (> 860px) gets a fixed sidebar with the MRI mark and the descriptor "Medical Records Interlinked" (no tagline), Home · History · Doctor Summary, and the owning patient ("Alex Rowan · Synthetic demo record"). Mobile gets a top bar with the mark + descriptor (mark only below 340px, never wrapped) and a bottom tab bar (Home · History · Summary) with 44px+ targets. Line icons are inline SVG (`components/shell/icons.tsx`), and there's no icon library.
 
 ### Evidence Drawer
 Implements `prd.md > Evidence Drawer`. A client component mounted once in the layout (`components/evidence/`) and opened through a small React context (`EvidenceProvider`), so any view can open it with a fact or claim reference.

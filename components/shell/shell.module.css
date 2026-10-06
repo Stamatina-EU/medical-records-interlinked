@@ -28,13 +28,10 @@
   line-height: 1;
 }
 
-.wordmarkAccent {
-  color: var(--accent);
-}
-
-.tagline {
+.descriptor {
   font-size: var(--text-xs);
   color: var(--ink-muted);
+  white-space: nowrap;
 }
 
 /* ── Desktop sidebar ───────────────────────────────────────────────── */
@@ -138,6 +135,13 @@
 
   .topbar .wordmark {
     font-size: 1.375rem;
+  }
+
+  /* very narrow screens: the mark alone, never a wrapped descriptor */
+  @media (max-width: 340px) {
+    .topbar .descriptor {
+      display: none;
+    }
   }
 
   .tabbar {

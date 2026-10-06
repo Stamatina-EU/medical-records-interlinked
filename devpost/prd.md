@@ -3,14 +3,14 @@ doc: prd
 status: approved
 ---
 
-# MyHeDo — Product Requirements
+# MRI — Product Requirements
 
 An evidence-linked medical history for an adult patient about to see a new doctor. It focuses on medical documents that aren't already represented in a structured health record. A new record proposes changes, the patient approves the evidence, code derives the consequences, and every claim stays traceable to its source.
 Source: `scope.md > The Unique Kernel`, `scope.md > Who It's For`, `scope.md > Context and Positioning`.
 
 This POC is **not** a replacement for a national EHR, MyHealth or any other provider-backed record system. It isn't an EHR or government health-system integration, and it isn't a general patient portal. Its differentiator is the trust pipeline: unstructured external document → proposed facts → deterministic source verification → patient approval → evidence-linked longitudinal update.
 
-**Working brand:** **MyHeDo** — "My health, documented." A working hackathon brand chosen by the learner during the build (it replaces the earlier label "Medical History"), not a legally cleared trademark. Always written "MyHeDo", never abbreviated to an acronym.
+**Working brand:** three separate levels, chosen by the learner. **Primary mark:** MRI. **Descriptor:** Medical Records Interlinked. **Tagline:** "Every claim, back to its source." The tagline is a presentation line, not part of the core logo lockup or the navigation shell. A hackathon working name, not a legally cleared trademark (it replaces the earlier working brand "MyHeDo"). Where a doctor reads it (the Doctor Summary), the full name "Medical Records Interlinked (MRI)" is used.
 
 **Governing principles** (from `scope.md > The Unique Kernel` and `scope.md > The POC Boundary`):
 - **No medical claim without provenance.** Every source fact is traceable to an exact supporting excerpt. Every calculated claim is traceable to the structured facts that produced it, and through them to their excerpts.
@@ -40,7 +40,7 @@ Source: `scope.md > What "Working" Looks Like`, `scope.md > The Core Loop`.
 ## Screens and Layout
 Source: `scope.md > The POC Boundary`.
 
-**Three primary destinations** in one consistent app navigation: **Home (the Snapshot) · History · Doctor Summary**. On desktop they sit in a sidebar that carries the MyHeDo identity. On mobile there's a top bar with the brand and a bottom tab bar with comfortable touch targets.
+**Three primary destinations** in one consistent app navigation: **Home (the Snapshot) · History · Doctor Summary**. On desktop they sit in a sidebar that carries the MRI mark and its descriptor. On mobile there's a top bar with the brand and a bottom tab bar with comfortable touch targets.
 
 | Surface | Type | Purpose |
 |---|---|---|
@@ -108,7 +108,7 @@ Top to bottom:
 
 **D. Latest in your record** — compact, grouped, scalable
 - One row per category (Measurements, Treatment / medication, Imaging), with a deterministic count, the latest documented item (which opens its evidence), its **source reference** and a **View** link into History. Never one card per value.
-- **Source reference (MyHeDo's visual signature):** a quiet, tappable line with a teal document mark, e.g. "Lab report · 27 Jan 2026 · p. 2". It opens the evidence drawer or sheet. The page is the fact's verified page, shown only when the document has more than one page, and never invented.
+- **Source reference (MRI's visual signature):** a quiet, tappable line with a teal document mark, e.g. "Lab report · 27 Jan 2026 · p. 2". It opens the evidence drawer or sheet. The page is the fact's verified page, shown only when the document has more than one page, and never invented.
 - Latest documented information only, as recorded, not a claim about the patient's state today. Longitudinal claims live in History and What changed.
 - If many values sit outside their supplied ranges, Home may show a deterministic count (e.g. "N measurements outside their supplied ranges"), never one card per value and never judgement words. *(Not shown in this POC by learner decision: that historical information belongs in History and, where relevant, What changed.)*
 
@@ -329,7 +329,7 @@ Acceptance criteria:
 - **Doctor Summary provenance uses compact source markers on every line.** It stays concise, and provenance is never hidden.
 - **Latest-update marking works by update batch, not by time.** It's deterministic and reliable for the demo.
 - **No "Needs attention" section and no traffic-light colours.** Both would imply medical prioritisation or judgement.
-- **Working brand: MyHeDo, "My health, documented."** Chosen once the product was visible, as planned. It's a hackathon working brand, not a cleared trademark, and is never abbreviated to an acronym.
+- **Working brand: MRI — Medical Records Interlinked; tagline "Every claim, back to its source."** It replaces the earlier working brand "MyHeDo" (learner decision after the code freeze). Mark, descriptor and tagline are three separate levels: the sidebar and mobile header show the mark + descriptor only (the mark alone on very narrow screens), and the tagline stays out of the navigation shell. A hackathon working name, not a cleared trademark.
 - **A responsive personal app, not a document.** The application contains medical records but doesn't look like one. Only the Doctor Summary is deliberately a typeset clinical brief.
 - **Demo reset stays out of the product UI.** It's demo infrastructure, not a feature.
 
