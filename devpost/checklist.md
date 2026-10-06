@@ -150,6 +150,16 @@ Edit outcome:
 Reflection:
 Activity mode:
 
+## Devpost Submission Requirements (confirmed by Devpost's official Build With AI: Basics update)
+
+**Deadline:** Monday, 26 October 2026, 5:00 PM ET (23:00 Greece time).
+
+- [ ] Skill Pack field: a short explanation of how we used the Devpost Learn Skill Pack. The project followed the Skill Pack workflow 1-start → 2-scope → 3-prd → 4-spec → 5-build → 6-ship (6-ship still ahead at the time of this note). The learner writes it at submission time; it is not drafted yet.
+- [ ] Eligibility: confirm the age-of-majority checkbox (required, final submission check).
+- [ ] "Try it out" field includes the public GitHub repository link.
+
+Reference only: the Devpost Learn Skill Pack repository is now MIT-licensed. This does not decide our own project LICENSE, which is still open.
+
 ## Revisions
 
 - Corpus PDFs render through Playwright driving the locally installed Microsoft Edge (`channel: "msedge"`), not a downloaded Chromium. The Chromium download timed out on this network, and Edge produces the same clean text layer with no ~150 MB download. Only `scripts/build-corpus.ts` is affected, and the committed PDFs mean the app never needs it.
@@ -234,3 +244,5 @@ Activity mode:
     - The extraction instruction (and the schema field *descriptions* only) is narrowed to ferritin and oral iron, with names taken from the lexicon.
     - Live checks: preflight 5/5 again, and two unrelated synthetic reports now return `no_supported_facts`.
   - **Empty-record bootstrap bug found and fixed.** Medication verification looked the episode up only in the stored history, and `apply` never created episodes, so an empty record could not accept its first oral-iron status. Episode identity is now code-owned (`MEDICATION_EPISODES` in the lexicon, next to the aliases), and `apply` creates the episode with its first approved status. The summary composer is safe on an empty record. `tests/bootstrap.test.ts` covers empty state → first document → verified facts → approval → first measurement, topic and episode. It also checks that longitudinal claims wait for history, and that it fails against the old lookup and the old `apply`. The demo still starts from the synthetic seed, and the README explains why.
+- Devpost's official submission update was recorded under **Devpost Submission Requirements**: the deadline (26 Oct 2026, 5:00 PM ET / 23:00 Greece), the new required Skill Pack explanation field, the age-of-majority eligibility checkbox, and the public repo link in "Try it out". The Skill Pack's MIT licence was noted as reference only. Planning record only; no app change.
+
