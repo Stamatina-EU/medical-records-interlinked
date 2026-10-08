@@ -11,9 +11,9 @@ import { useRouter } from "next/navigation";
 import type { Proposal, TrustedState } from "@/lib/model/types";
 import { preview } from "@/lib/engine/apply";
 import { formatDate } from "@/lib/text/dates";
+import { reviewFactHeadline } from "@/lib/view/reviewFact";
 import { PlusIcon } from "@/components/shell/icons";
 import styles from "./addRecord.module.css";
-import { statusLabel } from "@/lib/text/status";
 
 type Phase =
   | { kind: "idle" }
@@ -33,19 +33,6 @@ const UNSUPPORTED_TITLE: Record<Extract<Phase, { kind: "unsupported_file" }>["co
   too_large: "This file is larger than 10 MB.",
   damaged_pdf: "This PDF couldn't be opened.",
 };
-
-function factHeadline(f: Proposal["facts"][number], state: TrustedState): { label: string; value: string } {
-  if (f.kind === "lab_measurement") {
-    const m = f;
-    return {
-      label: "Ferritin",
-      value: `${m.value} ${m.unit}${m.refText ? ` · supplied range ${m.refText} ${m.unit}` : ""} · ${formatDate(m.measuredOn)}`,
-    };
-  }
-  const e = f;
-  const name = (state.episodes.find((ep) => ep.id === e.episodeId)?.name ?? "Medication").split(" (")[0];
-  return { label: name, value: `${statusLabel(e.status)} · documented ${formatDate(e.documentedOn)}` };
-}
 
 /** `label`: the trigger's wording ("Add your first record" on an empty record); the flow itself is the same. */
 export default function AddRecord({ label = "Add record" }: { label?: string }) {
@@ -289,7 +276,7 @@ function Review({
       <p className={styles.sectionNote}>Matched to the source wording shown below.</p>
       <ul className={styles.facts}>
         {proposal.facts.map((f) => {
-          const { label, value } = factHeadline(f, state);
+          const { label, value } = reviewFactHeadline(f, state);
           const isRejected = rejected.has(f.id);
           return (
             <li key={f.id} className={isRejected ? `${styles.fact} ${styles.factRejected}` : styles.fact}>

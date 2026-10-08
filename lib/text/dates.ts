@@ -14,6 +14,17 @@ export function formatDate(iso: string): string {
   return `${d} ${MONTHS[m - 1]} ${y}`;
 }
 
+/**
+ * A date span, shown as one date when both ends read the same: ("2026-09-25", "2026-09-25") -> "25 Sep 2026",
+ * ("2025-03-14", "2026-09-25") -> "14 Mar 2025 to 25 Sep 2026". `format` and `separator` let month-level spans
+ * ("Mar 2025 – Jan 2026") follow the same rule.
+ */
+export function formatSpan(fromIso: string, toIso: string, format: (iso: string) => string = formatDate, separator = " to "): string {
+  const from = format(fromIso);
+  const to = format(toIso);
+  return from === to ? from : `${from}${separator}${to}`;
+}
+
 /** ISO date-time -> "1 Sep 2026, 12:00" in local time (same month style as formatDate). */
 export function formatDateTime(isoDateTime: string): string {
   const d = new Date(isoDateTime);

@@ -5,7 +5,8 @@
  */
 import Link from "next/link";
 import type { SnapshotView } from "@/lib/view/snapshot";
-import { formatDate } from "@/lib/text/dates";
+import { formatSpan } from "@/lib/text/dates";
+import { plural } from "@/lib/text/plural";
 import { DocIcon } from "@/components/shell/icons";
 import styles from "./snapshot.module.css";
 
@@ -18,8 +19,7 @@ export default function HealthSummary({ summary }: { summary: SnapshotView["summ
         </h2>
         {summary.firstDocumentDate && summary.lastDocumentDate && (
           <p className={styles.moduleNote}>
-            What your documented record contains · {formatDate(summary.firstDocumentDate)} to{" "}
-            {formatDate(summary.lastDocumentDate)}
+            What your documented record contains · {formatSpan(summary.firstDocumentDate, summary.lastDocumentDate)}
           </p>
         )}
         <p className={styles.coverage}>
@@ -27,9 +27,7 @@ export default function HealthSummary({ summary }: { summary: SnapshotView["summ
             <DocIcon size={18} />
           </span>
           <span>
-            <strong>
-              {summary.documentCount} source document{summary.documentCount === 1 ? "" : "s"}
-            </strong>{" "}
+            <strong>{plural(summary.documentCount, "source document")}</strong>{" "}
             · {summary.documentTypes.map((t) => `${t.count} ${t.label}`).join(", ")}
           </span>
         </p>

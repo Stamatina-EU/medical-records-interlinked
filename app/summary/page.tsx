@@ -10,6 +10,7 @@ import { derive } from "@/lib/engine/derive";
 import { buildEvidenceIndex } from "@/lib/evidence/index";
 import { composeDoctorSummary, refKey, type Statement } from "@/lib/summary/compose";
 import { formatDate } from "@/lib/text/dates";
+import { plural } from "@/lib/text/plural";
 import EvidenceProvider from "@/components/evidence/EvidenceProvider";
 import SourceChip from "@/components/summary/SourceChip";
 import StateError from "@/components/ui/StateError";
@@ -61,7 +62,7 @@ export default async function DoctorSummaryPage() {
               {summary.patientName} <span className={styles.synthetic}>fictional · synthetic demo record</span>
             </h1>
             <p className={styles.meta}>
-              Prepared in Medical Records Interlinked (MRI) from {summary.documentCount} source documents
+              Prepared in Medical Records Interlinked (MRI) from {plural(summary.documentCount, "source document")}
               {summary.latestSourceDate && ` · latest source dated ${formatDate(summary.latestSourceDate)}`}
             </p>
             <p className={styles.scope}>

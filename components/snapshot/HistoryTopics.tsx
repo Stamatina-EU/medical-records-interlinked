@@ -5,7 +5,7 @@
  */
 import Link from "next/link";
 import type { SnapshotView } from "@/lib/view/snapshot";
-import { formatDate } from "@/lib/text/dates";
+import { formatDate, formatSpan } from "@/lib/text/dates";
 import { ChevronIcon } from "@/components/shell/icons";
 import styles from "./snapshot.module.css";
 
@@ -30,7 +30,7 @@ export default function HistoryTopics({ topics }: { topics: SnapshotView["histor
                 <span className={styles.destTitle}>{t.title}</span>
                 {t.firstDate && t.lastDate && (
                   <span className={styles.destMeta}>
-                    {monthYear(t.firstDate)} – {monthYear(t.lastDate)}
+                    {formatSpan(t.firstDate, t.lastDate, monthYear, " – ")}
                   </span>
                 )}
                 {t.extra && <span className={styles.destMeta}>Also: {t.extra}</span>}

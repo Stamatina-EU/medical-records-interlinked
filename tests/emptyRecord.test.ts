@@ -68,6 +68,38 @@ describe("the seeded demo never shows the empty-record UI", () => {
   });
 });
 
+describe("a record with exactly one document (e.g. right after the first approval)", () => {
+  // one source document, one date: the laboratory report of 27 Jan 2026 from the seed (it also opens a history card)
+  const one: TrustedState = {
+    ...seed,
+    documents: seed.documents.filter((d) => d.id === "doc-03"),
+    facts: seed.facts.filter((f) => f.source.documentId === "doc-03"),
+    latestUpdate: null,
+  };
+
+  it("counts '1 source document' and shows a single date instead of 'X to X'", async () => {
+    const { home, iron, summary } = await render(one);
+    expect(home).toContain("1 source document");
+    expect(home).not.toContain("1 source documents");
+    expect(home).toContain("What your documented record contains · 27 Jan 2026<");
+    expect(home).not.toContain("27 Jan 2026 to 27 Jan 2026");
+    expect(home).toContain(">Jan 2026<"); // the history card's month span
+    expect(home).not.toContain("Jan 2026 – Jan 2026");
+    expect(iron).toContain("across time · 27 Jan 2026<");
+    expect(iron).not.toContain("27 Jan 2026 to 27 Jan 2026");
+    expect(summary).toContain("from 1 source document · latest source dated 27 Jan 2026");
+  });
+
+  it("the seeded demo keeps its multi-date spans and plural counts", async () => {
+    const { home, iron, summary } = await render(seed);
+    expect(home).toContain("What your documented record contains · 14 Mar 2025 to 12 Mar 2026");
+    expect(home).toContain("Mar 2025 – Jan 2026");
+    expect(home).toContain("Sep 2025 – Mar 2026");
+    expect(iron).toMatch(/14 Mar 2025 to \d{1,2} \w{3} 2026/);
+    expect(summary).toContain("from 6 source documents · latest source dated 12 Mar 2026");
+  });
+});
+
 describe("a genuinely empty record uses Home itself as first use", () => {
   it("is recognised as empty", () => {
     expect(isEmptyRecord(empty)).toBe(true);

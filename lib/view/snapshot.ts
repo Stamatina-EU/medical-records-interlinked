@@ -10,6 +10,7 @@ import type { CalculatedClaim, ChangeLine, DocumentRecord, ImagingExam, TrustedS
 import { ferritinSeries, followUps, latestMedicationStatus } from "@/lib/engine/derive";
 import { changesSummary } from "@/lib/engine/changes";
 import { FERRITIN_SERIES_KEY, IMAGING_KEY, TREATMENTS_KEY } from "@/lib/engine/recordClaims";
+import { plural } from "@/lib/text/plural";
 
 /** stateKey: the derived chronology claim for this follow-up (match found, or no later result), if any */
 export type FollowUpItem = { factId: string; stateKey: string | null; updated: boolean };
@@ -47,8 +48,6 @@ export type SnapshotView = {
   followUpsOnRecord: FollowUpItem[];
   history: HistoryTopicSummary[];
 };
-
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 export function snapshotView(state: TrustedState, claims: CalculatedClaim[]): SnapshotView {
   const has = (key: string) => claims.some((c) => c.key === key);

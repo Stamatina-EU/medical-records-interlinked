@@ -8,7 +8,7 @@ import { readState, StateCorruptedError } from "@/lib/store/stateStore";
 import { derive } from "@/lib/engine/derive";
 import { buildEvidenceIndex } from "@/lib/evidence/index";
 import { historyView, TOPICS, type Topic } from "@/lib/view/history";
-import { formatDate } from "@/lib/text/dates";
+import { formatSpan } from "@/lib/text/dates";
 import EvidenceProvider from "@/components/evidence/EvidenceProvider";
 import { ImagingHistory, IronHistory } from "@/components/history/HistorySections";
 import StateError from "@/components/ui/StateError";
@@ -54,7 +54,7 @@ export default async function HistoryPage({ params }: { params: Promise<{ topic:
   const claims = derive(state);
   const index = buildEvidenceIndex(state, claims);
   const view = historyView(state, claims, topic as Topic);
-  const span = view.firstDate && view.lastDate ? `${formatDate(view.firstDate)} to ${formatDate(view.lastDate)}` : null;
+  const span = view.firstDate && view.lastDate ? formatSpan(view.firstDate, view.lastDate) : null;
 
   return (
     <EvidenceProvider index={index}>

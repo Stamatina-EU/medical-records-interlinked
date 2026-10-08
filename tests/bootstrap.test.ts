@@ -17,6 +17,7 @@ import { derive } from "@/lib/engine/derive";
 import { historyView } from "@/lib/view/history";
 import { snapshotView } from "@/lib/view/snapshot";
 import { composeDoctorSummary } from "@/lib/summary/compose";
+import { reviewFactHeadline } from "@/lib/view/reviewFact";
 
 const root = path.resolve(__dirname, "..");
 const demoPdf = new Uint8Array(readFileSync(path.join(root, "demo-files/follow-up-consultation-2026-09-25.pdf")));
@@ -98,6 +99,25 @@ describe("empty trusted state → first supported document", () => {
     const lines = preview(empty, proposal, proposal.facts.map((f) => f.id)).map((l) => l.text);
     expect(lines).toContain("New ferritin measurement added · 32 μg/L · 25 Sep 2026");
     expect(lines).toContain("Oral iron marked Ongoing · documented 25 Sep 2026");
+  });
+
+  it("the review names the first medication 'Oral iron' before any episode exists, and the same after approval", async () => {
+    const proposal = await firstRecord();
+    const [lab, med] = proposal.facts;
+    expect(empty.episodes).toEqual([]);
+    expect(reviewFactHeadline(med, empty)).toEqual({ label: "Oral iron", value: "Ongoing · documented 25 Sep 2026" });
+    expect(reviewFactHeadline(lab, empty).label).toBe("Ferritin");
+    // after approval the record's own episode carries the name; review and record agree
+    const after = apply(empty, proposal, proposal.facts.map((f) => f.id), "2026-09-26T10:05:00.000Z");
+    expect(after.episodes.map((e) => e.name)).toEqual(["Oral iron (ferrous sulfate)"]);
+    expect(reviewFactHeadline(med, after).label).toBe("Oral iron");
+  });
+
+  it("a medication outside the supported catalogue is never given a name it doesn't have", async () => {
+    const proposal = await firstRecord();
+    const med = proposal.facts[1];
+    if (med.kind !== "medication_status") throw new Error("expected the medication fact");
+    expect(reviewFactHeadline({ ...med, episodeId: "ep-unknown" }, empty).label).toBe("Medication");
   });
 
   it("longitudinal consequences wait for history: no 'changed since previous', no follow-up match", async () => {
