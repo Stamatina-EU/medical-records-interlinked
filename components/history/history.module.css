@@ -24,6 +24,12 @@
   margin-top: var(--space-1);
 }
 
+/* a genuinely empty record: one quiet line instead of empty sections */
+.emptyNote {
+  margin-top: var(--space-4);
+  color: var(--ink-muted);
+}
+
 .switcher {
   display: inline-flex;
   gap: 4px;

@@ -59,6 +59,12 @@
   max-width: 68ch;
 }
 
+/* a genuinely empty record: one quiet line instead of empty sections */
+.emptyNote {
+  margin-top: var(--space-5);
+  color: var(--ink-muted);
+}
+
 .section {
   margin-top: var(--space-5);
 }

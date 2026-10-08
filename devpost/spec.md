@@ -47,7 +47,7 @@ The AI's only job is step 2: **it proposes, it never decides.** Changing the mod
 ## The Core Journey Through the System
 PRD ref: `prd.md > The Core Journey`.
 
-1. **Arrival.** The browser opens `http://localhost:3000`. The server reads `data/runtime/state.json`, initialising it from the seed if it's missing. The Snapshot page asks the **engine** (pure calculation code) for the calculated claims, then renders them. What changed is absent because `latestUpdate` is empty.
+1. **Arrival.** The browser opens `http://localhost:3000`. The server reads `data/runtime/state.json`, initialising it from the seed if it's missing. Initialisation is concurrency-safe: each reader copies the seed to its own temp file and publishes it with an atomic create-if-absent hard link, so simultaneous first reads produce one complete file and never a partial one. The Snapshot page asks the **engine** (pure calculation code) for the calculated claims, then renders them. What changed is absent because `latestUpdate` is empty.
 2. **Understand the current state.** The Snapshot sections render from approved facts and calculated claims.
 3. **Check a claim.** The patient clicks the Iron / Ferritin section and goes to `/history/iron`. Clicking a fact opens the **Evidence Drawer**. It already has the fact, its document and its excerpt, because the page sent them along. "Open source document" loads `/api/documents/{id}` in the browser's built-in PDF viewer, at `#page=N`.
 4. **See breadth.** The topic switcher goes to `/history/imaging`, the same template with no chart.

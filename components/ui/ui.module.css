@@ -88,6 +88,10 @@
 .calcText {
   border-bottom: 1px dotted var(--ink-faint);
 }
+/* one semantic part of a "·"-separated label: it never breaks inside */
+.calcPart {
+  white-space: nowrap;
+}
 .calculated:hover .calcText {
   color: var(--accent-ink);
   border-bottom-color: var(--accent);

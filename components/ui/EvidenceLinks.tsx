@@ -6,6 +6,7 @@
  *  - SourceRef: a QUIET source reference for Home — available, never dominant
  *  - CalculatedLabel: a visibly "derived" label that opens "How this was determined"
  */
+import { Fragment } from "react";
 import { useEvidence } from "@/components/evidence/EvidenceProvider";
 import { documentShortLabel } from "@/lib/evidence/index";
 import { DocIcon } from "@/components/shell/icons";
@@ -84,6 +85,9 @@ export function CalculatedLabel({ claimKey, label }: { claimKey: string; label?:
   const claim = index.claims[claimKey];
   if (!claim) return null;
   const text = label ?? claim.text;
+  // a label made of "·"-separated parts ("2 ferritin results · latest in record") breaks only after a separator,
+  // never inside a part; a label without separators wraps as ordinary text
+  const parts = text.split(" · ");
   return (
     <button
       type="button"
@@ -94,7 +98,16 @@ export function CalculatedLabel({ claimKey, label }: { claimKey: string; label?:
     >
       {/* one inline run: the label wraps as text, and "· derived" stays attached to its last word */}
       <span className={styles.calcRun}>
-        <span className={styles.calcText}>{text}</span>
+        <span className={styles.calcText}>
+          {parts.length === 1
+            ? text
+            : parts.map((part, i) => (
+                <Fragment key={i}>
+                  {i > 0 && " "}
+                  <span className={styles.calcPart}>{i < parts.length - 1 ? `${part} ·` : part}</span>
+                </Fragment>
+              ))}
+        </span>
         <span className={styles.calcTag}>derived</span>
       </span>
     </button>

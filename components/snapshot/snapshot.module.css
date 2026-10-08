@@ -76,6 +76,18 @@
   display: flex;
 }
 
+/* ── Start your record — first use, only on a genuinely empty record ─── */
+.start {
+  margin-top: var(--space-5);
+  padding: var(--space-5) var(--space-6);
+}
+
+.startCopy {
+  margin: var(--space-2) 0 var(--space-4);
+  max-width: 60ch;
+  color: var(--ink-muted);
+}
+
 /* ── Your record at a glance — a concise record overview (evidence coverage) ─── */
 .summary {
   margin-top: var(--space-5);
@@ -429,6 +441,10 @@
     grid-template-columns: 1fr;
     padding: var(--space-4);
     gap: var(--space-2);
+  }
+
+  .start {
+    padding: var(--space-4);
   }
 
   /* grouped rows become easy-to-tap stacked rows */

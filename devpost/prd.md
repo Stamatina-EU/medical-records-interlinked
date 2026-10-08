@@ -23,7 +23,7 @@ This POC is **not** a replacement for a national EHR, MyHealth or any other prov
 ## The Core Journey
 Source: `scope.md > What "Working" Looks Like`, `scope.md > The Core Loop`.
 
-1. **Arrival.** The app opens on the **Snapshot** for a fictional adult patient. The history already exists, built from the initial synthetic record set (see *Synthetic Demo Record Set*). There's no empty state and no onboarding.
+1. **Arrival.** The app opens on the **Snapshot** for a fictional adult patient. The history already exists, built from the initial synthetic record set (see *Synthetic Demo Record Set*). There's no empty state and no onboarding. *(Only a genuinely empty record, with no document and no fact and so never the demo, uses Home itself as first use: "No records yet", a "Start your record" card and one "Add your first record" action. History and the Doctor Summary each show one quiet line.)*
 2. **Understand the current state.** The patient scans Home: their identity, their record at a glance (with the Doctor Summary entry), the latest documented item per category, the follow-up on record, and the ways into their history.
 3. **Check a claim.** The patient opens the Iron / Ferritin **History** and clicks a fact. The **evidence drawer** slides in from the right with the exact excerpt, the document, its date and the page.
 4. **See breadth.** The patient briefly opens the Imaging follow-up topic in the same History view. It has no chart.

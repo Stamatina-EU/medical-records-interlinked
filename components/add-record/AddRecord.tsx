@@ -47,7 +47,8 @@ function factHeadline(f: Proposal["facts"][number], state: TrustedState): { labe
   return { label: name, value: `${statusLabel(e.status)} · documented ${formatDate(e.documentedOn)}` };
 }
 
-export default function AddRecord() {
+/** `label`: the trigger's wording ("Add your first record" on an empty record); the flow itself is the same. */
+export default function AddRecord({ label = "Add record" }: { label?: string }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
@@ -127,7 +128,7 @@ export default function AddRecord() {
     <>
       <button type="button" className={styles.addRecord} onClick={() => inputRef.current?.click()}>
         <PlusIcon />
-        <span>Add record</span>
+        <span>{label}</span>
       </button>
       <input
         ref={inputRef}

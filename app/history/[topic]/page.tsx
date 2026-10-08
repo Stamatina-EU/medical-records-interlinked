@@ -12,6 +12,7 @@ import { formatDate } from "@/lib/text/dates";
 import EvidenceProvider from "@/components/evidence/EvidenceProvider";
 import { ImagingHistory, IronHistory } from "@/components/history/HistorySections";
 import StateError from "@/components/ui/StateError";
+import { isEmptyRecord } from "@/lib/view/emptyRecord";
 import styles from "@/components/history/history.module.css";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +33,24 @@ export default async function HistoryPage({ params }: { params: Promise<{ topic:
     if (err instanceof StateCorruptedError) return <StateError />;
     throw err;
   }
+
+  // a genuinely empty record has no history to show yet (never the case for the seeded demo)
+  if (isEmptyRecord(state)) {
+    return (
+      <main className="page">
+        <header className={styles.header}>
+          <Link href="/" className={styles.back}>
+            ← Home
+          </Link>
+          <h1 className={styles.title}>History</h1>
+        </header>
+        <p className={styles.emptyNote}>
+          No history yet. <Link href="/">Add your first record on Home.</Link>
+        </p>
+      </main>
+    );
+  }
+
   const claims = derive(state);
   const index = buildEvidenceIndex(state, claims);
   const view = historyView(state, claims, topic as Topic);
