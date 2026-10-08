@@ -38,8 +38,8 @@ describe("medication meaning comes from the whole source sentence", () => {
   it.each([
     ["prescribed", "Prescribed: ferrous sulfate 200 mg tablets, one tablet once daily for 3 months."],
     ["current", "The patient continues to take oral iron (ferrous sulfate) once daily."],
-    ["completed", "The patient completed the course of oral iron in May 2026."],
-    ["stopped", "Oral iron (ferrous sulfate) was stopped on 1 Oct 2026."],
+    ["completed", "The patient completed the course of oral iron."],
+    ["stopped", "Oral iron (ferrous sulfate) was stopped on 2 Oct 2026."], // the document's own date
   ])("verifies an affirmative %s statement (a neighbouring negative sentence does not leak in)", (status, sentence) => {
     const r = run([page("No other regular medication is recorded at this visit.", "MEDICATION HISTORY", sentence)], { medicationStatements: [med(status, sentence)] });
     expect(verifiedKinds(r)).toEqual(["medication_status"]);
@@ -48,8 +48,8 @@ describe("medication meaning comes from the whole source sentence", () => {
 
 describe("the document date must be the current document's own date", () => {
   it("the correct consultation date verifies", () => {
-    const r = run([page("Previous report date: 27 Jan 2026", "MEDICATION HISTORY", "Oral iron (ferrous sulfate) was stopped on 1 Oct 2026.")],
-      { medicationStatements: [med("stopped", "Oral iron (ferrous sulfate) was stopped on 1 Oct 2026.")] });
+    const r = run([page("Previous report date: 27 Jan 2026", "MEDICATION HISTORY", "Oral iron (ferrous sulfate) was stopped.")],
+      { medicationStatements: [med("stopped", "Oral iron (ferrous sulfate) was stopped.")] });
     expect(verifiedKinds(r)).toEqual(["medication_status"]);
   });
 
@@ -72,10 +72,10 @@ describe("the document date must be the current document's own date", () => {
   });
 
   it("with several dates on the document-date line, only the labelled one counts", () => {
-    const pages = ["Elm Street Primary Care\nDate of consultation 3 Feb 2026 (results from 27 Jan 2026)\nMEDICATION HISTORY\nOral iron was stopped on 1 Feb 2026."];
+    const pages = ["Elm Street Primary Care\nDate of consultation 3 Feb 2026 (results from 27 Jan 2026)\nMEDICATION HISTORY\nOral iron was stopped."];
     const claim = (documentDate: string, excerpt: string) => verifyExtraction(pages, {
       document: { documentType: "Consultation note", documentDate, page: 1, excerpt },
-      labMeasurements: [], medicationStatements: [med("stopped", "Oral iron was stopped on 1 Feb 2026.")],
+      labMeasurements: [], medicationStatements: [med("stopped", "Oral iron was stopped.")],
     }, ctx);
     expect(claim("2026-01-27", "results from 27 Jan 2026")).toMatchObject({ status: "unusable", code: "document_date_unverified" });
     expect(verifiedKinds(claim("2026-02-03", "Date of consultation 3 Feb 2026"))).toEqual(["medication_status"]);

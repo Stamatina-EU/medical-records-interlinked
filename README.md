@@ -20,10 +20,10 @@ AI proposes → deterministic code verifies → you approve the evidence
 - **Live Add record support:** AI (OpenAI Responses API, structured output) only *proposes* ferritin measurements and oral-iron status, each with the page and quoted wording it relies on.
 - **The seeded synthetic history also contains** thyroid imaging facts and follow-up recommendations. These are pre-structured source facts, not currently extracted live.
 - **Deterministic verification** rejects anything it cannot find in the page text. Checks include:
-  - the quote exists on that page;
-  - the number and unit follow the named analyte;
-  - the medication and an affirmative status cue appear in the same clause (negated, planned or hypothetical wording fails);
-  - a reference range is the one written with that result, and the document date is labelled as the document's own date;
+  - the quote occurs exactly once on that page, and only the one source sentence (medication) or result line (ferritin) holding it is checked — a neighbouring sentence is never evidence, and a heading above can only reject;
+  - the number and unit follow the named analyte on its own result line, as an exact value (`>150`, `(or more)`, `approximately` fail, even when the quote leaves them out);
+  - the medication and an affirmative status cue appear in the same clause, about the patient, at the document's own date (negated, planned, hypothetical, someone else's or earlier-dated wording fails);
+  - a reference range is the one written with that result, and the document date is derived by code from the document header;
   - dates are real.
 
   The excerpt you see is cut from the document itself, not from the model's output.

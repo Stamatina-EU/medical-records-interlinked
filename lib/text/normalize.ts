@@ -66,14 +66,21 @@ export function findOriginalSpan(haystack: string, needle: string): string | nul
 
 /** Like `findOriginalSpan`, but returns the [from, to) offsets of the (trimmed) span in the ORIGINAL haystack. */
 export function findOriginalRange(haystack: string, needle: string): { from: number; to: number } | null {
+  return findOriginalRanges(haystack, needle)[0] ?? null;
+}
+
+/** Every place `needle` occurs in `haystack` after normalization, as [from, to) offsets of the ORIGINAL text. */
+export function findOriginalRanges(haystack: string, needle: string): { from: number; to: number }[] {
   const n = normalize(needle);
-  if (!n) return null;
+  if (!n) return [];
   const h = normalizeWithMap(haystack);
-  const idx = h.text.indexOf(n);
-  if (idx === -1) return null;
-  let from = h.start[idx];
-  let to = h.end[idx + n.length - 1];
-  while (from < to && /\s/.test(haystack[from])) from++;
-  while (to > from && /\s/.test(haystack[to - 1])) to--;
-  return { from, to };
+  const ranges: { from: number; to: number }[] = [];
+  for (let idx = h.text.indexOf(n); idx !== -1; idx = h.text.indexOf(n, idx + 1)) {
+    let from = h.start[idx];
+    let to = h.end[idx + n.length - 1];
+    while (from < to && /\s/.test(haystack[from])) from++;
+    while (to > from && /\s/.test(haystack[to - 1])) to--;
+    ranges.push({ from, to });
+  }
+  return ranges;
 }

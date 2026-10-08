@@ -53,7 +53,7 @@ const extractionA: Extraction = {
 const extractionB: Extraction = {
   document: { documentType: "Follow-up consultation note", documentDate: "2026-10-02", page: 1, excerpt: "Date of consultation 2 Oct 2026" },
   labMeasurements: [{ analyteName: "Ferritin", value: 41, unit: "μg/L", referenceRangeText: "15–150 μg/L", measuredOn: "2026-10-02", page: 1, excerpt: "Ferritin on 2 Oct 2026: 41 μg/L (reference range 15–150 μg/L)." }],
-  medicationStatements: [{ medicationName: "oral iron (ferrous sulfate)", status: "stopped", page: 1, excerpt: "Oral iron (ferrous sulfate) was stopped on 1 Oct 2026." }],
+  medicationStatements: [{ medicationName: "oral iron (ferrous sulfate)", status: "stopped", page: 1, excerpt: "Oral iron (ferrous sulfate) was stopped." }],
 };
 
 beforeEach(async () => {

@@ -84,7 +84,7 @@ describe("lab facts: subject AND value must come from the source", () => {
   });
 
   it("wrong binding fails: 32 belongs to B12, the value bound to ferritin is 20", () => {
-    const r = verifyLabFact(claim, "Ferritin 20 μg/L; Vitamin B12 32 μg/L", "2026-09-25");
+    const r = verifyLabFact(claim, "Ferritin 20 μg/L, Vitamin B12 32 μg/L", "2026-09-25");
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toMatch(/binds 20/);
   });
@@ -122,7 +122,7 @@ describe("lab facts: subject AND value must come from the source", () => {
 
 describe("medication facts: identity and status cue in the same sentence", () => {
   it("a generic statement fails: 'Treatment completed.' does not name oral iron", () => {
-    const r = verifyMedicationFact({ medicationName: "oral iron", status: "completed" }, "Treatment completed.", episodes);
+    const r = verifyMedicationFact({ medicationName: "oral iron", status: "completed" }, "Treatment completed.", episodes, "2026-09-25");
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toMatch(/does not name the medication/);
   });
@@ -132,6 +132,7 @@ describe("medication facts: identity and status cue in the same sentence", () =>
       { medicationName: "ferrous sulfate", status: "completed" },
       "The patient takes ferrous sulfate daily.",
       episodes,
+      "2026-09-25",
     );
     expect(r.ok).toBe(false);
   });
@@ -141,6 +142,7 @@ describe("medication facts: identity and status cue in the same sentence", () =>
       { medicationName: "oral iron", status: "completed" },
       "Oral iron was discussed. The course was completed.",
       episodes,
+      "2026-09-25",
     );
     expect(r.ok).toBe(false);
   });
@@ -150,12 +152,13 @@ describe("medication facts: identity and status cue in the same sentence", () =>
       { medicationName: "oral iron", status: "prescribed" },
       "The patient completed the prescribed course of oral iron (ferrous sulfate) in May 2026.",
       episodes,
+      "2026-09-25",
     );
     expect(r.ok).toBe(false);
   });
 
   it("the live note sentence is not evidence of Completed", () => {
-    const r = verifyMedicationFact({ medicationName: "oral iron (ferrous sulfate)", status: "completed" }, "The patient continues to take oral iron (ferrous sulfate) once daily.", episodes);
+    const r = verifyMedicationFact({ medicationName: "oral iron (ferrous sulfate)", status: "completed" }, "The patient continues to take oral iron (ferrous sulfate) once daily.", episodes, "2026-09-25");
     expect(r.ok).toBe(false);
   });
 
@@ -164,6 +167,7 @@ describe("medication facts: identity and status cue in the same sentence", () =>
       { medicationName: "oral iron (ferrous sulfate)", status: "current" },
       "The patient continues to take oral iron (ferrous sulfate) once daily.",
       episodes,
+      "2026-09-25",
     );
     expect(r.ok && [r.episodeId, r.status]).toEqual(["ep-oral-iron", "Current"]);
   });
