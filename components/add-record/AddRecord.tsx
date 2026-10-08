@@ -12,15 +12,17 @@ import type { Proposal, TrustedState } from "@/lib/model/types";
 import { preview } from "@/lib/engine/apply";
 import { formatDate } from "@/lib/text/dates";
 import { reviewFactHeadline } from "@/lib/view/reviewFact";
+import { APPROVAL_PROBLEM_TEXT, approvalProblem, canRetry, type ApprovalProblem } from "@/lib/view/approvalOutcome";
 import { PlusIcon } from "@/components/shell/icons";
 import styles from "./addRecord.module.css";
 
 type Phase =
   | { kind: "idle" }
   | { kind: "processing"; file: File }
-  // applyError: the last Add attempt did not update the record ("expired": the server no longer has this review)
-  | { kind: "review"; proposal: Proposal; state: TrustedState; rejected: Set<string>; applyError?: "failed" | "expired" }
-  | { kind: "applying"; proposal: Proposal; state: TrustedState; rejected: Set<string>; applyError?: undefined }
+  // applyProblem: what is known about the last Add attempt that did not clearly succeed (lib/view/approvalOutcome.ts);
+  // uncertainBefore: an earlier attempt's outcome is unknown, so it may already have added the record
+  | { kind: "review"; proposal: Proposal; state: TrustedState; rejected: Set<string>; applyProblem?: ApprovalProblem; uncertainBefore?: boolean }
+  | { kind: "applying"; proposal: Proposal; state: TrustedState; rejected: Set<string>; applyProblem?: undefined; uncertainBefore?: boolean }
   // each failure phase mirrors an actual pipeline outcome (lib/extraction/pipeline.ts)
   | { kind: "unsupported_file"; code: "not_pdf" | "too_large" | "damaged_pdf" }
   | { kind: "no_text" }
@@ -86,25 +88,28 @@ export default function AddRecord({ label = "Add record" }: { label?: string }) 
     if (phase.kind !== "review") return;
     const approved = phase.proposal.facts.filter((f) => !phase.rejected.has(f.id)).map((f) => f.id);
     if (approved.length === 0) return;
-    setPhase({ ...phase, kind: "applying", applyError: undefined });
+    setPhase({ ...phase, kind: "applying", applyProblem: undefined });
+    let httpStatus: number | null = null;
     try {
       const res = await fetch("/api/records/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ proposalId: phase.proposal.proposalId, approvedFactIds: approved }),
       });
-      if (!res.ok) {
-        // nothing was written; say so and keep the review open (retrying is safe: the server re-checks everything)
-        setPhase({ ...phase, kind: "review", applyError: res.status === 404 ? "expired" : "failed" });
-        return;
-      }
-      setPhase({ kind: "idle" });
-      if (inputRef.current) inputRef.current.value = "";
-      router.refresh();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      httpStatus = res.status;
     } catch {
-      setPhase({ ...phase, kind: "review", applyError: "failed" });
+      // no response: the request may or may not have reached the server and been applied
     }
+    const problem = approvalProblem(httpStatus, phase.uncertainBefore === true);
+    if (problem) {
+      // keep the review open with wording that claims only what is known (retry stays duplicate-safe)
+      setPhase({ ...phase, kind: "review", applyProblem: problem, uncertainBefore: phase.uncertainBefore || problem === "uncertain" });
+      return;
+    }
+    setPhase({ kind: "idle" });
+    if (inputRef.current) inputRef.current.value = "";
+    router.refresh();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [phase, router]);
 
   useEffect(() => {
@@ -326,18 +331,16 @@ function Review({
       )}
 
       <div className={styles.reviewFooter}>
-        {phase.applyError && (
+        {phase.applyProblem && (
           <p className={styles.applyError} role="alert">
-            {phase.applyError === "expired"
-              ? "This review is no longer available, so nothing was added. Your record hasn't changed. Close it and add the record again."
-              : "This record wasn't added. Your record hasn't changed. You can try again."}
+            {APPROVAL_PROBLEM_TEXT[phase.applyProblem]}
           </p>
         )}
         <div className={styles.reviewActions}>
           <button type="button" className={styles.secondary} onClick={onCancel} disabled={phase.kind === "applying"}>
             Cancel
           </button>
-          <button type="button" className={styles.primary} onClick={onApply} disabled={approvedIds.length === 0 || phase.kind === "applying" || phase.applyError === "expired"}>
+          <button type="button" className={styles.primary} onClick={onApply} disabled={approvedIds.length === 0 || phase.kind === "applying" || !canRetry(phase.applyProblem)}>
             {phase.kind === "applying" ? "Adding…" : rejected.size === 0 ? "Add all to my record" : "Add selected"}
           </button>
         </div>

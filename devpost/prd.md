@@ -197,7 +197,7 @@ Source: `scope.md > The POC Boundary` ("One live addition," "Proposed-changes re
   - **Add all to my record**, or **Add selected** when something is excluded. The user-facing words are "Exclude" / "Excluded · undo"; the internal review state stays REJECTED.
   - **Cancel** discards the whole proposal, and nothing is imported
   - If every source fact is excluded, Add all / Add selected is disabled. Cancel stays available and closes the review, importing nothing. The panel's standard close control has the same effect. **No approved source facts → no Apply action → nothing is persisted.**
-- The proposal is temporary. PROPOSED and REJECTED exist only inside this review. Refreshing or closing the app during review discards the proposal.
+- The proposal is temporary. PROPOSED and REJECTED exist only inside this review. Refreshing or closing the app during review abandons the proposal: it is never applied, though its pending copy (verified facts and PDF in `data/runtime/pending/`) can stay on disk until the next upload or demo reset clears it.
 - Model confidence isn't required in the panel. If it's shown, it's review context only (see *Open Questions*).
 
 **Dependency rules** (code, not UI):
@@ -212,7 +212,7 @@ Acceptance criteria:
 - [ ] Rejecting the medication fact leaves the medication episode unchanged after Apply.
 - [ ] Cancel leaves the history exactly as it was.
 - [ ] With every source fact rejected, Apply is disabled. Cancel, or the panel's close control, leaves the history and document list exactly as they were.
-- [ ] Refreshing during review returns to the unchanged history, with no proposal pending.
+- [ ] Refreshing during review returns to the unchanged history, with no proposal shown or applied (an abandoned pending copy may remain on disk until the next upload or demo reset).
 - [ ] Adding the same note again after it has been approved shows "No new history changes found. Your documented history hasn't changed." Nothing is added, including the document.
 
 ### Deterministic State Update
@@ -303,7 +303,7 @@ Acceptance criteria:
 - **Valid record, nothing new** (e.g. the same note added again after it's been approved). The message is neutral: "No new history changes found. Your documented history hasn't changed." There's no warning or failure language. **The document isn't persisted.** This isn't a document archive.
 - **All facts rejected.** Apply is disabled. Cancel or close imports nothing, including the document, and the history is unchanged.
 - **Cancelled or closed review.** Nothing is imported.
-- **Refresh or close during review.** The temporary proposal is discarded, and the history is unchanged.
+- **Refresh or close during review.** The proposal is abandoned and never applied, and the history is unchanged. Its pending copy can remain in `data/runtime/pending/` until the next upload or demo reset clears it.
 - **After approval.** The updated state, the latest-update marking and What changed appear everywhere.
 - **Persistence.** Only approved source facts, documents with at least one approved fact, and the latest-update marker persist across refresh and reopening. PROPOSED and REJECTED never enter the trusted history. Raw AI output is never stored; a pending proposal (its verified facts and the uploaded PDF) is kept temporarily in `data/runtime/pending/` until it is applied, cancelled, replaced by the next extraction or cleared by demo reset.
 - **Boundaries.** One fictional patient, with no accounts, profiles or sharing.
