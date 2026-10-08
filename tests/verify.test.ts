@@ -16,8 +16,8 @@ const episodes: MedicationEpisode[] = [{ id: "ep-oral-iron", topic: "iron", name
 
 // The live follow-up note, as extracted (page 1, page 2).
 const livePages = [
-  "Elm Street Primary Care\nGeneral practice (fictional) FOLLOW-UP CONSULTATION NOTE\nPatient Alex Rowan (fictional)\nDate of consultation 25 Sep 2026\nType Follow-up consultation\nREASON FOR VISIT\nFollow-up of iron studies.\nMEDICATION HISTORY\nThe patient continues to take oral iron (ferrous sulfate) once daily.\nNo other regular medication is recorded at this visit.",
-  "Elm Street Primary Care\nAlex Rowan (fictional) · 25 Sep 2026 FOLLOW-UP CONSULTATION NOTE\nRESULTS\nFerritin on 25 Sep 2026: 32 μg/L (reference range 15–150 μg/L).\nPLAN\nResults discussed with the patient.\nNote: “continue routine care”.",
+  "Elm Street Primary Care\nGeneral practice (fictional) FOLLOW-UP CONSULTATION NOTE\nPatient Laurence Mercer (fictional)\nDate of consultation 25 Sep 2026\nType Follow-up consultation\nREASON FOR VISIT\nFollow-up of iron studies.\nMEDICATION HISTORY\nThe patient continues to take oral iron (ferrous sulfate) once daily.\nNo other regular medication is recorded at this visit.",
+  "Elm Street Primary Care\nLaurence Mercer (fictional) · 25 Sep 2026 FOLLOW-UP CONSULTATION NOTE\nRESULTS\nFerritin on 25 Sep 2026: 32 μg/L (reference range 15–150 μg/L).\nPLAN\nResults discussed with the patient.\nNote: “continue routine care”.",
 ];
 
 const goodExtraction: Extraction = {

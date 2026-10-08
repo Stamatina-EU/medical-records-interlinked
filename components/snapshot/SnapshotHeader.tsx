@@ -1,4 +1,4 @@
-/** Identity — Alex Rowan owns this space. Then when the record was updated, and from what. */
+/** Identity — Laurence Mercer owns this space. Then when the record was updated, and from what. */
 import type { DocumentRecord } from "@/lib/model/types";
 import { formatDate, formatDateTime } from "@/lib/text/dates";
 import AddRecord from "@/components/add-record/AddRecord";

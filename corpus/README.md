@@ -2,7 +2,7 @@
 
 **Every document in this folder is synthetic and fictional.**
 
-The patient ("Alex Rowan"), the clinics, laboratories and imaging centre are all invented. No real person, provider, identifier, address, barcode or prescription number appears anywhere. Each page carries the footer *"SYNTHETIC DEMO DOCUMENT — fictional patient — not a real medical record."*
+The patient ("Laurence Mercer"), the clinics, laboratories and imaging centre are all invented. No real person, provider, identifier, address, barcode or prescription number appears anywhere. Each page carries the footer *"SYNTHETIC DEMO DOCUMENT — fictional patient — not a real medical record."*
 
 These HTML sources are rendered to PDF by `npm run corpus:build`:
 

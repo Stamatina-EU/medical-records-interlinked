@@ -11,7 +11,7 @@ import { addedDocumentRecord, nextDocumentId } from "@/lib/extraction/documentMe
 const seed: TrustedState = JSON.parse(readFileSync(path.resolve(__dirname, "../data/seed/state.json"), "utf8"));
 
 const livePages = [
-  "Elm Street Primary Care\nGeneral practice (fictional) FOLLOW-UP CONSULTATION NOTE\nPatient Alex Rowan (fictional)\nDate of consultation 25 Sep 2026\nMEDICATION HISTORY\nThe patient continues to take oral iron (ferrous sulfate) once daily.",
+  "Elm Street Primary Care\nGeneral practice (fictional) FOLLOW-UP CONSULTATION NOTE\nPatient Laurence Mercer (fictional)\nDate of consultation 25 Sep 2026\nMEDICATION HISTORY\nThe patient continues to take oral iron (ferrous sulfate) once daily.",
   "RESULTS\nFerritin on 25 Sep 2026: 32 μg/L (reference range 15–150 μg/L).",
 ];
 

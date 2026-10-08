@@ -209,7 +209,7 @@ Implements `prd.md > History (topic template)`. Route `/history/[topic]` with to
 Implements `prd.md > Doctor Summary`. Route `/summary` (dynamic). It's a user-controlled, evidence-linked view of the history represented in this product, not a claim to be the doctor's only access to the patient's history. It renders the output of the **Summary Composer** as a typeset brief, with a numbered **Sources** list at the foot (document type · source · date). Each chip opens the drawer for the underlying fact or claim.
 
 ### App Shell and Navigation
-`components/shell/AppNav.tsx` + `shell.module.css`, mounted in `app/layout.tsx`. It's one navigation system with two presentations. Desktop (> 860px) gets a fixed sidebar with the MRI mark and the descriptor "Medical Records Interlinked" (no tagline), Home · History · Doctor Summary, and the owning patient ("Alex Rowan · Synthetic demo record"). Mobile gets a top bar with the mark + descriptor (mark only below 340px, never wrapped) and a bottom tab bar (Home · History · Summary) with 44px+ targets. Line icons are inline SVG (`components/shell/icons.tsx`), and there's no icon library.
+`components/shell/AppNav.tsx` + `shell.module.css`, mounted in `app/layout.tsx`. It's one navigation system with two presentations. Desktop (> 860px) gets a fixed sidebar with the MRI mark and the descriptor "Medical Records Interlinked" (no tagline), Home · History · Doctor Summary, and the owning patient ("Laurence Mercer · Synthetic demo record"). Mobile gets a top bar with the mark + descriptor (mark only below 340px, never wrapped) and a bottom tab bar (Home · History · Summary) with 44px+ targets. Line icons are inline SVG (`components/shell/icons.tsx`), and there's no icon library.
 
 ### Evidence Drawer
 Implements `prd.md > Evidence Drawer`. A client component mounted once in the layout (`components/evidence/`) and opened through a small React context (`EvidenceProvider`), so any view can open it with a fact or claim reference.
@@ -474,7 +474,7 @@ type CalculatedClaim = {
 ## Synthetic Demo Corpus
 Implements `prd.md > Synthetic Demo Record Set`. Every document is fully fictional, in English, and has the footer **"SYNTHETIC DEMO DOCUMENT — fictional patient — not a real medical record."** There are no IDs, addresses, barcodes, QR codes or prescription numbers. Issuers are invented names.
 
-**Fictional patient:** *Alex Rowan* (proposed, editable). No date of birth.
+**Fictional patient:** *Laurence Mercer* (proposed, editable). No date of birth.
 
 | # | Document | Date | Establishes |
 |---|---|---|---|
@@ -637,7 +637,7 @@ unpdf for page text; Playwright for authoring the corpus; Vitest/tsx; CSS Module
 ### Confirmed in review
 - **Demo reset is terminal-only** (`npm run demo:reset`, then refresh). There's no in-app control of any kind.
 - **Typography:** Source Sans 3 + Source Serif 4 as the starting pair. It must stay **swappable in one place**: `app/layout.tsx` (next/font imports) maps the fonts to `--font-ui` and `--font-evidence` in `tokens.css`, and components use only those tokens. The learner reviews it after the first real visual pass. The logo is separate from the UI pair: the nav shows the outlined SVG mark (`public/brand/mark.svg`), and the descriptor beside it uses `--font-brand` (Montserrat 400).
-- **Fictional patient name:** Alex Rowan.
+- **Fictional patient name:** Laurence Mercer.
 - **The verifier checks subject as well as value/status**, entirely in the source text (see *Fact Verifier*).
 - **The seed meets the same semantic bar as live facts** (see *Seed Verifier Script*).
 - **The displayed excerpt is always a canonical `verifiedExcerpt`** cut from the page text through an index map (see *Fact Verifier*, *Verifier Tests*).

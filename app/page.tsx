@@ -1,5 +1,5 @@
 /**
- * Home (the Snapshot) — Alex Rowan's personal space inside MRI. Summary-first and scalable.
+ * Home (the Snapshot) — Laurence Mercer's personal space inside MRI. Summary-first and scalable.
  * Spec: `spec.md > Snapshot Page`; PRD: `prd.md > Snapshot`.
  * Order: Identity → Your record at a glance → (What changed, only after an approved update) →
  *        Latest in your record → Follow-up on record | Your history.

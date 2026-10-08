@@ -59,7 +59,7 @@ const run = (bytes: Uint8Array, extract: (p: string[]) => Promise<ExtractionCall
   runExtractionPipeline(bytes, state, { extract, newProposalId: () => "00000000-0000-4000-8000-000000000000", now: () => "2026-09-26T10:00:00.000Z" });
 
 // Text that appears in the demo document, plus a marker only the stub "model" produces.
-const DOCUMENT_TEXT = ["Alex Rowan", "ferrous sulfate", "continues to take", "32 μg/L", "Elm Street", "ZZ-PRIVATE-MARKER"];
+const DOCUMENT_TEXT = ["Laurence Mercer", "ferrous sulfate", "continues to take", "32 μg/L", "Elm Street", "ZZ-PRIVATE-MARKER"];
 function expectContentFree(o: PipelineOutcome) {
   const exposed = JSON.stringify(o) + outcomeLogLine(o);
   for (const t of DOCUMENT_TEXT) expect(exposed).not.toContain(t);

@@ -6,7 +6,7 @@
 
 MRI stands for Medical Records Interlinked. It is a hackathon proof of concept for an evidence-linked, longitudinal personal medical history. You add a medical document (a PDF). AI proposes facts from it, deterministic code checks each one against the document's own text, you approve what goes in, and then deterministic code works out what changed. Every value, status and recommendation in the app links back to the exact wording and page it came from.
 
-> ⚠️ **Synthetic data only.** Every person, clinic, laboratory, value and document in this repository is fictional ("Alex Rowan" is not a real patient). The app is a proof of concept. It is not a medical device, gives no medical advice, and must not be used with real medical records.
+> ⚠️ **Synthetic data only.** Every person, clinic, laboratory, value and document in this repository is fictional ("Laurence Mercer" is not a real patient). The app is a proof of concept. It is not a medical device, gives no medical advice, and must not be used with real medical records.
 
 > *MRI* is a working hackathon name, not a registered trademark.
 
