@@ -19,8 +19,9 @@ const ITEMS = [
 function Brand() {
   return (
     // Primary mark + descriptor only; the tagline is a presentation line, not part of the nav shell.
+    // The mark is an outlined SVG (public/brand/mark.svg); the link's aria-label names it, so the image is decorative.
     <Link href="/" className={styles.brand} aria-label="MRI, Medical Records Interlinked, home">
-      <span className={styles.wordmark}>MRI</span>
+      <img src="/brand/mark.svg" alt="" width={166} height={52} className={styles.mark} />
       <span className={styles.descriptor}>Medical Records Interlinked</span>
     </Link>
   );

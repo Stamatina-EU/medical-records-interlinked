@@ -636,7 +636,7 @@ unpdf for page text; Playwright for authoring the corpus; Vitest/tsx; CSS Module
 
 ### Confirmed in review
 - **Demo reset is terminal-only** (`npm run demo:reset`, then refresh). There's no in-app control of any kind.
-- **Typography:** Source Sans 3 + Source Serif 4 as the starting pair. It must stay **swappable in one place**: `app/layout.tsx` (next/font imports) maps the fonts to `--font-ui` and `--font-evidence` in `tokens.css`, and components use only those tokens. The learner reviews it after the first real visual pass.
+- **Typography:** Source Sans 3 + Source Serif 4 as the starting pair. It must stay **swappable in one place**: `app/layout.tsx` (next/font imports) maps the fonts to `--font-ui` and `--font-evidence` in `tokens.css`, and components use only those tokens. The learner reviews it after the first real visual pass. The logo is separate from the UI pair: the nav shows the outlined SVG mark (`public/brand/mark.svg`), and the descriptor beside it uses `--font-brand` (Montserrat 400).
 - **Fictional patient name:** Alex Rowan.
 - **The verifier checks subject as well as value/status**, entirely in the source text (see *Fact Verifier*).
 - **The seed meets the same semantic bar as live facts** (see *Seed Verifier Script*).

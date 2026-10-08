@@ -92,8 +92,11 @@ export function CalculatedLabel({ claimKey, label }: { claimKey: string; label?:
       aria-label={`${text} (derived — show how this was determined)`}
       title="Derived from your records — show how this was determined"
     >
-      <span className={styles.calcText}>{text}</span>
-      <span className={styles.calcTag}>derived</span>
+      {/* one inline run: the label wraps as text, and "· derived" stays attached to its last word */}
+      <span className={styles.calcRun}>
+        <span className={styles.calcText}>{text}</span>
+        <span className={styles.calcTag}>derived</span>
+      </span>
     </button>
   );
 }

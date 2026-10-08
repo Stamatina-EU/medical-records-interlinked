@@ -30,3 +30,15 @@ Thumbs.db
 # Real medical documents for private local testing must NEVER live in this folder.
 # This rule is a last-resort safety net, not permission to store them here.
 /private/
+
+# Logo working files (Illustrator / EPS / PDF sources, which can embed font data) and the local brand kit.
+# The app ships only its outlined assets: public/brand/mark.svg and app/icon.svg.
+/logo/
+/brand/
+
+# Font files never ship (the wordmark's typeface is commercial; app fonts come from next/font)
+*.otf
+*.ttf
+*.cff
+*.woff
+*.woff2

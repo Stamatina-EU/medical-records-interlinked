@@ -3,7 +3,8 @@
  * MRI is a personal app that CONTAINS medical records; it should not look like one.
  * Colour signals INTERFACE STATE, never medical judgement: no red / amber / green anywhere.
  * Fonts are swappable in one place: app/layout.tsx maps next/font families to
- * --font-ui-family and --font-evidence-family; components only use --font-ui / --font-evidence.
+ * --font-ui-family and --font-evidence-family; components only use --font-ui / --font-evidence
+ * (plus --font-brand, used only by the logo descriptor in the nav shell).
  */
 :root {
   /* Flat, very pale seafoam atmosphere (no gradient); content surfaces stay warm white. */
@@ -30,6 +31,7 @@
 
   --font-ui: var(--font-ui-family), "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-evidence: var(--font-evidence-family), Georgia, "Times New Roman", serif;
+  --font-brand: var(--font-brand-family), "Segoe UI", system-ui, sans-serif;
 
   --text-xs: 0.8125rem;
   --text-sm: 0.875rem;

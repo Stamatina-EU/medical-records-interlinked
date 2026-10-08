@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#235a5d"/>
-  <path d="M10 7h8l5 5v13H10z" fill="none" stroke="#e9f2ef" stroke-width="2" stroke-linejoin="round"/>
-  <path d="M13.5 17h7M13.5 21h5" stroke="#e9f2ef" stroke-width="2" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="MRI">
+<title>MRI</title>
+<rect width="128" height="128" rx="18" fill="#0e2f3d"/>
+<rect x="40" y="24" width="64" height="64" rx="8" fill="#68b1b1"/>
+<rect x="24" y="40" width="64" height="64" rx="8" fill="#6fcdc7"/>
+<path fill="#278f8f" d="M40 40H80A8 8 0 0 1 88 48V88H48A8 8 0 0 1 40 80Z"/>
 </svg>

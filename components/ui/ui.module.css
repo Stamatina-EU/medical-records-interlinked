@@ -59,7 +59,6 @@
 .calculated {
   display: inline-flex;
   align-items: baseline;
-  gap: 6px;
   background: none;
   border: none;
   padding: 0;
@@ -69,14 +68,21 @@
   font-size: var(--text-sm);
   color: var(--ink-muted);
 }
-/* quiet marker: lowercase, italic, no badge — discoverable, not a system label */
+/* label + tag flow as one run of text, so a long label wraps like a sentence */
+.calcRun {
+  min-width: 0;
+}
+/* quiet marker: lowercase, italic, no badge — discoverable, not a system label.
+   No space precedes it and its own spaces are non-breaking, so "· derived" never starts a line on its own. */
 .calcTag {
+  margin-left: 6px;
+  white-space: nowrap;
   font-size: var(--text-xs);
   font-style: italic;
   color: var(--ink-faint);
 }
 .calcTag::before {
-  content: "· ";
+  content: "·\00a0";
   font-style: normal;
 }
 .calcText {
