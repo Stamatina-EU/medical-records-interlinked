@@ -23,9 +23,12 @@ import { formatDate, isIsoDate } from "@/lib/text/dates";
 import {
   ANALYTE_ALIASES,
   COMPARISON_CUES,
+  DOCUMENT_DATE_LABELS,
   EXAM_ALIASES,
   FOLLOW_UP_CUES,
   MEDICATION_ALIASES,
+  NEGATION_WORDS,
+  NON_FACTUAL_WORDS,
   STATUS_CUES,
   UNITS,
   containsPhrase,
@@ -80,6 +83,28 @@ function mentionsDate(n: string, iso: string): boolean {
   return n.includes(normalize(formatDate(iso))) || n.includes(iso);
 }
 
+/** The written forms of a date, as one regex alternative ("25 sep 2026" | "2026-09-25"). */
+function datePattern(iso: string): string {
+  return `(?:${escapeRegExp(normalize(formatDate(iso)))}|${escapeRegExp(iso)})`;
+}
+
+/**
+ * The text states `iso` as THE document's own date: a document-date label is followed directly by that date
+ * ("date of consultation 25 sep 2026", "report date: 2026-09-25"), or the text starts with "date" and that date.
+ */
+export function statesDocumentDate(text: string, iso: string): boolean {
+  const n = normalize(text);
+  const date = datePattern(iso);
+  const end = "(?![0-9a-z])";
+  if (new RegExp(`^date ?:? ?${date}${end}`).test(n)) return true;
+  return DOCUMENT_DATE_LABELS.some((label) => new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(label)} ?:? ?${date}${end}`).test(n));
+}
+
+/** Calendar dates written inside a result line ("25 sep 2026", "2026-09-25"), removed before reading what lies between. */
+const DATE_TOKEN = /\b\d{1,2} [a-z]{3,9} \d{4}\b|\b\d{4}-\d{2}-\d{2}\b/g;
+/** The only words allowed between the analyte name and its value: they cannot introduce another test. */
+const RESULT_LINKERS = new Set(["on", "of", "at", "in", "was", "is", "were", "are", "level", "levels", "result", "results", "value", "measured", "serum", "plasma", "test", "dated", "reported"]);
+
 function analyteFor(name: string): "ferritin" | null {
   const n = normalize(name);
   for (const [key, aliases] of Object.entries(ANALYTE_ALIASES)) {
@@ -126,19 +151,26 @@ export function verifyLabFact(
   const hit = firstAlias(n, ANALYTE_ALIASES[analyte]);
   if (!hit) return { ok: false, reason: "source excerpt does not name the analyte" };
 
-  // Value bound to analyte: the FIRST number + unit that follows the alias.
-  const after = n.slice(hit.index + hit.alias.length);
+  // Value bound to analyte: the FIRST number + unit that follows the alias, in the SAME sentence/row, with nothing
+  // in between that could introduce another test (only dates and linking words like "on", "level", "was").
+  const rest0 = n.slice(hit.index + hit.alias.length);
+  const sentenceEnd = rest0.search(/(?<!\bref)[.;!?](?=\s|$)/);
+  const after = sentenceEnd === -1 ? rest0 : rest0.slice(0, sentenceEnd);
   const numberRe = /(?<![\d.])(\d+(?:\.\d+)?)(?![\d])/g;
-  let bound: { value: number; unit: string; restAfterUnit: string } | null = null;
+  let bound: { value: number; unit: string; restAfterUnit: string; gap: string } | null = null;
   for (let m = numberRe.exec(after); m; m = numberRe.exec(after)) {
     const rest = after.slice(m.index + m[0].length).replace(/^ /, "");
     const unit = UNITS.find((u) => rest.startsWith(u) && !/^[a-z0-9]/.test(rest.slice(u.length)));
     if (unit) {
-      bound = { value: Number(m[1]), unit, restAfterUnit: rest.slice(unit.length) };
+      bound = { value: Number(m[1]), unit, restAfterUnit: rest.slice(unit.length), gap: after.slice(0, m.index) };
       break;
     }
   }
-  if (!bound) return { ok: false, reason: "no value with a unit follows the analyte in the source" };
+  if (!bound) return { ok: false, reason: "no value with a unit follows the analyte in the same sentence of the source" };
+  const gapWords = bound.gap.replace(DATE_TOKEN, " ").match(/[a-z]+/g) ?? [];
+  if (gapWords.some((w) => !RESULT_LINKERS.has(w))) {
+    return { ok: false, reason: "the value is not written as the analyte's own result in the source" };
+  }
   if (Math.abs(bound.value - claim.value) > 1e-9) {
     return { ok: false, reason: `source binds ${bound.value} to the analyte, not ${claim.value}` };
   }
@@ -153,9 +185,12 @@ export function verifyLabFact(
   if (claim.referenceRangeText) {
     const nums = normalize(claim.referenceRangeText).match(/\d+(?:\.\d+)?/g) ?? [];
     if (nums.length !== 2) return { ok: false, reason: "reference range is not two numbers" };
-    const rangeRe = new RegExp(`(?<![\\d.])${escapeRegExp(nums[0])} ?- ?${escapeRegExp(nums[1])}(?![\\d])`);
+    // The range must belong to THIS result: it directly follows the value and unit ("32 μg/l 15-150",
+    // "32 μg/l (reference range 15-150 μg/l)"). A range elsewhere in the excerpt is never borrowed.
+    const label = "(?:(?:reference|ref\\.?|normal) (?:range|interval)|reference|range|ref\\.?|rr)";
+    const rangeRe = new RegExp(`^ ?\\(? ?(?:${label} ?)?:? ?${escapeRegExp(nums[0])} ?- ?${escapeRegExp(nums[1])}(?![\\d.])`);
     if (!rangeRe.test(bound.restAfterUnit)) {
-      return { ok: false, reason: "reference range does not appear after the value in the source" };
+      return { ok: false, reason: "the claimed reference range is not the one written with this result" };
     }
     refLow = Number(nums[0]);
     refHigh = Number(nums[1]);
@@ -169,7 +204,21 @@ export function verifyLabFact(
   return { ok: true, analyte, unit: unitOriginal, refLow, refHigh, refText };
 }
 
-/** Medication: episode alias AND status cue in the SAME sentence of the source excerpt. */
+/** Dates like "3 may 2026" / "may 2026" removed, so the month "May" is never read as the word "may". */
+function withoutDates(s: string): string {
+  return s.replace(/\b(?:\d{1,2} )?(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* \d{4}\b/g, " ");
+}
+
+/** Clauses of one sentence: the status cue must sit in the same clause as the medication it is about. */
+function clauses(sentence: string): string[] {
+  return sentence.split(/,|\b(?:and|but|while|whereas|although|though|however|yet)\b/).map((c) => c.trim()).filter(Boolean);
+}
+
+/**
+ * Medication: the status must be stated affirmatively. In one sentence of the source excerpt, the episode alias and
+ * the status cue appear in the SAME clause, and nothing in that sentence negates the status or makes it
+ * hypothetical, planned or recommended ("was not completed", "should be stopped", "if needed, …"). Fails closed.
+ */
 export function verifyMedicationFact(
   claim: Pick<ExtractedMedication, "medicationName" | "status">,
   verifiedExcerpt: string,
@@ -181,19 +230,29 @@ export function verifyMedicationFact(
   if (!episodeId) return { ok: false, reason: `medication "${claim.medicationName}" is not a tracked episode` };
 
   const aliases = MEDICATION_ALIASES[episodeId];
-  const sents = sentences(normalize(verifiedExcerpt));
-  const named = sents.filter((s) => aliases.some((a) => containsPhrase(s, a)));
+  const names = (s: string) => aliases.some((a) => containsPhrase(s, a));
+  const cues = (s: string) => STATUS_CUES[status].some((re) => re.test(s));
+  const named = sentences(normalize(verifiedExcerpt)).filter(names);
   if (named.length === 0) return { ok: false, reason: "source excerpt does not name the medication" };
-  const cued = named.some((s) => STATUS_CUES[status].some((re) => re.test(s)));
-  if (!cued) return { ok: false, reason: `no "${status}" cue in the same sentence as the medication` };
+  const cued = named.filter((s) => clauses(s).some((c) => names(c) && cues(c)));
+  if (cued.length === 0) return { ok: false, reason: `no "${status}" cue in the same clause as the medication` };
+  const affirmed = cued.map(withoutDates).filter(
+    (s) => !NEGATION_WORDS.some((w) => containsPhrase(s, w)) && !/n't\b/.test(s) && !NON_FACTUAL_WORDS.some((w) => containsPhrase(s, w)),
+  );
+  if (affirmed.length === 0) {
+    return { ok: false, reason: `the "${status}" status is negated, hypothetical or planned, not stated as fact` };
+  }
   return { ok: true, episodeId, status };
 }
 
-/** Document date: must appear in the located excerpt. */
+/**
+ * Document date: the located excerpt must state it AS the document's date (a document-date label directly followed
+ * by that date). A date that merely occurs in the document — e.g. the date of earlier blood results — fails.
+ */
 export function verifyDocumentDate(documentDate: string, verifiedExcerpt: string): Check {
   if (!isIsoDate(documentDate)) return { ok: false, reason: "document date is not a valid date" };
-  if (!mentionsDate(normalize(verifiedExcerpt), documentDate)) {
-    return { ok: false, reason: "document date does not appear in the excerpt" };
+  if (!statesDocumentDate(verifiedExcerpt, documentDate)) {
+    return { ok: false, reason: "the excerpt does not state this date as the document's date" };
   }
   return { ok: true };
 }
@@ -340,8 +399,8 @@ export function verifySeedState(state: TrustedState, pagesByDocId: Map<string, s
       failures.push({ factId: doc.id, page: 0, check: "PDF missing or unreadable" });
       continue;
     }
-    if (!pages.some((p) => mentionsDate(normalize(p), doc.date))) {
-      failures.push({ factId: doc.id, page: 1, check: "document date does not appear in its own text" });
+    if (!pages.some((p) => statesDocumentDate(p, doc.date))) {
+      failures.push({ factId: doc.id, page: 1, check: "no page states this date as the document's date" });
     }
   }
 

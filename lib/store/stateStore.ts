@@ -5,7 +5,8 @@
  * overwritten — the fix is `npm run demo:reset`.
  */
 import { randomUUID } from "node:crypto";
-import { access, copyFile, link, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { access, copyFile, link, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import path from "node:path";
 import type { TrustedState } from "@/lib/model/types";
 import { RUNTIME_DIR, RUNTIME_STATE, SEED_STATE } from "@/lib/store/paths";
 
@@ -59,6 +60,42 @@ export async function readState(): Promise<TrustedState> {
     return state;
   } catch (err) {
     throw new StateCorruptedError(`data/runtime/state.json is not valid (${(err as Error).message})`);
+  }
+}
+
+export class StateBusyError extends Error {}
+
+const LOCK_STALE_MS = 30_000;
+const LOCK_WAIT_MS = 10_000;
+
+/**
+ * Runs `fn` while holding the trusted-state lock, so a read–modify–write (an approval) can never interleave with
+ * another one — in this server or in another process using the same data folder. The lock is a directory:
+ * creating it is atomic and fails if it exists. A lock left behind by a crashed holder is reclaimed once stale.
+ */
+export async function withStateLock<T>(fn: () => Promise<T>): Promise<T> {
+  const lock = path.join(RUNTIME_DIR, ".state.lock");
+  await mkdir(RUNTIME_DIR, { recursive: true });
+  const deadline = Date.now() + LOCK_WAIT_MS;
+  for (;;) {
+    try {
+      await mkdir(lock);
+      break;
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
+      const age = await stat(lock).then((s) => Date.now() - s.mtimeMs, () => 0);
+      if (age > LOCK_STALE_MS) {
+        await rm(lock, { recursive: true, force: true });
+        continue;
+      }
+      if (Date.now() > deadline) throw new StateBusyError("the record is busy");
+      await new Promise((r) => setTimeout(r, 20));
+    }
+  }
+  try {
+    return await fn();
+  } finally {
+    await rm(lock, { recursive: true, force: true }).catch(() => undefined);
   }
 }
 

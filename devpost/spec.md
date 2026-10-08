@@ -255,7 +255,7 @@ Implements `prd.md > Latest Update Marking`. A small presentational component. I
 The trusted state isn't touched at any point.
 
 ### Apply Route
-`POST /api/records/apply` with body `{proposalId, approvedFactIds}`. It reloads the proposal from the Proposal Store and rejects any ID not in it. With zero approved facts it returns 400 and changes nothing. Otherwise it runs `engine.apply()`, copies the PDF to `data/runtime/documents/`, writes `state.json` atomically (write to a temp file, then rename), deletes the proposal, and returns the new state.
+`POST /api/records/apply` with body `{proposalId, approvedFactIds}`. It reloads the proposal from the Proposal Store and rejects any ID not in it. With zero approved facts it returns 400 and changes nothing. Otherwise, under the trusted-state lock (one approval at a time, also across processes), it assigns the proposal its **final** document id from the current state: the id given at extraction is provisional, because two proposals made from the same state can share it. The document, its PDF file name, fact ids and source references are rebased together. It then runs `engine.apply()`, copies the PDF to `data/runtime/documents/` (never over an approved document's file), writes `state.json` atomically (write to a temp file, then rename), deletes the proposal, and returns the new state.
 
 ### Cancel Route
 `POST /api/records/cancel` with body `{proposalId}`. Deletes the pending proposal. Idempotent. Orphaned proposals (for example after a refresh mid-review) are cleared at the start of the next extract call and by `demo:reset`.
@@ -309,13 +309,13 @@ The system prompt tells the model to:
 | Check | Applies to | Rule (evaluated on `verifiedExcerpt`) |
 |---|---|---|
 | Analyte identity | lab | The excerpt contains an accepted **ferritin alias** (`ferritin`, `serum ferritin`), and the model's `analyteName` maps to the same analyte. A model label with no alias in the source text fails. |
-| Value bound to analyte | lab | The claimed value is the **first number + unit that follows the alias** in the excerpt. `Ferritin 20 μg/L; Vitamin B12 32 μg/L` does not verify 32 as ferritin. |
+| Value bound to analyte | lab | The claimed value is the **first number + unit that follows the alias in the same sentence or row**, with only dates and linking words (`on`, `of`, `level`, `result`, `was`…) in between. `Ferritin 20 μg/L; Vitamin B12 32 μg/L` does not verify 32 as ferritin, and `Ferritin pending, haemoglobin 12.9 g/dL` verifies nothing. |
 | Unit | lab | That number is immediately followed by the normalized unit (`µ`/`μ` unified by NFKC). |
-| Range | lab | If a range is claimed, both range numbers appear in the excerpt after the value. They're parsed into `refLow`/`refHigh`. |
+| Range | lab | If a range is claimed, it is the one written **with this result**: it directly follows the value and unit (optionally labelled, e.g. `(reference range 15–150 μg/L)`). A range elsewhere in the excerpt is never borrowed. It's parsed into `refLow`/`refHigh`. |
 | Date | lab | `measuredOn` parses and appears in the excerpt, or equals the verified document date. |
 | Medication identity | medication | The excerpt contains an accepted **oral iron episode alias** (`oral iron`, `ferrous sulfate`, `iron tablets`, `iron supplement`), and the model's `medicationName` maps to that episode. A generic phrase such as "treatment completed," with no alias, fails. |
-| Status cue | medication | The same **sentence** of the excerpt that contains the alias also contains a cue for the claimed status: completed → `completed`/`finished`; stopped → `stopped`/`discontinued`; current → `currently taking`/`continues to take`; prescribed → `prescribed`. |
-| Document date | document | The excerpt is on the page and contains the date. If this fails, the whole extraction is `no_verified_facts` (`document_date_unverified`), because facts can't be dated. |
+| Status cue | medication | The same **clause** of the excerpt that contains the alias also contains a cue for the claimed status: completed → `completed`/`finished`; stopped → `stopped`/`discontinued`; current → `currently taking`/`continues to take`; prescribed → `prescribed`. The status must be **affirmative**: a sentence that negates it or makes it hypothetical, planned or recommended (`not`, `no longer`, `if`, `should`, `will`, `plan`, `recommend`…) fails closed. |
+| Document date | document | The excerpt is on the page and states the date **as the document's own date**: a document-date label (`Date of consultation`, `Report date`, `Date issued`, `Examination date`…) directly followed by that date. Any other date in the document (e.g. of earlier blood results) does not count. If this fails, the whole extraction is `no_verified_facts` (`document_date_unverified`), because facts can't be dated. |
 
 Result: `{ verified: SourceFact[], excludedCount: number }`. Verified facts get new IDs and review status `PROPOSED`, in memory only. Their `source.verifiedExcerpt` is the canonical page text.
 
@@ -341,7 +341,7 @@ Result: `{ verified: SourceFact[], excludedCount: number }`. Verified facts get 
   - `followup-match`: the earliest approved ferritin observation dated after an approved ferritin follow-up recommendation, plus the elapsed months
   - Each claim has a stable `key`, `text`, `inputFactIds[]` and a `ruleDescription`
 - **Medication status** is the latest explicit status event by `documentedOn`. It's displayed as that event (a source fact), so there's never a status without one.
-- **`dedupe(state, facts)`:** same analyte + date + value + unit → duplicate. Same episode + status + documented date → duplicate.
+- **`dedupe(state, facts)`:** same analyte + date + value + unit → duplicate. Same episode + status + documented date → duplicate. This applies against the approved state **and** between candidates of the same proposal, so a fact the AI lists twice becomes one approvable fact.
 - **`preview(state, proposedFacts, approvedIds)`:** applies the approved subset to a copy, derives, and returns the human-readable differences. This is where "This would also update…" comes from.
 - **`apply(state, proposal, approvedIds) → newState`:** adds the document and the approved facts (as `APPROVED`). A medication status event's `documentedOn` is the verified document date. and sets `latestUpdate = { documentId, approvedFactIds, affected: [...fact IDs and claim keys that are new or changed], approvedAt }`.
 - **`changesSummary(state)`:** the What changed lines, derived from `latestUpdate`.
@@ -374,10 +374,10 @@ Implements `prd.md > Demo Reset`. `scripts/demo-reset.ts` (`npm run demo:reset`)
 |---|---|
 | Every fact | Step A: the stored `verifiedExcerpt` is found on the stated page, **and is exactly equal to the canonical page text** that Step A produces. Seed excerpts are page wording, not paraphrase. |
 | Lab measurement | `verifyLabFact`: ferritin alias, value bound to the alias, unit, supplied range (if stored) and date |
-| Medication status event | `verifyMedicationFact`: episode alias + status cue in the same sentence (e.g. D5 must say "prescribed") |
+| Medication status event | `verifyMedicationFact`: episode alias + affirmative status cue in the same clause (e.g. D5 must say "prescribed") |
 | Follow-up | `verifyFollowUpFact`: a recommendation cue (`repeat`, `recheck`, `follow-up`, `recommended`) plus a target alias (ferritin alias, or the exam alias such as `ultrasound`), plus the stored interval text (e.g. "3 months") |
 | Imaging exam | `verifyImagingFact`: exam alias + `performedOn` date. If `comparesToDocumentId` is set, the excerpt must contain a comparison cue (`comparison`, `compared with`) **and** the referenced document's date |
-| Document record | Its date appears in its own page text |
+| Document record | A page of its own text states its date with a document-date label (e.g. "Report date 27 Jan 2026") |
 
 Any failure prints the fact ID, the check that failed and the page, and the script exits non-zero. **No medical claim without provenance** holds for hand-authored seed facts exactly as it does for AI-proposed ones.
 

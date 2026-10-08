@@ -73,7 +73,8 @@ export function derive(state: TrustedState): CalculatedClaim[] {
       kind: "previously_outside_range",
       text: "Previously outside supplied range",
       ruleDescription: "An earlier ferritin result in this history was outside the reference range supplied with that earlier result.",
-      inputFactIds: earlierOutside.map((e) => e.id),
+      // every fact the rule needs: the earlier outside-range result(s) AND this result, whose date makes them "earlier"
+      inputFactIds: [...earlierOutside.map((e) => e.id), m.id],
     });
   });
 

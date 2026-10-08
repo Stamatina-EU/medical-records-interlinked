@@ -1,13 +1,13 @@
 /**
- * Engine: dedupe — drop verified facts that already exist in the approved state.
- * Spec: `spec.md > Engine` (`dedupe`). Pure.
+ * Engine: dedupe — drop verified facts that already exist in the approved state, or that repeat an earlier
+ * candidate of the same proposal (the AI may list one fact twice). Spec: `spec.md > Engine` (`dedupe`). Pure.
  *  - lab: same analyte + date + value + unit
  *  - medication: same episode + status + documented date
  */
 import type { ProposedFact, SourceFact } from "@/lib/model/types";
 import { normalize } from "@/lib/text/normalize";
 
-function sameFact(a: ProposedFact, b: SourceFact): boolean {
+function sameFact(a: ProposedFact | SourceFact, b: ProposedFact | SourceFact): boolean {
   if (a.kind === "lab_measurement" && b.kind === "lab_measurement") {
     return (
       a.analyte === b.analyte &&
@@ -28,6 +28,9 @@ export function dedupe(
 ): { fresh: ProposedFact[]; duplicates: ProposedFact[] } {
   const fresh: ProposedFact[] = [];
   const duplicates: ProposedFact[] = [];
-  for (const p of proposed) (approved.some((f) => sameFact(p, f)) ? duplicates : fresh).push(p);
+  for (const p of proposed) {
+    const repeat = approved.some((f) => sameFact(p, f)) || fresh.some((f) => sameFact(p, f));
+    (repeat ? duplicates : fresh).push(p);
+  }
   return { fresh, duplicates };
 }

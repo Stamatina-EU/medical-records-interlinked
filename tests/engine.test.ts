@@ -56,9 +56,25 @@ describe("derive — pre-update seed state", () => {
     expect(byKey["range:lab-ferritin-2026-01-27"].text).toBe("Inside supplied laboratory range"); // 19.6 vs 15–150
   });
 
-  it("marks the later result as previously outside supplied range, citing the earlier result", () => {
-    expect(byKey["prev-outside:lab-ferritin-2026-01-27"].inputFactIds).toEqual(["lab-ferritin-2025-03-14"]);
+  it("marks the later result as previously outside supplied range, citing both sides of 'earlier'", () => {
+    // the earlier outside-range result AND the focal result whose date defines "earlier"
+    expect(byKey["prev-outside:lab-ferritin-2026-01-27"].inputFactIds).toEqual(["lab-ferritin-2025-03-14", "lab-ferritin-2026-01-27"]);
     expect(byKey["prev-outside:lab-ferritin-2025-03-14"]).toBeUndefined();
+  });
+
+  it("every declared input of 'previously outside' resolves to its own source excerpt", () => {
+    const index = buildEvidenceIndex(seed, claims);
+    const claim = index.claims["prev-outside:lab-ferritin-2026-01-27"];
+    const sources = claim.inputFactIds.map((id) => index.facts[id]).map((f) => [f.source.documentId, f.source.page, f.source.verifiedExcerpt]);
+    expect(sources).toEqual([
+      ["doc-01", 1, "Ferritin 11 μg/L 30–400"],
+      ["doc-03", 2, "Ferritin 19.6 μg/L 15–150"],
+    ]);
+    // the evidence drawer offers both sides of the relationship as inputs to open
+    const drawer = renderToStaticMarkup(createElement(CalculatedClaimView, { claim, index, onOpenFact: () => undefined }));
+    expect(drawer.match(/<button\b/g)).toHaveLength(2);
+    expect(drawer).toContain("11 μg/L");
+    expect(drawer).toContain("19.6 μg/L");
   });
 
   it("notes a change since the previous measurement, citing both inputs", () => {

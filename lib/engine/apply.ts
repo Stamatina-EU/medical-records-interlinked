@@ -26,6 +26,31 @@ export function validateApproval(proposal: Proposal, approvedFactIds: unknown): 
   return { ok: true, approved: ids.map((id) => known.get(id)!) };
 }
 
+/** A proposal fact id, moved from the proposal's provisional document id to its final one. */
+export function rebaseFactId(id: string, fromDocumentId: string, toDocumentId: string): string {
+  return id.startsWith(`${fromDocumentId}-`) ? `${toDocumentId}${id.slice(fromDocumentId.length)}` : id;
+}
+
+/**
+ * Give a proposal its final identity. The document id assigned at extraction is provisional: another proposal made
+ * from the same trusted state may have received the same one. At approval the route assigns the next free id from
+ * the CURRENT state (under the state lock) and rebases the document, its PDF file name, every fact id and every
+ * source reference consistently. Fact contents are untouched.
+ */
+export function rebaseProposal(proposal: Proposal, documentId: string): Proposal {
+  const from = proposal.document.id;
+  if (from === documentId) return proposal;
+  return {
+    ...proposal,
+    document: { ...proposal.document, id: documentId, file: `${documentId}.pdf` },
+    facts: proposal.facts.map((f) => ({
+      ...f,
+      id: rebaseFactId(f.id, from, documentId),
+      source: { ...f.source, documentId },
+    })),
+  };
+}
+
 function withFacts(state: TrustedState, proposal: Proposal, approvedIds: string[]): TrustedState {
   const approved = new Set(approvedIds);
   const facts: SourceFact[] = proposal.facts

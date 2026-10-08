@@ -38,6 +38,33 @@ export const STATUS_CUES: Record<MedicationStatus, RegExp[]> = {
   Stopped: [/\bstopped\b/, /\bdiscontinued\b/],
 };
 
+/**
+ * A status is evidence only when it is stated as fact. Any of these words in the sentence that carries the cue
+ * means the status is denied, hypothetical, planned or recommended — not documented — so the claim fails closed.
+ */
+export const NEGATION_WORDS: string[] = [
+  "not", "no", "never", "none", "neither", "nor", "without", "cannot", "no longer",
+  "denies", "denied", "declined", "refused", "refuses", "unable", "failed",
+];
+export const NON_FACTUAL_WORDS: string[] = [
+  "if", "unless", "whether", "should", "would", "could", "may", "might", "must", "will", "shall",
+  "consider", "considered", "considering", "plan", "plans", "planned", "planning", "intend", "intends", "intended",
+  "propose", "proposed", "recommend", "recommends", "recommended", "advise", "advised", "suggest", "suggested",
+  "expect", "expected", "likely", "possibly", "possible", "probably", "perhaps", "awaiting", "pending",
+  "to be", "to start", "to stop", "to continue", "to complete",
+];
+
+/**
+ * Labels that make a date THE document's own date ("Date of consultation 25 Sep 2026"). A date anywhere else in
+ * the text — a result date, a referral date — is not the document date. "Date" alone counts only when the
+ * excerpt starts with it ("Date: 3 Feb 2026").
+ */
+export const DOCUMENT_DATE_LABELS: string[] = [
+  "date of consultation", "consultation date", "date of visit", "visit date", "clinic date", "date of service",
+  "date of report", "report date", "reported on", "date issued", "date of issue", "issue date", "issued on",
+  "date of examination", "examination date", "date of letter", "letter date", "document date",
+];
+
 export const FOLLOW_UP_CUES: RegExp[] = [/\brepeat\b/, /\brecheck\b/, /\bfollow-up\b/, /\brecommended\b/];
 
 export const EXAM_ALIASES: Record<string, string[]> = {
