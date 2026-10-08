@@ -113,7 +113,7 @@ export function derive(state: TrustedState): CalculatedClaim[] {
         text: "No later ferritin result found in your record",
         ruleDescription:
           "Every approved ferritin result in your record was checked, and none is dated after this recommendation. This describes your record only — it does not say whether a test happened elsewhere, and it is not a judgement about timing.",
-        inputFactIds: [fu.id],
+        inputFactIds: [fu.id, ...series.map((m) => m.id)],
       });
     }
   }

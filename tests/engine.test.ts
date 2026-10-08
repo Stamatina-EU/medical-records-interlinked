@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import type { LabMeasurement, MedicationStatusEvent, TrustedState } from "@/lib/model/types";
-import { derive, latestMedicationStatus } from "@/lib/engine/derive";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { derive, ferritinSeries, latestMedicationStatus } from "@/lib/engine/derive";
+import { buildEvidenceIndex, documentShortLabel } from "@/lib/evidence/index";
+import { readPdfPages } from "@/lib/extraction/pdfText";
+import { locateExcerpt } from "@/lib/extraction/verify";
+import CalculatedClaimView from "@/components/evidence/CalculatedClaimView";
 import { snapshotView } from "@/lib/view/snapshot";
 
 const seed: TrustedState = JSON.parse(readFileSync(path.resolve(__dirname, "../data/seed/state.json"), "utf8"));
@@ -63,8 +69,43 @@ describe("derive — pre-update seed state", () => {
     expect(keys(seed).some((k) => k.startsWith("followup-match:"))).toBe(false);
     expect(byKey["followup-no-later:fu-ferritin-2026-02-03"]).toMatchObject({
       text: "No later ferritin result found in your record",
-      inputFactIds: ["fu-ferritin-2026-02-03"],
+      inputFactIds: ["fu-ferritin-2026-02-03", "lab-ferritin-2025-03-14", "lab-ferritin-2026-01-27"],
     });
+  });
+
+  it("negative follow-up provenance exposes the recommendation and every searched result, each linked to its source", async () => {
+    const claim = byKey["followup-no-later:fu-ferritin-2026-02-03"];
+    const expectedInputs = ["fu-ferritin-2026-02-03", ...ferritinSeries(seed).map((m) => m.id)];
+    expect(claim.inputFactIds).toEqual(expectedInputs);
+    expect(new Set(claim.inputFactIds).size).toBe(expectedInputs.length);
+
+    const index = buildEvidenceIndex(seed, claims);
+    const drawer = renderToStaticMarkup(createElement(CalculatedClaimView, {
+      claim,
+      index,
+      onOpenFact: () => undefined,
+    }));
+    expect(drawer.match(/<button\b/g)).toHaveLength(expectedInputs.length);
+
+    for (const id of expectedInputs) {
+      const fact = index.facts[id];
+      expect(fact, id).toBeDefined();
+      expect(fact.review).toBe("APPROVED");
+      const doc = index.documents[fact.source.documentId];
+      expect(doc, id).toBeDefined();
+      expect(fact.source.page).toBeGreaterThanOrEqual(1);
+      expect(fact.source.page).toBeLessThanOrEqual(doc.pageCount);
+      expect(fact.source.verifiedExcerpt.length).toBeGreaterThan(0);
+      expect(drawer).toContain(documentShortLabel(doc));
+      expect(drawer).toContain("page " + fact.source.page);
+
+      const bytes = new Uint8Array(readFileSync(path.resolve(__dirname, "../data/seed/documents", doc.file)));
+      const pages = await readPdfPages(bytes);
+      expect(locateExcerpt(pages, fact.source.page, fact.source.verifiedExcerpt)).toEqual({
+        ok: true,
+        verifiedExcerpt: fact.source.verifiedExcerpt,
+      });
+    }
   });
 
   it("shows the medication as Prescribed from the explicit prescription only", () => {

@@ -17,7 +17,8 @@ AI proposes → deterministic code verifies → you approve the evidence
             → deterministic code derives the consequences → your history updates
 ```
 
-- **AI (OpenAI Responses API, structured output)** only *proposes* facts: lab values, medication status, follow-up recommendations and imaging exams, each with the page and the quoted wording it relies on.
+- **Live Add record support:** AI (OpenAI Responses API, structured output) only *proposes* ferritin measurements and oral-iron status, each with the page and quoted wording it relies on.
+- **The seeded synthetic history also contains** thyroid imaging facts and follow-up recommendations. These are pre-structured source facts, not currently extracted live.
 - **Deterministic verification** rejects anything it cannot find in the page text. Checks include:
   - the quote exists on that page;
   - the number and unit follow the named analyte;
@@ -82,7 +83,7 @@ Open http://localhost:3000. The server binds to 127.0.0.1 only, so it is not rea
 5. Open **History** for the ferritin chart (each result against its own supplied range) and the imaging timeline.
 6. Open **Doctor Summary** for a concise, source-numbered brief to show or discuss with a doctor.
 
-**Why the demo starts with history.** The demo begins with a synthetic existing history (six documents) so that one new record can show longitudinal consequences: a change since the previous result, a matching follow-up, a medication status over time. The same trust pipeline also bootstraps an empty record. In a new record, the verified facts from the first supported document, once approved, create the first measurement, topic and medication episode (covered by `tests/bootstrap.test.ts`). Comparisons across time appear once there is history to compare.
+**Why the demo starts with history.** A fresh clone starts with six pre-structured synthetic documents by design, so one live addition can demonstrate a change since the previous result, a matching follow-up and medication status over time. Empty-record bootstrap and first-use UI are implemented and tested (`tests/bootstrap.test.ts`, `tests/emptyRecord.test.ts`): approving the first supported facts creates the first measurement and/or medication episode. Comparisons across time appear once there is history to compare.
 
 ## Reset and checks
 
@@ -114,6 +115,6 @@ devpost/        scope, PRD, spec and build checklist
 ## Limits (on purpose)
 
 - English only. Text-based PDFs only (no OCR). One synthetic patient.
-- Only a small set of fact types: ferritin results, oral-iron status, follow-up recommendations and imaging exams.
+- Live extraction is limited to ferritin measurements and oral-iron status; thyroid imaging facts and follow-up recommendations are included only in the seeded synthetic history.
 - A single local user. There are no accounts, no sharing and no deployment.
 - The verifier checks that a fact is **faithfully stated in the document**. It does not check that the document is clinically correct.
