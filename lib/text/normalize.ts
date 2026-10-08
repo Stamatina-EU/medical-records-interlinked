@@ -60,12 +60,20 @@ export function normalize(s: string): string {
  * matching span of the ORIGINAL haystack text, or null if not found.
  */
 export function findOriginalSpan(haystack: string, needle: string): string | null {
+  const r = findOriginalRange(haystack, needle);
+  return r ? haystack.slice(r.from, r.to) : null;
+}
+
+/** Like `findOriginalSpan`, but returns the [from, to) offsets of the (trimmed) span in the ORIGINAL haystack. */
+export function findOriginalRange(haystack: string, needle: string): { from: number; to: number } | null {
   const n = normalize(needle);
   if (!n) return null;
   const h = normalizeWithMap(haystack);
   const idx = h.text.indexOf(n);
   if (idx === -1) return null;
-  const from = h.start[idx];
-  const to = h.end[idx + n.length - 1];
-  return haystack.slice(from, to).trim();
+  let from = h.start[idx];
+  let to = h.end[idx + n.length - 1];
+  while (from < to && /\s/.test(haystack[from])) from++;
+  while (to > from && /\s/.test(haystack[to - 1])) to--;
+  return { from, to };
 }

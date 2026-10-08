@@ -117,7 +117,7 @@ describe("derive — pre-update seed state", () => {
 
       const bytes = new Uint8Array(readFileSync(path.resolve(__dirname, "../data/seed/documents", doc.file)));
       const pages = await readPdfPages(bytes);
-      expect(locateExcerpt(pages, fact.source.page, fact.source.verifiedExcerpt)).toEqual({
+      expect(locateExcerpt(pages, fact.source.page, fact.source.verifiedExcerpt)).toMatchObject({
         ok: true,
         verifiedExcerpt: fact.source.verifiedExcerpt,
       });

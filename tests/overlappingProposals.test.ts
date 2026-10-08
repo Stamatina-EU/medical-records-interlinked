@@ -36,6 +36,8 @@ import { derive } from "@/lib/engine/derive";
 import { buildEvidenceIndex } from "@/lib/evidence/index";
 import type { Extraction } from "@/lib/extraction/verify";
 import type { Proposal } from "@/lib/model/types";
+import { tryAcquire } from "@/lib/store/stateLock";
+import { spawnSync } from "node:child_process";
 import { POST as applyRoute } from "@/app/api/records/apply/route";
 import { GET as documentRoute } from "@/app/api/documents/[id]/route";
 
@@ -141,6 +143,18 @@ describe("overlapping proposals get collision-free identities at approval", () =
 
   it("simultaneous approval: both succeed, nothing is lost and nothing collides", async () => {
     const [a, b] = await twoOverlappingProposals();
+    const results = await Promise.all([approve(a), approve(b)]);
+    expect(results).toEqual([
+      { status: 200, body: { ok: true, status: "applied" } },
+      { status: 200, body: { ok: true, status: "applied" } },
+    ]);
+    await expectBothAddedIntact();
+  });
+
+  it("simultaneous approval after a crashed holder left the lock behind: recovery, then one at a time", async () => {
+    const [a, b] = await twoOverlappingProposals();
+    const crashed = spawnSync(process.execPath, ["-e", ""]).pid!; // a process that has already exited
+    expect(await tryAcquire("crashed-holder", crashed)).toBe(true);
     const results = await Promise.all([approve(a), approve(b)]);
     expect(results).toEqual([
       { status: 200, body: { ok: true, status: "applied" } },
