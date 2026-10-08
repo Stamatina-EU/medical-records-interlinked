@@ -12,7 +12,7 @@ import type { Proposal, TrustedState } from "@/lib/model/types";
 import { preview } from "@/lib/engine/apply";
 import { formatDate } from "@/lib/text/dates";
 import { reviewFactHeadline } from "@/lib/view/reviewFact";
-import { APPROVAL_PROBLEM_TEXT, approvalProblem, canRetry, type ApprovalProblem } from "@/lib/view/approvalOutcome";
+import { APPROVAL_PROBLEM_TEXT, approvalProblem, canRetry, isUncertain, type ApprovalProblem } from "@/lib/view/approvalOutcome";
 import { PlusIcon } from "@/components/shell/icons";
 import styles from "./addRecord.module.css";
 
@@ -103,7 +103,7 @@ export default function AddRecord({ label = "Add record" }: { label?: string }) 
     const problem = approvalProblem(httpStatus, phase.uncertainBefore === true);
     if (problem) {
       // keep the review open with wording that claims only what is known (retry stays duplicate-safe)
-      setPhase({ ...phase, kind: "review", applyProblem: problem, uncertainBefore: phase.uncertainBefore || problem === "uncertain" });
+      setPhase({ ...phase, kind: "review", applyProblem: problem, uncertainBefore: phase.uncertainBefore || isUncertain(problem) });
       return;
     }
     setPhase({ kind: "idle" });

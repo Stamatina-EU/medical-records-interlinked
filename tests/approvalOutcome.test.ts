@@ -5,6 +5,7 @@
  */
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { copyFile, mkdir, readFile, rm } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 
 vi.mock("@/lib/store/paths", async () => {
@@ -32,7 +33,8 @@ import { clearPending, saveProposal } from "@/lib/store/proposalStore";
 import { runExtractionPipeline } from "@/lib/extraction/pipeline";
 import type { Extraction } from "@/lib/extraction/verify";
 import type { Proposal } from "@/lib/model/types";
-import { APPROVAL_PROBLEM_TEXT, approvalProblem, canRetry } from "@/lib/view/approvalOutcome";
+import { APPROVAL_PROBLEM_TEXT, approvalProblem, canRetry, isUncertain } from "@/lib/view/approvalOutcome";
+import { release, tryAcquire } from "@/lib/store/stateLock";
 import { POST as applyRoute } from "@/app/api/records/apply/route";
 
 const repo = path.resolve(__dirname, "..");
@@ -75,7 +77,7 @@ describe("the wording for each outcome", () => {
   it("only a refusal before any change says the record is unchanged", () => {
     for (const status of [400, 403, 409, 503]) expect(approvalProblem(status, false)).toBe("rejected");
     expect(claimsUnchanged(APPROVAL_PROBLEM_TEXT.rejected)).toBe(true);
-    for (const p of ["uncertain", "gone", "gone-after-uncertain"] as const) expect(claimsUnchanged(APPROVAL_PROBLEM_TEXT[p]), p).toBe(false);
+    for (const p of ["uncertain", "still-uncertain", "gone", "gone-after-uncertain"] as const) expect(claimsUnchanged(APPROVAL_PROBLEM_TEXT[p]), p).toBe(false);
   });
 
   it("no response, or an unexpected server failure, is uncertain", () => {
@@ -92,6 +94,19 @@ describe("the wording for each outcome", () => {
     expect(approvalProblem(404, false)).toBe("gone");
     expect(canRetry("gone")).toBe(false);
     expect(canRetry("gone-after-uncertain")).toBe(false);
+  });
+
+  it("after an uncertain attempt, no later failure downgrades to 'unchanged' (the uncertainty is sticky)", () => {
+    for (const status of [null, 400, 403, 409, 500, 502, 503, 504]) expect(approvalProblem(status, true), String(status)).toBe("still-uncertain");
+    expect(APPROVAL_PROBLEM_TEXT["still-uncertain"]).toBe("We still couldn't confirm whether this record was added. Check your record before trying again.");
+    expect(isUncertain("still-uncertain") && isUncertain("uncertain")).toBe(true);
+    expect(isUncertain("rejected")).toBe(false);
+    expect(canRetry("still-uncertain")).toBe(true);
+    // only a positively established outcome ends it: a success, or the review being gone
+    expect(approvalProblem(200, true)).toBeNull();
+    expect(approvalProblem(404, true)).toBe("gone-after-uncertain");
+    // a FIRST-attempt definite refusal may still say "hasn't changed"
+    expect(approvalProblem(503, false)).toBe("rejected");
   });
 
   it("success is not a problem", () => {
@@ -124,6 +139,48 @@ describe("the wording matches what really happened", () => {
     expect(retry).toBe(404);
     expect(approvalProblem(retry, true)).toBe("gone-after-uncertain");
     expect(await added()).toBe(1); // duplicate-safe
+  });
+
+  it("lost response after a successful commit, then a retry refused as busy (503): still uncertain, never 'unchanged', never added twice", async () => {
+    const p = await pendingProposal();
+    // 1. the server commits, but the browser never receives the response
+    expect(await apply(p)).toBe(200);
+    let shown = approvalProblem(null, false);
+    let uncertainBefore = isUncertain(shown!);
+    expect(shown).toBe("uncertain");
+    expect(await added()).toBe(1);
+
+    // 2. the patient retries while another approval holds the record: the real route refuses with a definite 503
+    //    (the real lock is held by a live owner; only the clock is sped up so the 10 s wait passes at once)
+    const holder = randomUUID();
+    expect(await tryAcquire(holder)).toBe(true);
+    const realNow = Date.now.bind(Date);
+    let skew = 0;
+    const clock = vi.spyOn(Date, "now").mockImplementation(() => realNow() + (skew += 4_000));
+    let retry: number;
+    try {
+      retry = await apply(p);
+    } finally {
+      clock.mockRestore();
+      await release(holder);
+    }
+    expect(retry).toBe(503);
+    shown = approvalProblem(retry, uncertainBefore);
+    uncertainBefore = uncertainBefore || isUncertain(shown!);
+    expect(shown).toBe("still-uncertain"); // NOT "rejected": the first attempt is still unaccounted for
+    expect(claimsUnchanged(APPROVAL_PROBLEM_TEXT[shown!])).toBe(false);
+    expect(APPROVAL_PROBLEM_TEXT[shown!]).toBe("We still couldn't confirm whether this record was added. Check your record before trying again.");
+    expect(canRetry(shown!)).toBe(true);
+    expect(await added()).toBe(1); // the truthful answer: it WAS added, once
+
+    // 3. a further retry learns the review is gone — still no claim that the record is unchanged, still one addition
+    const third = await apply(p);
+    expect(third).toBe(404);
+    expect(approvalProblem(third, uncertainBefore)).toBe("gone-after-uncertain");
+    expect(await added()).toBe(1);
+    const state = await readState();
+    const history = state.facts.filter((f) => f.source.documentId === state.latestUpdate?.documentId);
+    expect(history.map((f) => f.kind).sort()).toEqual(["lab_measurement", "medication_status"]); // no duplicate trusted history
   });
 
   it("a review that disappeared for another reason (a newer upload cleared it) is 'gone', with no claim about the record", async () => {
