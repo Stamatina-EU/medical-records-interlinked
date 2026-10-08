@@ -245,6 +245,16 @@
   gap: var(--space-3);
 }
 
+/* the last Add attempt did not update the record: plain interface state, no alarm colour */
+.applyError {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+  color: var(--ink);
+  font-size: var(--text-sm);
+}
+
 .reviewNote {
   text-align: right;
   font-size: var(--text-xs);

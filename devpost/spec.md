@@ -110,7 +110,7 @@ Snapshot / History / Summary ◀── State Store + Engine: derive (+ Summary C
 **Runtime:** a local Node.js process serving a web app, opened in a desktop browser. Both `dev` and `start` bind to `127.0.0.1` only (`-H 127.0.0.1`), so the app is never exposed on the local network. Chrome or Edge is recommended, because their built-in PDF viewer supports `#page=N`.
 
 **Requirements:**
-- Node.js 20+ (v24 is installed)
+- Node.js 22.12 or later, as `package.json` `engines` requires (v24 is installed)
 - `OPENAI_API_KEY` in `.env.local`, which is gitignored. The learner adds it locally. It's never pasted into chat or committed.
 
 **Configuration (`.env.example` is committed with no values):**
@@ -257,6 +257,8 @@ The trusted state isn't touched at any point.
 ### Apply Route
 `POST /api/records/apply` with body `{proposalId, approvedFactIds}`. It reloads the proposal from the Proposal Store and rejects any ID not in it. With zero approved facts it returns 400 and changes nothing. Otherwise, under the trusted-state lock (one approval at a time, also across processes), it assigns the proposal its **final** document id from the current state: the id given at extraction is provisional, because two proposals made from the same state can share it. The document, its PDF file name, fact ids and source references are rebased together. It then runs `engine.apply()`, copies the PDF to `data/runtime/documents/` (never over an approved document's file), writes `state.json` atomically (write to a temp file, then rename), deletes the proposal, and returns the new state.
 
+**Local origin guard (Extract, Cancel and Apply routes).** Before any work, each state-changing route rejects a browser request from a foreign origin with a generic 403 (`lib/http/originGuard.ts`): a page on another site, or on another port of this machine, cannot start an extraction, discard a pending proposal or approve one. The app's own loopback origin is allowed, and so is a request with no `Origin` (curl, local scripts). This is local proof-of-concept hardening, not authentication.
+
 ### Cancel Route
 `POST /api/records/cancel` with body `{proposalId}`. Deletes the pending proposal. Idempotent. Orphaned proposals (for example after a refresh mid-review) are cleared at the start of the next extract call and by `demo:reset`.
 
@@ -317,7 +319,7 @@ The system prompt tells the model to:
 | Status cue | medication | The same **clause** of the excerpt that contains the alias also contains a cue for the claimed status: completed → `completed`/`finished`; stopped → `stopped`/`discontinued`; current → `currently taking`/`continues to take`; prescribed → `prescribed`. The status must be **affirmative**: a sentence that negates it or makes it hypothetical, planned or recommended (`not`, `no longer`, `if`, `should`, `will`, `plan`, `recommend`…) fails closed. |
 | Document date | document | The excerpt is on the page and states the date **as the document's own date**: a document-date label (`Date of consultation`, `Report date`, `Date issued`, `Examination date`…) directly followed by that date. Any other date in the document (e.g. of earlier blood results) does not count. If this fails, the whole extraction is `no_verified_facts` (`document_date_unverified`), because facts can't be dated. |
 
-Result: `{ verified: SourceFact[], excludedCount: number }`. Verified facts get new IDs and review status `PROPOSED`, in memory only. Their `source.verifiedExcerpt` is the canonical page text.
+Result: `{ verified: SourceFact[], excludedCount: number }`. Verified facts get new IDs and review status `PROPOSED`. They never enter the trusted history before approval: the Extract Route keeps them, with the uploaded PDF, only as a pending proposal in `data/runtime/pending/` until apply, cancel, the next extraction or demo reset. Raw AI output is not stored. Their `source.verifiedExcerpt` is the canonical page text.
 
 **Shared checkers.** The per-kind checks are exported as small pure functions. `verifyLabFact`, `verifyMedicationFact` and `verifyDocumentDate` are used by the live verifier. The Seed Verifier uses those plus `verifyFollowUpFact` and `verifyImagingFact` (see *Seed Verifier Script*). There is one implementation of "what counts as evidence," applied to both live and seed data.
 

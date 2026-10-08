@@ -12,11 +12,15 @@ import { readState } from "@/lib/store/stateStore";
 import { extractFacts } from "@/lib/extraction/extract";
 import { outcomeLogLine, runExtractionPipeline } from "@/lib/extraction/pipeline";
 import { clearPending, newProposalId, saveProposal } from "@/lib/store/proposalStore";
+import { rejectForeignOrigin } from "@/lib/http/originGuard";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  const foreign = rejectForeignOrigin(req);
+  if (foreign) return foreign; // before reading the upload or touching pending proposals
+
   let file: FormDataEntryValue | null;
   try {
     file = (await req.formData()).get("file");

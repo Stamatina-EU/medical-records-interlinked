@@ -251,7 +251,7 @@ It's a short, scannable, typeset one-page brief built from the same approved sta
 For this fictional patient:
 - **A. Relevant documented history.** Factual, e.g. "Ferritin has been measured repeatedly across the documented record, including 19.6 μg/L on 27 Jan 2026 and 32 μg/L on 25 Sep 2026." No diagnostic label (e.g. "iron deficiency") unless a source explicitly uses it.
 - **B. Recent investigations.** E.g. "Ferritin — 32 μg/L · Supplied reference range: 15–150 μg/L · 25 Sep 2026."
-- **C. Medication / recent treatment.** E.g. "Oral iron (ferrous sulfate) — Completed. Status documented in follow-up consultation note dated 25 Sep 2026." A "Current medication" subsection appears only if a source explicitly documents current use.
+- **C. Medication / recent treatment.** E.g. "Oral iron (ferrous sulfate) — Ongoing. Status documented in follow-up consultation note dated 25 Sep 2026." A "Current medication" subsection appears only if a source explicitly documents current use.
 - **D. Documented follow-up.** E.g. "Ferritin recheck recommended in an earlier record. A later approved ferritin result has been found." This is calculated, so its marker leads to both the recommendation and the result. No "satisfied," "on time" or "late."
 - **E. Imaging follow-up.** A short factual line using only wording the synthetic documents support.
 
@@ -305,7 +305,7 @@ Acceptance criteria:
 - **Cancelled or closed review.** Nothing is imported.
 - **Refresh or close during review.** The temporary proposal is discarded, and the history is unchanged.
 - **After approval.** The updated state, the latest-update marking and What changed appear everywhere.
-- **Persistence.** Only approved source facts, documents with at least one approved fact, and the latest-update marker persist across refresh and reopening. PROPOSED and REJECTED are never persisted.
+- **Persistence.** Only approved source facts, documents with at least one approved fact, and the latest-update marker persist across refresh and reopening. PROPOSED and REJECTED never enter the trusted history. Raw AI output is never stored; a pending proposal (its verified facts and the uploaded PDF) is kept temporarily in `data/runtime/pending/` until it is applied, cancelled, replaced by the next extraction or cleared by demo reset.
 - **Boundaries.** One fictional patient, with no accounts, profiles or sharing.
 
 ---
@@ -318,7 +318,7 @@ Acceptance criteria:
 - **AI extracts; code validates, derives and composes; the patient approves.** This keeps the trust boundary explicit.
 - **Patients approve evidence. Code derives consequences.** Only source facts are reviewable, and calculated consequences recompute automatically. This prevents inconsistent states and needs no dependency UI.
 - **Evidence type is separate from review status.** SOURCE FACT and CALCULATED are types. PROPOSED, APPROVED and REJECTED are statuses. Only APPROVED is persisted, and PROPOSED and REJECTED exist only during review. USER CONFIRMED is reserved for the patient's own knowledge and isn't part of this POC.
-- **Nothing is persisted without at least one approved fact.** Cancel, reject-all, a refresh mid-review and a nothing-new record all leave the history and document list unchanged, because this isn't a document archive.
+- **Nothing is persisted without at least one approved fact.** Cancel, reject-all, a refresh mid-review and a nothing-new record all leave the history and document list unchanged, because this isn't a document archive. (The pending proposal and its PDF sit temporarily in `data/runtime/pending/` and are deleted on cancel, apply, the next extraction or demo reset.)
 - **Patient-facing language avoids internal model terms.** "Updated from Follow-up consultation note · 25 Sep 2026," not "source facts approved."
 - **Medication states come only from explicit sources.** Prescription ≠ Current. Current, Completed and Stopped each need explicit documentation.
 - **"Matching follow-up result found," not "follow-up satisfied."** Code may calculate chronology, but not judgement ("late," "on time," "satisfied").

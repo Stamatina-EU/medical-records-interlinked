@@ -22,11 +22,12 @@ AI proposes → deterministic code verifies → you approve the evidence
 - **Deterministic verification** rejects anything it cannot find in the page text. Checks include:
   - the quote exists on that page;
   - the number and unit follow the named analyte;
-  - the medication and its status cue appear in the same sentence;
+  - the medication and an affirmative status cue appear in the same clause (negated, planned or hypothetical wording fails);
+  - a reference range is the one written with that result, and the document date is labelled as the document's own date;
   - dates are real.
 
   The excerpt you see is cut from the document itself, not from the model's output.
-- **You approve.** Nothing changes in your record until you choose what to add. You can exclude any proposed fact.
+- **You approve.** Nothing changes in your record until you choose what to add. You can exclude any proposed fact. Raw AI output is never stored. The verified facts awaiting review and the uploaded PDF are kept temporarily in `data/runtime/pending/` (gitignored), and deleted when you add them, cancel, upload the next record or run `demo:reset`.
 - **Derived statements are calculated, never stored.** These include whether a value sits inside the range *supplied with that result*, the change since the previous result, and whether a later result matches a recommended recheck. They are recomputed from approved facts and marked "Derived".
 - **The Doctor Summary** is composed from templates with no AI. It never states an absence ("no current medication") and never uses a diagnostic label. Every line has numbered source chips.
 

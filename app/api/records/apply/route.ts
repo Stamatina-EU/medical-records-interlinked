@@ -13,11 +13,15 @@ import { commitProposalDocument, deleteProposal, loadProposal } from "@/lib/stor
 import { apply, rebaseFactId, rebaseProposal, validateApproval } from "@/lib/engine/apply";
 import { dedupe } from "@/lib/engine/dedupe";
 import { nextDocumentId } from "@/lib/extraction/documentMeta";
+import { rejectForeignOrigin } from "@/lib/http/originGuard";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  const foreign = rejectForeignOrigin(req);
+  if (foreign) return foreign;
+
   let body: { proposalId?: unknown; approvedFactIds?: unknown };
   try {
     body = await req.json();
