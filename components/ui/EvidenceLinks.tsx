@@ -12,12 +12,22 @@ import { documentShortLabel } from "@/lib/evidence/index";
 import { DocIcon } from "@/components/shell/icons";
 import styles from "./ui.module.css";
 
-export function FactValue({ factId, children, className }: { factId: string; children: React.ReactNode; className?: string }) {
+export function FactValue({
+  factId,
+  children,
+  className,
+}: {
+  factId: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   const { open } = useEvidence();
   return (
     <button
       type="button"
-      className={className ? `${styles.factValue} ${className}` : styles.factValue}
+      className={
+        className ? `${styles.factValue} ${className}` : styles.factValue
+      }
       onClick={() => open({ type: "fact", id: factId })}
     >
       {children}
@@ -67,6 +77,7 @@ export function SourceRef({ factId }: { factId: string }) {
     <button
       type="button"
       className={styles.sourceRef}
+      data-evidence-kind="source"
       onClick={() => open({ type: "fact", id: factId })}
       aria-label={`Show evidence: ${type}, ${date}, page ${fact.source.page}`}
     >
@@ -80,7 +91,13 @@ export function SourceRef({ factId }: { factId: string }) {
 }
 
 /** `label` (optional): the wording shown in place of the claim's headline; the drawer still shows the headline. */
-export function CalculatedLabel({ claimKey, label }: { claimKey: string; label?: string }) {
+export function CalculatedLabel({
+  claimKey,
+  label,
+}: {
+  claimKey: string;
+  label?: string;
+}) {
   const { open, index } = useEvidence();
   const claim = index.claims[claimKey];
   if (!claim) return null;
@@ -92,6 +109,7 @@ export function CalculatedLabel({ claimKey, label }: { claimKey: string; label?:
     <button
       type="button"
       className={styles.calculated}
+      data-evidence-kind="derived"
       onClick={() => open({ type: "claim", key: claimKey })}
       aria-label={`${text} (derived — show how this was determined)`}
       title="Derived from your records — show how this was determined"
@@ -104,7 +122,9 @@ export function CalculatedLabel({ claimKey, label }: { claimKey: string; label?:
             : parts.map((part, i) => (
                 <Fragment key={i}>
                   {i > 0 && " "}
-                  <span className={styles.calcPart}>{i < parts.length - 1 ? `${part} ·` : part}</span>
+                  <span className={styles.calcPart}>
+                    {i < parts.length - 1 ? `${part} ·` : part}
+                  </span>
                 </Fragment>
               ))}
         </span>

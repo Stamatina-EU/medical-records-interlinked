@@ -74,3 +74,19 @@ p {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+.page {
+  padding-top: 40px;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 860px) {
+  .page {
+    padding-top: 24px;
+  }
+}

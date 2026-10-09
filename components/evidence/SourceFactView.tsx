@@ -5,6 +5,7 @@ import type { EvidenceIndex } from "@/lib/evidence/index";
 import { factHeadline } from "@/lib/evidence/index";
 import { formatDate } from "@/lib/text/dates";
 import styles from "./evidence.module.css";
+import VisualIcon from "@/components/ui/VisualIcon";
 
 type Props = {
   fact: SourceFact;
@@ -17,19 +18,37 @@ export default function SourceFactView({ fact, index, onOpenDocument }: Props) {
   const { label, value } = factHeadline(fact, index.episodes);
 
   return (
-    <div>
-      <p className={styles.kind}>Source fact</p>
-      <h2 className={styles.factLabel}>{label}</h2>
-      <p className={styles.factValue}>{value}</p>
-      {fact.kind === "lab_measurement" && fact.refText && (
-        <p className={styles.factMeta}>
-          Supplied range {fact.refText} {fact.unit} · measured {formatDate(fact.measuredOn)}
+    <div className={styles.sourceView}>
+      <div className={styles.factHeader}>
+        <p className={styles.kind}>
+          <VisualIcon name="files" size={19} />
+          From a document
         </p>
-      )}
-      {fact.kind === "follow_up" && <p className={styles.factMeta}>Recommended {formatDate(fact.recommendedOn)}</p>}
-      {fact.kind === "imaging_exam" && <p className={styles.factMeta}>{fact.statement}</p>}
-
-      <h3 className={styles.sectionHeading}>Source</h3>
+        <h2 className={styles.factLabel}>{label}</h2>
+        <p className={styles.factValue}>{value}</p>
+        {fact.kind === "lab_measurement" && fact.refText && (
+          <p className={styles.factMeta}>
+            Supplied range {fact.refText} {fact.unit} · measured{" "}
+            {formatDate(fact.measuredOn)}
+          </p>
+        )}
+        {fact.kind === "follow_up" && (
+          <p className={styles.factMeta}>
+            Recommended {formatDate(fact.recommendedOn)}
+          </p>
+        )}
+        {fact.kind === "imaging_exam" && (
+          <p className={styles.factMeta}>{fact.statement}</p>
+        )}
+      </div>
+      <h3 className={styles.sectionHeading}>Exact source wording</h3>
+      <blockquote className={styles.excerpt}>
+        <mark>{fact.source.verifiedExcerpt}</mark>
+      </blockquote>
+      <p className={styles.excerptNote}>
+        Checked against source wording · page {fact.source.page}
+      </p>
+      <h3 className={styles.sectionHeading}>Source document</h3>
       {doc ? (
         <dl className={styles.sourceList}>
           <div>
@@ -62,14 +81,17 @@ export default function SourceFactView({ fact, index, onOpenDocument }: Props) {
         <p className={styles.muted}>Source document not found.</p>
       )}
 
-      <h3 className={styles.sectionHeading}>Evidence</h3>
-      <blockquote className={styles.excerpt}>
-        <mark>{fact.source.verifiedExcerpt}</mark>
-      </blockquote>
-      <p className={styles.excerptNote}>Exact wording from the source document, page {fact.source.page}.</p>
-
+      <p className={styles.excerptNote}>
+        {doc?.origin === "added"
+          ? "Added with your approval"
+          : "Approved synthetic seed fact"}
+      </p>
       {doc && (
-        <button type="button" className={styles.secondaryButton} onClick={() => onOpenDocument(doc.id, fact.source.page)}>
+        <button
+          type="button"
+          className={styles.secondaryButton}
+          onClick={() => onOpenDocument(doc.id, fact.source.page)}
+        >
           Open source document
         </button>
       )}

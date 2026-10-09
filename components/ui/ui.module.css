@@ -107,3 +107,14 @@
     align-items: center;
   }
 }
+
+.calcPart {
+  white-space: normal;
+}
+.sourceMarker {
+  white-space: normal;
+  text-align: left;
+}
+.calcTag {
+  color: var(--ink-muted);
+}

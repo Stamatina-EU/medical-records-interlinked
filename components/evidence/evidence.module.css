@@ -303,7 +303,8 @@
   }
 
   .drawerBody {
-    padding: var(--space-4) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom));
+    padding: var(--space-4) var(--space-4)
+      calc(var(--space-6) + env(safe-area-inset-bottom));
   }
 
   .textButton,
@@ -334,5 +335,268 @@
 @media (max-width: 860px) and (prefers-reduced-motion: reduce) {
   .drawer {
     animation: none;
+  }
+}
+
+.reading {
+  min-width: 0;
+}
+.readingWithEvidence {
+  margin-right: 440px;
+  min-width: 0;
+}
+.readingWithEvidence :global(.page) {
+  padding-left: 32px;
+  padding-right: 32px;
+}
+@media (min-width: 1101px) {
+  .backdrop {
+    display: none;
+  }
+  .drawer {
+    top: 92px;
+    width: 440px;
+    box-shadow: none;
+    background: #faf9f4;
+  }
+}
+.drawerBody {
+  overflow-wrap: anywhere;
+}
+.factLabel {
+  font-family: var(--font-evidence);
+  font-size: 23px;
+  font-weight: 400;
+}
+.excerpt {
+  box-shadow: none;
+}
+.inputs li {
+  padding-bottom: 16px;
+}
+.textButton {
+  min-height: 44px;
+}
+.inputButton {
+  min-height: 44px;
+}
+@media (max-width: 1100px) {
+  .readingWithEvidence {
+    margin-right: 0;
+  }
+  .drawer {
+    width: min(460px, 100vw);
+  }
+}
+@media (max-width: 860px) {
+  .readingWithEvidence :global(.page) {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+.reading,
+.readingWithEvidence {
+  container-type: inline-size;
+}
+
+/* Art direction is contained in the evidence panel; the PDF viewer keeps its current presentation. */
+.drawer.artDrawer {
+  background: var(--rb-canvas);
+  border-left-color: var(--rb-line);
+  color: var(--rb-ink);
+}
+.artDrawer .drawerTop {
+  background: var(--rb-petrol);
+  border-bottom: 3px solid var(--rb-turquoise);
+  padding: 10px 24px;
+  min-height: 66px;
+  color: white;
+}
+.artDrawer .drawerKicker {
+  color: #d9f1ed;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+}
+.artDrawer .textButton {
+  color: white;
+  border: 1px solid #56848b;
+  border-radius: 5px;
+  padding: 4px 12px;
+}
+.artDrawer .textButton:hover {
+  background: #235963;
+  color: white;
+  text-decoration: none;
+}
+.artDrawer .drawerBody {
+  padding: 22px;
+}
+.artDrawer .kind {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  font-weight: 600;
+  color: var(--rb-teal);
+  margin-bottom: 12px;
+}
+.factHeader,
+.claimHeader {
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #baded9;
+  border-left: 4px solid var(--rb-teal);
+  background: var(--rb-tint);
+}
+.artDrawer .factLabel {
+  font-size: 24px;
+  line-height: 1.35;
+  color: var(--rb-ink);
+}
+.sourceView .factValue {
+  font-family: var(--font-ui);
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.35;
+  margin: 5px 0;
+}
+.sourceView .factMeta {
+  color: var(--rb-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.artDrawer .sectionHeading {
+  color: var(--rb-muted);
+  border-color: var(--rb-line);
+  margin-top: 24px;
+  letter-spacing: 0.1em;
+  font-size: 11px;
+}
+.artDrawer .excerpt {
+  background: white;
+  border-color: var(--rb-line);
+  border-left: 3px solid var(--rb-turquoise);
+  padding: 16px 18px;
+  border-radius: 0 6px 6px 0;
+  font-size: 17px;
+  color: var(--rb-ink);
+}
+.artDrawer .excerpt mark {
+  background: var(--rb-tint);
+}
+.artDrawer .excerptNote {
+  color: var(--rb-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.artDrawer .sourceList {
+  padding: 14px 16px;
+  background: white;
+  border: 1px solid var(--rb-line);
+  border-radius: 6px;
+  gap: 6px;
+  font-size: 13px;
+}
+.artDrawer .sourceList div {
+  grid-template-columns: 78px 1fr;
+  gap: 8px;
+}
+.artDrawer .sourceList dt {
+  color: var(--rb-muted);
+}
+.artDrawer .secondaryButton {
+  color: white;
+  background: var(--rb-teal);
+  border-color: var(--rb-teal);
+  min-height: 44px;
+  width: 100%;
+  font-weight: 600;
+  margin-top: 18px;
+}
+.artDrawer .secondaryButton:hover {
+  background: var(--rb-petrol);
+  color: white;
+}
+.claimHeader {
+  background: var(--rb-derived-tint);
+  border-color: var(--rb-derived-line);
+  border-left-color: var(--rb-derived);
+}
+.calculatedView .kind {
+  color: var(--rb-derived);
+}
+.calculatedView .factLabel {
+  font-size: 23px;
+}
+.calculatedView .rule {
+  padding: 14px 16px;
+  background: var(--rb-derived-tint);
+  border-radius: 6px;
+  color: var(--rb-ink);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.artDrawer .inputs {
+  border-top: none;
+  display: grid;
+  gap: 12px;
+  counter-reset: input;
+}
+.artDrawer .inputs li {
+  position: relative;
+  border: 1px solid var(--rb-line);
+  border-radius: 7px;
+  padding: 12px 14px;
+  background: white;
+  counter-increment: input;
+}
+.artDrawer .inputButton {
+  padding: 0 0 10px;
+  min-height: 48px;
+}
+.artDrawer .inputHeadline {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--rb-teal);
+}
+.artDrawer .inputSource {
+  color: var(--rb-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.artDrawer .inputs .excerpt {
+  padding: 10px 12px;
+  font-size: 16px;
+  background: #f5faf9;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
+@media (max-width: 860px) {
+  .drawer.artDrawer {
+    border-left: 0;
+    border-top-color: var(--rb-line);
+    overflow: hidden;
+  }
+  .artDrawer .drawerTop {
+    padding: 14px 16px 8px;
+    min-height: 68px;
+  }
+  .artDrawer .drawerTop::before {
+    background: #78a3a7;
+  }
+  .artDrawer .drawerBody {
+    padding: 18px 16px 32px;
+  }
+  .factHeader,
+  .claimHeader {
+    padding: 18px;
+  }
+  .artDrawer .textButton {
+    font-size: 14px;
+    min-height: 40px;
   }
 }

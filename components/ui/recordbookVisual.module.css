@@ -1,0 +1,77 @@
+/* First visual pass: scoped to Record, History and evidence. Existing global tokens stay intact. */
+.theme {
+  --rb-petrol: #123f49;
+  --rb-teal: #006d77;
+  --rb-turquoise: #2eb6b3;
+  --rb-tint: #d9f1ed;
+  --rb-canvas: #f5faf9;
+  --rb-white: #ffffff;
+  --rb-ink: #183e48;
+  --rb-muted: #49636b;
+  --rb-line: #cbdddc;
+  --rb-derived: #87536c;
+  --rb-derived-hover: #6c3e54;
+  --rb-derived-line: #d9c4ce;
+  --rb-derived-tint: #f4edf1;
+}
+:global(body):has(.pageCanvas) {
+  background: #f5faf9;
+}
+.pageCanvas {
+  color: var(--rb-ink);
+}
+.theme [data-evidence-kind="source"] {
+  color: var(--rb-teal);
+  background: var(--rb-white);
+  border: 1px solid var(--rb-line);
+  border-radius: 6px;
+  padding: 4px 9px;
+  margin: 6px 0;
+  min-height: 34px;
+  font-size: 12px;
+  line-height: 1.35;
+  max-width: 100%;
+}
+.theme [data-evidence-kind="source"] svg {
+  width: 16px;
+  height: 16px;
+  color: var(--rb-teal);
+}
+.theme [data-evidence-kind="source"]:hover {
+  background: var(--rb-tint);
+  border-color: var(--rb-teal);
+}
+.theme [data-evidence-kind="derived"] {
+  color: var(--rb-derived);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 34px;
+  padding: 4px 0;
+}
+.theme [data-evidence-kind="derived"]:hover {
+  color: var(--rb-derived-hover);
+}
+.theme [data-evidence-kind="derived"]:hover > span > span:first-child {
+  color: var(--rb-derived-hover);
+  border-bottom-color: var(--rb-derived);
+}
+.theme [data-evidence-kind="derived"] > span > span:last-child {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--rb-derived-tint);
+  color: var(--rb-derived);
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+.theme [data-evidence-kind="derived"] > span > span:last-child::before {
+  content: none;
+}
+@media (max-width: 860px) {
+  .theme [data-evidence-kind="source"],
+  .theme [data-evidence-kind="derived"] {
+    min-height: 44px;
+  }
+}

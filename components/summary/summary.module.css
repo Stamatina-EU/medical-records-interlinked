@@ -133,7 +133,8 @@
 
 .updated {
   /* same quiet trace as Home: a thin accent-wash stripe, no fill */
-  background: linear-gradient(var(--accent-wash), var(--accent-wash)) no-repeat left / 3px 100%;
+  background: linear-gradient(var(--accent-wash), var(--accent-wash)) no-repeat
+    left / 3px 100%;
   padding-left: var(--space-3);
 }
 
@@ -185,5 +186,42 @@
   .chip {
     min-height: 28px;
     padding: 0 9px;
+  }
+}
+
+.sheet {
+  box-shadow: none;
+}
+.scope {
+  line-height: 1.55;
+}
+.synthetic {
+  white-space: normal;
+  display: block;
+  width: fit-content;
+  margin-top: 8px;
+  border: none;
+  padding: 0;
+}
+.sourceList li {
+  overflow-wrap: anywhere;
+}
+.keep {
+  white-space: normal;
+}
+.patient {
+  font-weight: 400;
+}
+@media (max-width: 860px) {
+  .sheet {
+    margin: 0;
+    border: 1px solid var(--rule);
+    padding: 24px 16px;
+  }
+  .patient {
+    font-size: 26px;
+  }
+  .chip {
+    min-height: 36px;
   }
 }

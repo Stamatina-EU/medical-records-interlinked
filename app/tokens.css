@@ -8,16 +8,16 @@
  */
 :root {
   /* Flat, very pale seafoam atmosphere (no gradient); content surfaces stay warm white. */
-  --paper: #e9f2ef;
-  --nav-bg: #dfebe7;
+  --paper: #f5f3ed;
+  --nav-bg: #eeece5;
   --surface: #ffffff;
   --surface-raised: #fffdf9;
-  --surface-sunk: #d4e4df;
+  --surface-sunk: #e9eee9;
   --ink: #1f2328;
   --ink-muted: #5b6068;
   --ink-faint: #8a8f96;
-  --rule: #e3e3dc;
-  --rule-strong: #c9d6d1;
+  --rule: #dfddd4;
+  --rule-strong: #cfcec4;
 
   /* deep petrol teal: white text on --accent is ~7.8:1 (WCAG AAA) */
   --accent: #235a5d;
@@ -29,8 +29,10 @@
   --evidence-border: #e6dfcf;
   --evidence-mark: #f3ecd9;
 
-  --font-ui: var(--font-ui-family), "Segoe UI", system-ui, -apple-system, sans-serif;
-  --font-evidence: var(--font-evidence-family), Georgia, "Times New Roman", serif;
+  --font-ui:
+    var(--font-ui-family), "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-evidence:
+    var(--font-evidence-family), Georgia, "Times New Roman", serif;
   --font-brand: var(--font-brand-family), "Segoe UI", system-ui, sans-serif;
 
   --text-xs: 0.8125rem;
@@ -50,13 +52,15 @@
   --space-7: 48px;
 
   --radius: 6px;
-  --radius-lg: 14px;
-  --shadow-1: 0 1px 2px rgba(31, 35, 40, 0.04), 0 1px 1px rgba(31, 35, 40, 0.03);
-  --shadow-2: 0 1px 2px rgba(31, 35, 40, 0.05), 0 8px 24px -12px rgba(31, 35, 40, 0.16);
+  --radius-lg: 8px;
+  --shadow-1:
+    0 1px 2px rgba(31, 35, 40, 0.04), 0 1px 1px rgba(31, 35, 40, 0.03);
+  --shadow-2:
+    0 1px 2px rgba(31, 35, 40, 0.05), 0 8px 24px -12px rgba(31, 35, 40, 0.16);
   --focus: 0 0 0 2px var(--paper), 0 0 0 4px var(--accent);
 
   --sidebar-width: 248px;
-  --content-max: 1040px;
+  --content-max: 1120px;
   --tabbar-height: 64px;
   --topbar-height: 56px;
   --drawer-width: 460px;

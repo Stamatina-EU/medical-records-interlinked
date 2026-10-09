@@ -3,144 +3,253 @@
  * (examinations, follow-up) through one template. Every row opens its evidence; derived labels
  * open "How this was determined". Latest-update marks follow `latestUpdate.affected`.
  */
+import type { SourceFact } from "@/lib/model/types";
 import type { HistoryView } from "@/lib/view/history";
 import { formatDate } from "@/lib/text/dates";
-import { CalculatedLabel, FactValue, SourceRef } from "@/components/ui/EvidenceLinks";
+import {
+  CalculatedLabel,
+  FactValue,
+  SourceRef,
+} from "@/components/ui/EvidenceLinks";
 import MeasurementChart from "./MeasurementChart";
 import styles from "./history.module.css";
 import { statusLabel } from "@/lib/text/status";
+import VisualIcon from "@/components/ui/VisualIcon";
 
-const Updated = () => <span className={styles.updatedLabel}>Updated from latest record</span>;
+const Updated = () => (
+  <span className={styles.updatedLabel}>Updated from latest record</span>
+);
 
-function FollowUps({ rows }: { rows: HistoryView["followUps"] }) {
-  if (rows.length === 0) return null;
-  return (
-    <section className={styles.section} aria-labelledby="h-followup">
-      <h2 id="h-followup" className={styles.sectionTitle}>
-        Follow-up on record
-      </h2>
-      <ul className={`${styles.surface} ${styles.rows}`}>
-        {rows.map((r) => (
-          <li key={r.fact.id} className={r.updated ? `${styles.row} ${styles.updated}` : styles.row}>
-            <div className={styles.rowMain}>
-              <FactValue factId={r.fact.id} className={styles.rowTitle}>
-                {r.fact.recommendation}
-              </FactValue>
-              <p className={styles.rowMeta}>Recommended {formatDate(r.fact.recommendedOn)}</p>
-              {r.stateKey && (
-                <div className={styles.rowClaims}>
-                  <CalculatedLabel claimKey={r.stateKey} />
-                  {r.elapsedMonths !== null && (
-                    <span className={styles.chronology}>
-                      dated {r.elapsedMonths} month{r.elapsedMonths === 1 ? "" : "s"} after the recommendation
-                    </span>
-                  )}
-                </div>
-              )}
-              {r.updated && <Updated />}
-            </div>
-            <SourceRef factId={r.fact.id} />
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-export function IronHistory({ view }: { view: Extract<HistoryView, { topic: "iron" }> }) {
-  const latestUpdated = view.measurements.find((m) => m.updated)?.fact.id ?? null;
+export function IronHistory({
+  view,
+}: {
+  view: Extract<HistoryView, { topic: "iron" }>;
+}) {
+  const latestUpdated =
+    view.measurements.find((m) => m.updated)?.fact.id ?? null;
   return (
     <>
       <section className={styles.section} aria-labelledby="h-measurements">
         <h2 id="h-measurements" className={styles.sectionTitle}>
-          Ferritin results <span className={styles.titleUnit}>· {view.series[0]?.unit ?? ""}</span>
+          <VisualIcon name="chart-no-axes-combined" size={26} /> Ferritin
+          results{" "}
+          <span className={styles.titleUnit}>
+            · {view.series[0]?.unit ?? ""}
+          </span>
         </h2>
         <div className={`${styles.surface} ${styles.chartSurface}`}>
-          <MeasurementChart series={view.series} latestUpdatedId={latestUpdated} />
+          <MeasurementChart
+            series={view.series}
+            latestUpdatedId={latestUpdated}
+          />
         </div>
-        <ul className={`${styles.surface} ${styles.rows}`} aria-label="Ferritin results, newest first">
-          {view.measurements.map((r) => (
-            <li key={r.fact.id} className={r.updated ? `${styles.row} ${styles.updated}` : styles.row}>
-              <p className={styles.rowDate}>{formatDate(r.fact.measuredOn)}</p>
-              <div className={styles.rowMain}>
-                <FactValue factId={r.fact.id} className={styles.rowValue}>
-                  {r.fact.value} <span className={styles.unit}>{r.fact.unit}</span>
-                </FactValue>
-                {r.fact.refText && (
-                  <p className={styles.rowMeta}>
-                    Supplied range {r.fact.refText} {r.fact.unit}
-                  </p>
-                )}
-                {r.claimKeys.length > 0 && (
-                  <div className={styles.rowClaims}>
-                    {r.claimKeys.map((k) => (
-                      <CalculatedLabel key={k} claimKey={k} />
-                    ))}
-                  </div>
-                )}
-                {r.updated && <Updated />}
-              </div>
-              <SourceRef factId={r.fact.id} />
-            </li>
-          ))}
-        </ul>
       </section>
-
-      {view.treatment.map((t) => (
-        <section key={t.name} className={styles.section} aria-labelledby="h-treatment">
-          <h2 id="h-treatment" className={styles.sectionTitle}>
-            Treatment · {t.name}
-          </h2>
-          <p className={styles.sectionNote}>Only statuses a document explicitly states. Dates are when each status was documented.</p>
-          <ol className={`${styles.surface} ${styles.timeline}`}>
-            {t.events.map((e) => (
-              <li key={e.fact.id} className={e.updated ? `${styles.step} ${styles.updated}` : styles.step}>
-                <span className={styles.stepDot} aria-hidden="true" />
-                <div className={styles.rowMain}>
-                  <FactValue factId={e.fact.id} className={styles.rowTitle}>
-                    {statusLabel(e.fact.status)}
-                  </FactValue>
-                  {/* documentedOn = date of the document stating the status, never an effective date */}
-                  <p className={styles.rowMeta}>documented {formatDate(e.fact.documentedOn)}</p>
-                  {e.updated && <Updated />}
-                </div>
-                <SourceRef factId={e.fact.id} />
-              </li>
-            ))}
-          </ol>
-        </section>
-      ))}
-
-      <FollowUps rows={view.followUps} />
+      <RecordSequence view={view} />
     </>
   );
 }
 
-export function ImagingHistory({ view }: { view: Extract<HistoryView, { topic: "imaging" }> }) {
+function RecordSequence({
+  view,
+}: {
+  view: Extract<HistoryView, { topic: "iron" }>;
+}) {
+  const events: {
+    fact: SourceFact;
+    date: string;
+    title: string;
+    detail: string | null;
+    claims: string[];
+    updated: boolean;
+  }[] = [
+    ...view.measurements.map((r) => ({
+      fact: r.fact,
+      date: r.fact.measuredOn,
+      title: "Ferritin · " + r.fact.value + " " + r.fact.unit,
+      detail: r.fact.refText
+        ? "Supplied range " + r.fact.refText + " " + r.fact.unit
+        : null,
+      claims: r.claimKeys,
+      updated: r.updated,
+    })),
+    ...view.treatment.flatMap((t) =>
+      t.events.map((r) => ({
+        fact: r.fact,
+        date: r.fact.documentedOn,
+        title: t.name + " · " + statusLabel(r.fact.status),
+        detail: "Status documented on this date",
+        claims: [],
+        updated: r.updated,
+      })),
+    ),
+    ...view.followUps.map((r) => ({
+      fact: r.fact,
+      date: r.fact.recommendedOn,
+      title: r.fact.recommendation,
+      detail: "Documented recommendation",
+      claims: r.stateKey ? [r.stateKey] : [],
+      updated: r.updated,
+    })),
+  ];
+  events.sort(
+    (a, b) =>
+      b.date.localeCompare(a.date) || a.fact.id.localeCompare(b.fact.id),
+  );
   return (
-    <>
-      <section className={styles.section} aria-labelledby="h-exams">
-        <h2 id="h-exams" className={styles.sectionTitle}>
-          Examinations
-        </h2>
-        <ol className={`${styles.surface} ${styles.timeline}`}>
-          {view.exams.map((r) => (
-            <li key={r.fact.id} className={r.updated ? `${styles.step} ${styles.updated}` : styles.step}>
-              <span className={styles.stepDot} aria-hidden="true" />
-              <div className={styles.rowMain}>
-                <FactValue factId={r.fact.id} className={styles.rowTitle}>
-                  {formatDate(r.fact.performedOn)} · {r.fact.examName}
-                </FactValue>
-                <p className={styles.statement}>{r.fact.statement}</p>
-                {r.comparesToDate && <p className={styles.rowMeta}>Compared with the examination of {formatDate(r.comparesToDate)}, as stated in the report</p>}
-                {r.updated && <Updated />}
-              </div>
-              <SourceRef factId={r.fact.id} />
-            </li>
-          ))}
-        </ol>
-      </section>
-      <FollowUps rows={view.followUps} />
-    </>
+    <section className={styles.section} aria-labelledby="h-sequence">
+      <h2 id="h-sequence" className={styles.sectionTitle}>
+        <VisualIcon name="notebook-tabs" size={25} /> The dated record
+      </h2>
+      <p className={styles.sequenceNote}>
+        Measurements, medication statements and recommendations · newest first
+      </p>
+      <ol className={styles.sequence}>
+        {events.map((e) => (
+          <li
+            key={e.fact.id}
+            data-fact-kind={e.fact.kind}
+            className={e.updated ? styles.updated : undefined}
+          >
+            <div className={styles.sequenceDate}>
+              <VisualIcon
+                name={
+                  e.fact.kind === "lab_measurement"
+                    ? "flask-conical"
+                    : e.fact.kind === "medication_status"
+                      ? "pill"
+                      : "clipboard-list"
+                }
+                size={21}
+                className={styles.eventIcon}
+              />
+              <time dateTime={e.date}>{formatDate(e.date)}</time>
+              <span>
+                {e.fact.kind === "lab_measurement"
+                  ? "Measurement"
+                  : e.fact.kind === "medication_status"
+                    ? "Medication statement"
+                    : "Recommendation"}
+              </span>
+            </div>
+            <div className={styles.sequenceBody}>
+              <FactValue factId={e.fact.id} className={styles.rowTitle}>
+                {e.title}
+              </FactValue>
+              {e.detail && <p className={styles.rowMeta}>{e.detail}</p>}
+              <SourceRef factId={e.fact.id} />
+              {e.claims.length > 0 && (
+                <details className={styles.comparisons}>
+                  <summary>Calculated from your records</summary>
+                  <div className={styles.rowClaims}>
+                    {e.claims.map((k) => (
+                      <CalculatedLabel key={k} claimKey={k} />
+                    ))}
+                  </div>
+                </details>
+              )}
+              {e.updated && <Updated />}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+export function ImagingHistory({
+  view,
+}: {
+  view: Extract<HistoryView, { topic: "imaging" }>;
+}) {
+  const events = [
+    ...view.exams.map((r) => ({
+      fact: r.fact,
+      date: r.fact.performedOn,
+      title: r.fact.examName,
+      detail: r.fact.statement,
+      comparison: r.comparesToDate
+        ? "Compared with the examination of " +
+          formatDate(r.comparesToDate) +
+          ", as stated in the report"
+        : null,
+      claims: [] as string[],
+      updated: r.updated,
+    })),
+    ...view.followUps.map((r) => ({
+      fact: r.fact,
+      date: r.fact.recommendedOn,
+      title: r.fact.recommendation,
+      detail: "Documented recommendation",
+      comparison: null,
+      claims: r.stateKey ? [r.stateKey] : [],
+      updated: r.updated,
+    })),
+  ].sort(
+    (a, b) =>
+      b.date.localeCompare(a.date) || a.fact.id.localeCompare(b.fact.id),
+  );
+  return (
+    <section className={styles.section} aria-labelledby="h-exams">
+      <h2 id="h-exams" className={styles.sectionTitle}>
+        <VisualIcon name="notebook-tabs" size={25} /> The dated record
+      </h2>
+      <p className={styles.sequenceNote}>
+        Examinations and recommendations · newest first
+      </p>
+      <ol className={styles.sequence}>
+        {events.map((e) => (
+          <li
+            key={e.fact.id}
+            data-fact-kind={e.fact.kind}
+            className={e.updated ? styles.updated : undefined}
+          >
+            <div className={styles.sequenceDate}>
+              <VisualIcon
+                name={
+                  e.fact.kind === "imaging_exam"
+                    ? "scan-line"
+                    : "clipboard-list"
+                }
+                size={21}
+                className={styles.eventIcon}
+              />
+              <time dateTime={e.date}>{formatDate(e.date)}</time>
+              <span>
+                {e.fact.kind === "imaging_exam"
+                  ? "Examination"
+                  : "Recommendation"}
+              </span>
+            </div>
+            <div className={styles.sequenceBody}>
+              <FactValue factId={e.fact.id} className={styles.rowTitle}>
+                {e.title}
+              </FactValue>
+              <p
+                className={
+                  e.fact.kind === "imaging_exam"
+                    ? styles.statement
+                    : styles.rowMeta
+                }
+              >
+                {e.detail}
+              </p>
+              {e.comparison && <p className={styles.rowMeta}>{e.comparison}</p>}
+              <SourceRef factId={e.fact.id} />
+              {e.claims.length > 0 && (
+                <details className={styles.comparisons}>
+                  <summary>Calculated from your records</summary>
+                  <div className={styles.rowClaims}>
+                    {e.claims.map((k) => (
+                      <CalculatedLabel key={k} claimKey={k} />
+                    ))}
+                  </div>
+                </details>
+              )}
+              {e.updated && <Updated />}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }

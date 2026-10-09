@@ -309,14 +309,16 @@
     border-radius: 18px 18px 0 0;
   }
   .panelBody {
-    padding: var(--space-4) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom));
+    padding: var(--space-4) var(--space-4)
+      calc(var(--space-6) + env(safe-area-inset-bottom));
   }
   /* Sticky actions: never scroll to the bottom to find Cancel / Add, however many facts */
   .reviewFooter {
     position: sticky;
     bottom: calc(-1 * (var(--space-6) + env(safe-area-inset-bottom)));
     margin: var(--space-5) calc(-1 * var(--space-4)) 0;
-    padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
+    padding: var(--space-3) var(--space-4)
+      calc(var(--space-3) + env(safe-area-inset-bottom));
     box-shadow: 0 -8px 16px -12px rgba(23, 63, 66, 0.35);
     z-index: 1;
   }
@@ -329,5 +331,138 @@
   }
   .reviewNote {
     text-align: center;
+  }
+}
+
+.addRecord,
+.primary,
+.secondary {
+  border-radius: 5px;
+  box-shadow: none;
+}
+.panel {
+  width: min(900px, 100%);
+  border-radius: 8px;
+  box-shadow: none;
+}
+.panelTitle {
+  font-family: var(--font-evidence);
+  font-size: 24px;
+  font-weight: 400;
+}
+.panelBody {
+  padding-bottom: 0;
+}
+.choose {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 8px 0 28px;
+}
+.chooseTitle {
+  font-family: var(--font-evidence);
+  font-size: 28px;
+  line-height: 1.3;
+}
+.choose ul {
+  margin: 0;
+  padding-left: 22px;
+}
+.choose .primary {
+  margin-top: 6px;
+}
+.pending {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--surface-sunk);
+  border-left: 2px solid var(--accent);
+  font-size: 14px;
+}
+.include {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.include input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+.factRejected {
+  opacity: 1;
+  background: var(--paper);
+}
+.factRejected .factValue {
+  color: var(--ink-muted);
+}
+.consequences {
+  list-style: none;
+  padding: 0;
+  gap: 12px;
+}
+.previewKind {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-bottom: 2px;
+}
+.reviewFooter {
+  position: sticky;
+  bottom: 0;
+  padding: 16px 24px;
+  margin: 28px -24px 0;
+  border-top: 1px solid var(--rule-strong);
+  z-index: 1;
+}
+.reviewNote {
+  font-size: 13px;
+}
+.reviewActions {
+  justify-content: space-between;
+}
+.sectionHeading {
+  font-size: 13px;
+}
+.panelBody {
+  overscroll-behavior: contain;
+}
+@media (max-width: 860px) {
+  .panel {
+    height: calc(100dvh - 12px);
+    max-height: calc(100dvh - 12px);
+    border-radius: 12px 12px 0 0;
+  }
+  .panelBody {
+    flex: 1;
+    padding-bottom: 0;
+  }
+  .panelTitle {
+    font-size: 22px;
+  }
+  .factHead {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .include {
+    align-self: flex-start;
+  }
+  .reviewFooter {
+    margin: 24px -16px 0;
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+    bottom: 0;
+  }
+  .reviewActions {
+    flex-direction: column-reverse;
+  }
+  .docLine {
+    font-size: 14px;
+  }
+  .chooseTitle {
+    font-size: 25px;
   }
 }

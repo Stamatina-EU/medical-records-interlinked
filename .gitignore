@@ -42,3 +42,7 @@ Thumbs.db
 *.cff
 *.woff
 *.woff2
+
+# Isolated design experiment tooling
+.npm-cache/
+.design-checks/
