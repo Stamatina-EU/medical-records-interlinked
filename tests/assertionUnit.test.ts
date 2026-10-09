@@ -1,7 +1,8 @@
 /**
  * One authoritative source assertion unit per fact (final re-audit H2). The model's excerpt is only a search key:
  * code finds its ONE occurrence, takes the source sentence (medication) or result line (ferritin) that holds it,
- * and verifies only that unit. Headings above can only reject. The document date is derived from the header.
+ * and verifies only that unit (against the positive grammar, `tests/verifierGrammar.test.ts`). Headings are never
+ * evidence: the fact must sit in a supported section. The document date is derived from the header.
  * Every case runs the real verification path — `verifyExtraction` on full page text — and the six reproductions
  * from the audit are numbered.
  */
@@ -41,9 +42,9 @@ describe("H2-A · oral iron status: only the one sentence holding the excerpt, a
   });
 
   it("1 · an excerpt that occurs more than once is ambiguous, never resolved to either sentence", () => {
-    const r = verifyExtraction([`${repro1}\nRESULTS\nFerritin on 25 Sep 2026: 32 μg/L`], {
+    const r = verifyExtraction([`${repro1}\nRESULTS\nFerritin on 25 Sep 2026: 32 μg/L.`], {
       document: headerClaim,
-      labMeasurements: [ferritin(32, "Ferritin on 25 Sep 2026: 32 μg/L")],
+      labMeasurements: [ferritin(32, "Ferritin on 25 Sep 2026: 32 μg/L.")],
       medicationStatements: [med("current", "currently taking oral iron")],
     }, ctx);
     expect(reasons(r)).toEqual([expect.stringMatching(/occurs 2 times/)]);
@@ -69,7 +70,7 @@ describe("H2-A · oral iron status: only the one sentence holding the excerpt, a
   });
 
   it.each([["IF NEEDED"], ["PREVIOUS MEDICATION"], ["HISTORICAL CONSULTATION"], ["FAMILY HISTORY"], ["PLAN"]])(
-    "3 · a heading can only reject: '%s' above 'Oral iron was stopped.'",
+    "3 · a heading is never evidence: '%s' above 'Oral iron was stopped.' is not a supported section",
     (heading) => {
       const r = run([page(heading, "Oral iron was stopped.")], { medicationStatements: [med("stopped", "Oral iron was stopped.")] });
       expect(outcome(r)).toBe("none_verified");
@@ -96,8 +97,8 @@ describe("H2-A · oral iron status: only the one sentence holding the excerpt, a
     ["prescribed", "Prescribed: ferrous sulfate 200 mg tablets, one tablet once daily for 3 months."],
     ["current", "The patient continues to take oral iron (ferrous sulfate) once daily."],
     ["current", "The patient is currently taking oral iron."],
-    ["completed", "The patient completed the course of oral iron."],
-    ["stopped", "Oral iron (ferrous sulfate) was stopped on 25 Sep 2026."],
+    ["completed", "The patient completed oral iron."],
+    ["stopped", "The patient stopped oral iron."],
     ["stopped", "Ferrous sulfate was discontinued."],
   ])("control · an affirmative %s statement about the patient still verifies, next to a negative sibling", (status, sentence) => {
     const p = page("MEDICATION HISTORY", sentence, "No other regular medication is recorded at this visit.", "IF NEEDED", "Review in clinic.");
@@ -140,7 +141,7 @@ describe("H2-B · the document date is derived from the header, never from a lat
     });
     expect(outcome(r)).toEqual(["medication_status"]);
     // both guards apply: the heading above it, and the 27 Jan date its (wrapped) sentence carries
-    expect(reasons(r)).toEqual([expect.stringMatching(/HISTORICAL CONSULTATION|other than the document date/)]);
+    expect(reasons(r)).toEqual([expect.stringMatching(/HISTORICAL CONSULTATION|complete source sentence/)]);
     const underHeadingOnly = page("MEDICATION HISTORY", "Seen today.", "HISTORICAL CONSULTATION", "The patient is currently taking oral iron.");
     expect(outcome(run([underHeadingOnly], { medicationStatements: [med("current", "The patient is currently taking oral iron.")] }))).toBe("none_verified");
   });

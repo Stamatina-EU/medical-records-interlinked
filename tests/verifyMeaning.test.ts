@@ -1,30 +1,43 @@
 /**
- * The verifier establishes MEANING, not just token presence (narrow, fail-closed rules):
- *  A. a medication status counts only when stated affirmatively for oral iron
- *  B. a document date counts only when the text states it as the document's own date
+ * The verifier establishes MEANING, not just token presence — through a narrow positive grammar, failing closed:
+ *  A. a medication status counts only as a supported sentence binding the status to oral iron
+ *  B. a document date counts only when the header states it as the document's own date
  *  C. a ferritin value, unit and supplied range must belong to the same result
+ * Each statement is placed on a fictional page and located as the pipeline does, so it is judged in its section.
  */
 import { describe, expect, it } from "vitest";
-import { verifyDocumentDate, verifyExtraction, verifyLabFact, verifyMedicationFact, type Extraction } from "@/lib/extraction/verify";
+import { locateExcerpt, verifyDocumentDate, verifyExtraction, verifyLabFact, verifyMedicationFact, type Extraction } from "@/lib/extraction/verify";
 import type { MedicationEpisode } from "@/lib/model/types";
 
 const episodes: MedicationEpisode[] = [{ id: "ep-oral-iron", topic: "iron", name: "Oral iron (ferrous sulfate)" }];
-const med = (status: string, excerpt: string, documentDate = "2026-09-25") =>
-  verifyMedicationFact({ medicationName: "oral iron", status }, excerpt, episodes, documentDate);
-const lab = (value: number, unit: string, referenceRangeText: string | null, excerpt: string) =>
-  verifyLabFact({ analyteName: "Ferritin", value, unit, referenceRangeText, measuredOn: "2026-09-25" }, excerpt, "2026-09-25");
+const HEADER = ["Elm Street Primary Care", "Patient Laurence Mercer (fictional)", "Date of consultation 25 Sep 2026"];
 
-describe("A · medication status must be stated affirmatively", () => {
+function located(section: string, lines: string[], excerpt: string) {
+  const loc = locateExcerpt([[...HEADER, section, ...lines].join("\n")], 1, excerpt);
+  if (!loc.ok) throw new Error(loc.reason);
+  return loc;
+}
+const med = (status: string, sentence: string) => {
+  const loc = located("MEDICATION HISTORY", [sentence], sentence);
+  return verifyMedicationFact({ medicationName: "oral iron", status }, loc.verifiedExcerpt, episodes, loc.context);
+};
+const lab = (value: number, unit: string, referenceRangeText: string | null, lines: string[], excerpt = lines[0], section = "RESULTS") => {
+  const loc = located(section, lines, excerpt);
+  return verifyLabFact({ analyteName: "Ferritin", value, unit, referenceRangeText, measuredOn: "2026-09-25" }, loc.verifiedExcerpt, "2026-09-25", loc.context);
+};
+const TABLE = "TEST RESULT UNITS REFERENCE RANGE";
+
+describe("A · medication status must be a supported affirmative sentence about oral iron", () => {
   it.each([
-    ["prescribed", "Prescribed: ferrous sulfate 200 mg tablets, one tablet once daily for 3 months.", "2026-02-03"],
-    ["prescribed", "Oral iron (ferrous sulfate) was prescribed on 3 Feb 2026.", "2026-02-03"], // dated the document's own date
-    ["current", "The patient continues to take oral iron (ferrous sulfate) once daily.", "2026-09-25"],
-    ["current", "The patient is currently taking oral iron.", "2026-09-25"],
-    ["completed", "The patient completed the course of oral iron.", "2026-09-25"],
-    ["stopped", "Oral iron was stopped on 1 Oct 2026.", "2026-10-01"],
-    ["stopped", "Ferrous sulfate was discontinued.", "2026-09-25"],
-  ])("verifies %s: %s", (status, excerpt, documentDate) => {
-    expect(med(status, excerpt, documentDate).ok).toBe(true);
+    ["prescribed", "Prescribed: ferrous sulfate 200 mg tablets, one tablet once daily for 3 months."],
+    ["prescribed", "Oral iron (ferrous sulfate) was prescribed."],
+    ["current", "The patient continues to take oral iron (ferrous sulfate) once daily."],
+    ["current", "The patient is currently taking oral iron."],
+    ["completed", "The patient completed oral iron."],
+    ["stopped", "Oral iron was stopped."],
+    ["stopped", "Ferrous sulfate was discontinued."],
+  ])("verifies %s: %s", (status, sentence) => {
+    expect(med(status, sentence).ok).toBe(true);
   });
 
   it.each([
@@ -39,14 +52,16 @@ describe("A · medication status must be stated affirmatively", () => {
     ["current", "Recommend that the patient continues to take oral iron.", "recommendation"],
     ["completed", "Plan: oral iron to be completed by June.", "plan"],
     ["completed", "Oral iron will be completed in May 2026.", "future"],
-    ["completed", "Oral iron (ferrous sulfate) was completed in May 2026.", "dated only by a month, not the document date"],
-    ["prescribed", "Oral iron (ferrous sulfate) was prescribed on 3 Feb 2026.", "an earlier date than the document date"],
+    ["completed", "Oral iron (ferrous sulfate) was completed in May 2026.", "a date is not part of the grammar"],
+    ["prescribed", "Oral iron (ferrous sulfate) was prescribed on 3 Feb 2026.", "a date is not part of the grammar"],
+    ["stopped", "Oral iron was stopped on 1 Oct 2026.", "a date is not part of the grammar"],
     ["current", "The patient was currently taking oral iron.", "past tense is not Current"],
     ["current", "Continues to take oral iron.", "Current needs the patient as subject"],
-    ["stopped", "Vitamin D was stopped and oral iron was started.", "the cue belongs to another medication"],
-    ["completed", "The patient continues to take oral iron (ferrous sulfate) once daily.", "no Completed cue"],
-  ])("rejects %s: %s (%s)", (status, excerpt) => {
-    expect(med(status, excerpt).ok).toBe(false);
+    ["stopped", "Vitamin D was stopped and oral iron was started.", "the status belongs to another medication"],
+    ["completed", "The patient continues to take oral iron (ferrous sulfate) once daily.", "not a Completed sentence"],
+    ["completed", "The patient completed the course of oral iron.", "outside the narrow grammar (accepted false negative)"],
+  ])("rejects %s: %s (%s)", (status, sentence) => {
+    expect(med(status, sentence).ok).toBe(false);
   });
 });
 
@@ -84,25 +99,28 @@ describe("B · the document date must be stated as the document's date", () => {
 
 describe("C · value, unit and supplied range must belong to the same ferritin result", () => {
   it("binds a range written with the result", () => {
-    const sentence = lab(32, "μg/L", "15–150 μg/L", "Ferritin on 25 Sep 2026: 32 μg/L (reference range 15–150 μg/L).");
+    const sentence = lab(32, "μg/L", "15–150 μg/L", ["Ferritin on 25 Sep 2026: 32 μg/L (reference range 15–150 μg/L)."]);
     expect(sentence).toMatchObject({ ok: true, refLow: 15, refHigh: 150 });
-    expect(lab(19.6, "μg/L", "15–150", "Ferritin 19.6 μg/L 15–150")).toMatchObject({ ok: true, refLow: 15, refHigh: 150 });
+    expect(lab(19.6, "μg/L", "15–150", [TABLE, "Ferritin 19.6 μg/L 15–150"], "Ferritin 19.6 μg/L 15–150", "IRON STUDIES")).toMatchObject({ ok: true, refLow: 15, refHigh: 150 });
   });
 
-  it("never borrows an unrelated range from elsewhere on the line", () => {
-    expect(lab(32, "μg/L", "12.0–15.5", "Ferritin 32 μg/L, haemoglobin 12.9 g/dL 12.0–15.5").ok).toBe(false);
-    expect(lab(32, "μg/L", "20–50", "Ferritin 32 μg/L, transferrin saturation 18 % 20–50").ok).toBe(false);
-    // without a claimed range the ferritin result itself still verifies
-    expect(lab(32, "μg/L", null, "Ferritin 32 μg/L, haemoglobin 12.9 g/dL 12.0–15.5")).toMatchObject({ ok: true, refText: null });
+  it("never borrows an unrelated range from another row or another test on the line", () => {
+    const rows = [TABLE, "Ferritin 32 μg/L 15–150", "Haemoglobin 12.9 g/dL 12.0–15.5"];
+    expect(lab(32, "μg/L", "12.0–15.5", rows, "Ferritin 32 μg/L 15–150", "IRON STUDIES").ok).toBe(false);
+    // without a claimed range the ferritin row itself still verifies
+    expect(lab(32, "μg/L", null, rows, "Ferritin 32 μg/L 15–150", "IRON STUDIES")).toMatchObject({ ok: true, refText: null });
+    // another test on the same line is not part of the grammar at all
+    expect(lab(32, "μg/L", "12.0–15.5", ["Ferritin 32 μg/L, haemoglobin 12.9 g/dL 12.0–15.5"]).ok).toBe(false);
+    expect(lab(32, "μg/L", null, ["Ferritin 32 μg/L, haemoglobin 12.9 g/dL 12.0–15.5"]).ok).toBe(false);
   });
 
-  it("an excerpt that runs into the next sentence has no single result line", () => {
-    expect(lab(32, "μg/L", null, "Ferritin 32 μg/L. Haemoglobin 12.9 g/dL 12.0–15.5").ok).toBe(false);
-    expect(lab(32, "μg/L", null, "Ferritin 32 μg/L; transferrin saturation 18 % 20–50").ok).toBe(false);
+  it("an excerpt that runs into the next sentence is not one result line", () => {
+    expect(lab(32, "μg/L", null, ["Ferritin 32 μg/L. Haemoglobin 12.9 g/dL 12.0–15.5"]).ok).toBe(false);
+    expect(lab(32, "μg/L", null, ["Ferritin 32 μg/L; transferrin saturation 18 % 20–50"]).ok).toBe(false);
   });
 
   it("never takes another test's value as the ferritin result", () => {
-    expect(lab(12.9, "g/dL", null, "Ferritin pending, haemoglobin 12.9 g/dL").ok).toBe(false);
-    expect(lab(12.9, "g/dL", null, "Ferritin was requested. Haemoglobin 12.9 g/dL.").ok).toBe(false);
+    expect(lab(12.9, "g/dL", null, ["Ferritin pending, haemoglobin 12.9 g/dL"]).ok).toBe(false);
+    expect(lab(12.9, "g/dL", null, ["Ferritin was requested. Haemoglobin 12.9 g/dL."]).ok).toBe(false);
   });
 });

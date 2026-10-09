@@ -1,10 +1,10 @@
 /**
  * Fact Verifier — THE TRUST GATE. Pure, deterministic code. Spec: `spec.md > Fact Verifier`.
  *
- * The model's excerpt is only a search key. Step A locates it on the stated page and cuts the
- * canonical `verifiedExcerpt` out of the ORIGINAL page text. Step B runs every semantic check
- * against that verifiedExcerpt — never against model text — verifying both the claimed
- * value/status AND the subject the claim is about.
+ * The model's excerpt is only a search key. Step A finds its ONE occurrence on the stated page, cuts the canonical
+ * `verifiedExcerpt` out of the ORIGINAL page text, and determines the complete source unit around it. Step B accepts
+ * a fact only when that complete unit matches a supported structure (`grammar.ts`) that directly establishes exactly
+ * that fact — a deliberately narrow positive grammar, not language understanding. Anything else fails closed.
  *
  * The same checkers verify hand-authored seed facts (`verifySeedState`), so live and seed
  * data meet one definition of "what counts as evidence".
@@ -23,23 +23,24 @@ import { formatDate, isIsoDate } from "@/lib/text/dates";
 import {
   ANALYTE_ALIASES,
   COMPARISON_CUES,
-  DOCUMENT_DATE_LABELS,
   EXAM_ALIASES,
   FOLLOW_UP_CUES,
-  HEADING_REJECT_WORDS,
-  HISTORICAL_FRAME,
-  HISTORICAL_WORDS,
   MEDICATION_ALIASES,
-  NEGATION_WORDS,
-  NON_FACTUAL_WORDS,
-  QUALIFIER_SYMBOLS,
-  QUALIFIER_WORDS,
-  STATUS_CUES,
-  THIRD_PARTY_WORDS,
-  UNITS,
   containsPhrase,
-  escapeRegExp,
 } from "@/lib/extraction/lexicon";
+import {
+  FACT_SECTIONS,
+  FERRITIN_ROW,
+  FERRITIN_SENTENCE,
+  HEADER_DATE_INTRO,
+  HEADER_DATE_LINE,
+  KNOWN_SECTIONS,
+  TABLE_HEADER,
+  TABLE_NOTE,
+  TABLE_ROW,
+  isoFromDate,
+  medicationStatusGrammar,
+} from "@/lib/extraction/grammar";
 
 export type Check<T = object> = ({ ok: true } & T) | { ok: false; reason: string };
 
@@ -61,20 +62,26 @@ export type Extraction = {
   medicationStatements: ExtractedMedication[];
 };
 
-// ─── Step A: locate the one occurrence + its source assertion unit ────────────────────────
+// ─── Step A: locate the one occurrence + its complete source unit ─────────────────────────
 /**
- * The AUTHORITATIVE source assertion unit around a located excerpt. The model only supplies a search key: code
- * finds the single place it occurs and decides the unit around it, so the model's excerpt boundaries never set
- * the semantic boundary, and a neighbouring sentence is never evidence.
- *  - `sentence`: the one source sentence holding the excerpt (it may wrap over lines; a heading or a blank line
- *    ends it, so "It is not true that\nthe patient …" is one sentence). `null` when the excerpt runs across a
- *    sentence end, a heading or a blank line — then no single unit holds it.
- *  - `row`: the part of that sentence on the excerpt's own source line — the result line. `null` when the
- *    excerpt runs across lines.
- *  - `headings`: the heading lines above the excerpt in the document. They can only ever REJECT a fact
- *    ("IF NEEDED", "PREVIOUS RESULTS", "FAMILY HISTORY"); they are never evidence for one.
+ * The AUTHORITATIVE source units around a located excerpt. The model only supplies a search key: code finds the
+ * single place it occurs and decides the units around it, so the model's excerpt boundaries never set the semantic
+ * boundary, and a neighbouring sentence is never evidence.
+ *  - `sentence`: the complete source sentence holding the excerpt (it may wrap over lines; a heading or a blank line
+ *    ends it). `null` when the excerpt runs across a sentence end, a heading or a blank line.
+ *  - `sentenceOwnsLines`: that sentence occupies whole lines — nothing else shares a line with it.
+ *  - `line`: the complete physical source line holding the excerpt. `null` when the excerpt runs across lines.
+ *  - `pageLines` / `lineIndex`: the page's lines and the index of `line` (a table row is read with its table).
+ *  - `headings`: the heading lines above the excerpt in the document, nearest last.
  */
-export type SourceContext = { sentence: string | null; row: string | null; headings: string[] };
+export type SourceContext = {
+  sentence: string | null;
+  sentenceOwnsLines: boolean;
+  line: string | null;
+  pageLines: string[];
+  lineIndex: number;
+  headings: string[];
+};
 
 /** Words whose final "." does not end a sentence. */
 const ABBREVIATIONS = new Set(["dr", "mr", "mrs", "ms", "prof", "approx", "e.g", "i.e", "etc", "vs", "no", "ref", "st"]);
@@ -90,7 +97,7 @@ function endsSentence(text: string, i: number): boolean {
   return true;
 }
 
-/** A heading line ("MEDICATION HISTORY", "IF NEEDED"): no lowercase letters and no trailing ",", ":" or ";". */
+/** A heading line ("MEDICATION HISTORY", "RESULTS"): no lowercase letters and no trailing ",", ":" or ";". */
 const isHeading = (line: string) => line.trim() !== "" && !/[a-z]/.test(line) && !/[,:;]\s*$/.test(line);
 /** A heading or a blank line: no sentence runs across one. */
 const isBoundaryLine = (line: string) => line.trim() === "" || isHeading(line);
@@ -101,16 +108,20 @@ function lineAt(text: string, i: number): { from: number; to: number } {
   return { from: text.lastIndexOf("\n", i - 1) + 1, to: nl === -1 ? text.length : nl };
 }
 
-/** The source assertion unit around [from, to) on `pages[page - 1]` (see `SourceContext`). */
+/** The complete source units around [from, to) on `pages[page - 1]` (see `SourceContext`). */
 export function sourceContext(pages: string[], page: number, from: number, to: number): SourceContext {
   const text = pages[page - 1];
   const first = lineAt(text, from);
   const last = lineAt(text, Math.max(from, to - 1));
+  const pageLines = text.split("\n");
+  const lineIndex = text.slice(0, first.from).split("\n").length - 1;
+  const line = first.from === last.from ? text.slice(first.from, first.to).trim() : null;
   const headings = [...pages.slice(0, page - 1), text.slice(0, first.from)]
     .flatMap((p) => p.split("\n"))
     .filter(isHeading)
     .map((h) => h.trim());
-  if (text.slice(first.from, last.to).split("\n").some(isBoundaryLine)) return { sentence: null, row: null, headings };
+  const noSentence = { sentence: null, sentenceOwnsLines: false, line, pageLines, lineIndex, headings };
+  if (text.slice(first.from, last.to).split("\n").some(isBoundaryLine)) return noSentence;
 
   let start = 0;
   for (let i = from - 1; i >= 0; i--) {
@@ -125,21 +136,17 @@ export function sourceContext(pages: string[], page: number, from: number, to: n
       if (isBoundaryLine(text.slice(next.from, next.to))) { end = j; break; }
     }
   }
-  if (to > end) return { sentence: null, row: null, headings }; // the excerpt runs into the next sentence
-  return {
-    sentence: text.slice(start, end).trim(),
-    row: first.from === last.from ? text.slice(Math.max(start, first.from), Math.min(end, first.to)).trim() : null,
-    headings,
-  };
+  if (to > end) return noSentence; // the excerpt runs into the next sentence
+  const s0 = start + (text.slice(start, end).length - text.slice(start, end).trimStart().length);
+  const e0 = end - (text.slice(start, end).length - text.slice(start, end).trimEnd().length);
+  const sentenceOwnsLines =
+    text.slice(lineAt(text, s0).from, s0).trim() === "" && text.slice(e0, lineAt(text, Math.max(s0, e0 - 1)).to).trim() === "";
+  return { sentence: text.slice(start, end).trim(), sentenceOwnsLines, line, pageLines, lineIndex, headings };
 }
-
-/** For a direct checker call without page text: the excerpt is its own (one-page, heading-free) source. */
-const ownContext = (excerpt: string): SourceContext => sourceContext([excerpt], 1, 0, excerpt.length);
 
 /**
  * Find the ONE place the excerpt occurs on the stated page. An excerpt that occurs more than once does not say
- * which statement it is ("currently taking oral iron" in "The patient is not currently taking oral iron. Her
- * mother is currently taking oral iron."), so it fails closed.
+ * which statement it is, so it fails closed.
  */
 export function locateExcerpt(
   pages: string[],
@@ -160,113 +167,9 @@ export function locateExcerpt(
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────────────────
-function firstAlias(n: string, aliases: string[]): { alias: string; index: number } | null {
-  let best: { alias: string; index: number } | null = null;
-  for (const alias of aliases) {
-    const m = new RegExp(`(^|[^a-z0-9])(${escapeRegExp(alias)})($|[^a-z0-9])`).exec(n);
-    if (!m) continue;
-    const index = m.index + m[1].length;
-    if (!best || index < best.index || (index === best.index && alias.length > best.alias.length)) {
-      best = { alias, index };
-    }
-  }
-  return best;
-}
-
 function mentionsDate(n: string, iso: string): boolean {
   return n.includes(normalize(formatDate(iso))) || n.includes(iso);
 }
-
-// ─── dates ────────────────────────────────────────────────────────────────────────────────
-const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-const MONTH = "(?:jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|sept|september|oct|october|nov|november|dec|december)";
-/** A full written date in normalized text: "25 sep 2026", "25 september 2026", "2026-09-25". */
-const FULL_DATE = `(?:(\\d{1,2}) (${MONTH}) (\\d{4})|(\\d{4})-(\\d{2})-(\\d{2}))`;
-/** Anything else that dates a statement only partly or loosely: a month name, a year, a numeric date. */
-const PARTIAL_DATE = new RegExp(`\\b${MONTH}\\b|\\b(?:19|20)\\d{2}\\b|\\b\\d{1,2}[/.]\\d{1,2}[/.]\\d{2,4}\\b`);
-
-/** ISO form of a FULL_DATE match (groups 1–6), or null for an impossible date ("31 feb 2026"). */
-function isoFromMatch(g: (string | undefined)[]): string | null {
-  const iso = g[0]
-    ? `${g[2]}-${String(MONTHS.indexOf(g[1]!.slice(0, 3)) + 1).padStart(2, "0")}-${g[0].padStart(2, "0")}`
-    : `${g[3]}-${g[4]}-${g[5]}`;
-  return isIsoDate(iso) ? iso : null;
-}
-
-/**
- * The dates an assertion unit states: every full date (as ISO), whether anything dates it only partly
- * ("May 2026", "2025", "in January") or impossibly, and the text with the full dates taken out (so the month in
- * "3 May 2026" is never read as the word "may").
- */
-function readDates(n: string): { dates: string[]; partial: boolean; rest: string } {
-  const dates: string[] = [];
-  let impossible = false;
-  const rest = n
-    .replace(new RegExp(`\\b${FULL_DATE}\\b`, "g"), (...m: string[]) => {
-      const iso = isoFromMatch(m.slice(1, 7));
-      if (iso) dates.push(iso);
-      else impossible = true;
-      return " ";
-    })
-    .replace(/ {2,}/g, " ");
-  return { dates, partial: impossible || PARTIAL_DATE.test(rest), rest };
-}
-
-/**
- * THE document date, derived by code from the document header: the lines of page 1 above the first section
- * heading. A header line counts only when it BEGINS with an allowed label (`DOCUMENT_DATE_LABELS`) followed
- * directly by a full date. Exactly one such date must be found; none, or two different ones, fails closed. A
- * later section ("HISTORICAL CONSULTATION / Consultation date: 27 Jan 2026") is below a heading, so it can never
- * be — or override — the document date. Returns the date and the header line(s) stating it.
- */
-export function headerDocumentDate(firstPage: string): Check<{ date: string; lines: { from: number; to: number }[] }> {
-  const labels = [...DOCUMENT_DATE_LABELS].sort((a, b) => b.length - a.length).map(escapeRegExp).join("|");
-  const re = new RegExp(`^(?:${labels}) ?:? ?${FULL_DATE}(?![0-9a-z])`);
-  const found: { date: string; from: number; to: number }[] = [];
-  let offset = 0;
-  for (const line of firstPage.split("\n")) {
-    const from = offset;
-    offset += line.length + 1;
-    if (isHeading(line)) break; // the header ends at the first section heading
-    const m = re.exec(normalize(line));
-    if (!m) continue;
-    const date = isoFromMatch(m.slice(1, 7));
-    if (!date) return { ok: false, reason: "the document header states an impossible date" };
-    found.push({ date, from, to: from + line.length });
-  }
-  const distinct = [...new Set(found.map((f) => f.date))];
-  if (distinct.length === 0) return { ok: false, reason: "the document header does not state the document's date" };
-  if (distinct.length > 1) return { ok: false, reason: "the document header states more than one document date" };
-  return { ok: true, date: distinct[0], lines: found.map(({ from, to }) => ({ from, to })) };
-}
-
-// ─── rejection rules shared by every assertion unit ───────────────────────────────────────
-/**
- * Why an assertion unit (with its full dates already taken out) does not state a fact about the patient at the
- * document's own time — or null. Fails closed on: a question, a negation, anything hypothetical, conditional,
- * planned or recommended, someone other than the patient, or an earlier time.
- */
-function unitRejection(rest: string): string | null {
-  if (rest.includes("?")) return "the source asks a question; it does not state a fact";
-  if (NEGATION_WORDS.some((w) => containsPhrase(rest, w)) || /n't\b/.test(rest)) return "the source negates it";
-  if (NON_FACTUAL_WORDS.some((w) => containsPhrase(rest, w))) return "the source makes it hypothetical, conditional, planned or recommended";
-  if (THIRD_PARTY_WORDS.some((w) => containsPhrase(rest, w))) return "the source is about someone other than the patient";
-  if (HISTORICAL_WORDS.some((w) => containsPhrase(rest, w)) || HISTORICAL_FRAME.test(rest)) {
-    return "the source describes an earlier time, not the document's own date";
-  }
-  return null;
-}
-
-/** Headings above a statement can only reject it: conditional, historical, uncertain, negated or someone else's. */
-function headingRejection(headings: string[]): string | null {
-  const hit = headings.find((h) => HEADING_REJECT_WORDS.some((w) => containsPhrase(normalize(h), w)));
-  return hit ? `it sits under the heading "${hit}", so it is not stated as a current fact about the patient` : null;
-}
-
-/** The only words allowed between the analyte name and its value: they cannot introduce another test. */
-const RESULT_LINKERS = new Set(["on", "of", "at", "in", "was", "is", "were", "are", "level", "levels", "result", "results", "value", "measured", "serum", "plasma", "test", "dated", "reported"]);
-/** The only words allowed before the analyte name on its result line. */
-const RESULT_LEADS = new Set(["the", "plasma"]);
 
 function analyteFor(name: string): "ferritin" | null {
   const n = normalize(name);
@@ -295,83 +198,75 @@ function toStatus(s: string): MedicationStatus | null {
   return map[normalize(s)] ?? null;
 }
 
-// ─── Step B: semantic checkers (each on its one source assertion unit) ────────────────────
+/** The excerpt is the complete unit (a missing final full stop aside): what the patient sees is the whole evidence. */
+const isWholeUnit = (excerpt: string, unit: string) => normalize(excerpt).replace(/\.$/, "") === normalize(unit).replace(/\.$/, "");
 
 /**
- * Lab: verified ONLY on the source result line that holds the excerpt (`context.row`) — never on the excerpt's
- * boundaries, never borrowing from another line or sentence. On that one line:
- *  - identity: the line opens with the analyte's name and names it once ("Approximately ferritin …",
- *    "Previous ferritin …", "32 μg/L ferritin" fail);
- *  - exact scalar only: no comparator or qualifier anywhere on the line (">150", "150 μg/L (or more)", "~32",
- *    "approximately"), even where the excerpt leaves it out;
- *  - the value is the first number + unit after the name, with only linking words and dates in between;
- *  - a claimed range is the one written directly after that value;
- *  - the date is the line's own full date, or — when the line has none — the document date;
- *  - not negated, hypothetical, about someone else or historical, and not under a heading that makes it so.
- * The excerpt itself must show the name, the value and unit (and a claimed range): that is what the patient sees.
- * Without a source context (direct calls), the excerpt is its own source.
+ * The document structure around a fact: every heading above it must be one of the corpus's ordinary sections, and
+ * the fact's own section (its nearest heading, not counting a table's column header) must be one where this kind
+ * of fact is supported. Any other heading ("IF NEEDED", "HISTORICAL CONSULTATION", "PLAN") fails closed.
+ */
+function sectionProblem(headings: string[], kind: "medication" | "ferritin"): string | null {
+  const unknown = headings.find((h) => !KNOWN_SECTIONS.includes(normalize(h)));
+  if (unknown) return `it sits below the heading "${unknown}", which is not a supported section`;
+  const section = headings.map(normalize).filter((h) => h !== TABLE_HEADER).pop();
+  if (!section || !FACT_SECTIONS[kind].includes(section)) return `it is not in a supported ${kind} section`;
+  return null;
+}
+
+/**
+ * A table row counts only inside a supported laboratory table: above it, only well-formed rows up to the column
+ * header; below it, only well-formed rows until the table ends (end of page, a blank line, a heading or the closing
+ * reference-range note). A line that continues or qualifies the row makes the table unsupported.
+ */
+function inLabTable(lines: string[], i: number): boolean {
+  const at = (k: number) => normalize(lines[k]);
+  let up = i - 1;
+  while (up >= 0 && TABLE_ROW.test(at(up))) up--;
+  if (up < 0 || at(up) !== TABLE_HEADER) return false;
+  let down = i + 1;
+  while (down < lines.length && TABLE_ROW.test(at(down))) down++;
+  return down === lines.length || lines[down].trim() === "" || isHeading(lines[down]) || TABLE_NOTE.test(at(down));
+}
+
+// ─── Step B: the complete source unit must match a supported structure ────────────────────
+
+/**
+ * Lab (ferritin): the excerpt must be the complete physical result line, and that line must be one of the
+ * supported structures in full (`grammar.ts`) — a result sentence on its own line, or a row of a supported
+ * laboratory table. Identity, the one exact value, its unit, the optional supplied range and the optional date all
+ * come from that one parse; the document date is used only when the line has no date of its own. A second value or
+ * range, a correction, a comparator or a qualifier is simply not part of the grammar, so it fails.
  */
 export function verifyLabFact(
   claim: Pick<ExtractedLab, "analyteName" | "value" | "unit" | "referenceRangeText" | "measuredOn">,
   verifiedExcerpt: string,
   documentDate: string,
-  context: Pick<SourceContext, "row" | "headings"> = ownContext(verifiedExcerpt),
+  context: Pick<SourceContext, "sentence" | "line" | "pageLines" | "lineIndex" | "headings">,
 ): Check<{ analyte: "ferritin"; unit: string; refLow: number | null; refHigh: number | null; refText: string | null }> {
   const analyte = analyteFor(claim.analyteName);
   if (!analyte) return { ok: false, reason: `analyte "${claim.analyteName}" is not a tracked topic` };
-  const aliases = ANALYTE_ALIASES[analyte];
-  const quoted = normalize(verifiedExcerpt);
-  if (!firstAlias(quoted, aliases)) return { ok: false, reason: "source excerpt does not name the analyte" };
-  if (context.row === null) return { ok: false, reason: "the excerpt is not within one result line of the source" };
+  if (context.line === null) return { ok: false, reason: "the excerpt is not within one line of the source" };
+  if (!isWholeUnit(verifiedExcerpt, context.line)) return { ok: false, reason: "the excerpt is not the complete source result line" };
 
-  const row = normalize(context.row);
-  const hit = firstAlias(row, aliases)!;
-  const lead = row.slice(0, hit.index).match(/[a-z0-9]+/g) ?? [];
-  if (lead.some((w) => !RESULT_LEADS.has(w))) return { ok: false, reason: "the source line does not open with the analyte's name, so it is not that analyte's result" };
-  const mentions = row.match(new RegExp(`(?<![a-z0-9])(?:${aliases.map(escapeRegExp).join("|")})(?![a-z0-9])`, "g")) ?? [];
-  if (mentions.length > 1) return { ok: false, reason: "the source line names the analyte more than once" };
-  if (QUALIFIER_SYMBOLS.test(row) || QUALIFIER_WORDS.some((w) => containsPhrase(row, w))) {
-    return { ok: false, reason: "the source gives a bound or an approximation, not an exact value" };
-  }
-  const { dates, partial, rest } = readDates(row);
-  if (partial) return { ok: false, reason: "the source line dates the result only partly, so its date is ambiguous" };
-  if (new Set(dates).size > 1) return { ok: false, reason: "the source line holds more than one date" };
-  const rejected = unitRejection(rest) ?? headingRejection(context.headings);
-  if (rejected) return { ok: false, reason: rejected };
-
-  // The value: the FIRST number + unit after the name, with nothing in between that could introduce another
-  // test or value (only dates and linking words like "on", "level", "was").
-  const afterStart = hit.index + hit.alias.length;
-  const after = row.slice(afterStart);
-  const numberRe = /(?<![\d.])(\d+(?:\.\d+)?)(?![\d])/g;
-  let bound: { value: number; unit: string; end: number; gap: string } | null = null;
-  for (let m = numberRe.exec(after); m; m = numberRe.exec(after)) {
-    const sp = after[m.index + m[0].length] === " " ? 1 : 0;
-    const tail = after.slice(m.index + m[0].length + sp);
-    const unit = UNITS.find((u) => tail.startsWith(u) && !/^[a-z0-9]/.test(tail.slice(u.length)));
-    if (unit) {
-      bound = { value: Number(m[1]), unit, end: m.index + m[0].length + sp + unit.length, gap: after.slice(0, m.index) };
-      break;
+  const line = normalize(context.line);
+  let parsed = FERRITIN_SENTENCE.exec(line)?.groups;
+  if (parsed) {
+    // a result sentence must be complete on its line: nothing of it on an earlier line ("Approximately\nFerritin …")
+    if (context.sentence === null || normalize(context.sentence) !== line) {
+      return { ok: false, reason: "the result line is not a complete sentence of its own" };
     }
+  } else {
+    parsed = FERRITIN_ROW.exec(line)?.groups;
+    if (!parsed) return { ok: false, reason: "the source line is not a supported ferritin result (one exact value, its unit and at most one range)" };
+    if (!inLabTable(context.pageLines, context.lineIndex)) return { ok: false, reason: "the result row is not part of a supported laboratory table" };
   }
-  if (!bound) return { ok: false, reason: "no value with a unit follows the analyte on its source line" };
-  const gap = readDates(bound.gap).rest;
-  if (/\d/.test(gap) || (gap.match(/[a-z]+/g) ?? []).some((w) => !RESULT_LINKERS.has(w))) {
-    return { ok: false, reason: "the value is not written as the analyte's own result in the source" };
-  }
-  if (Math.abs(bound.value - claim.value) > 1e-9) {
-    return { ok: false, reason: `source binds ${bound.value} to the analyte, not ${claim.value}` };
-  }
-  if (normalize(claim.unit) !== bound.unit) {
-    return { ok: false, reason: `unit "${claim.unit}" does not match the source` };
-  }
-  // what the patient is shown must hold the name, the value and the unit
-  const at = row.indexOf(quoted);
-  const quoteEnd = at + quoted.length;
-  if (at === -1 || at > hit.index || quoteEnd < afterStart + bound.end) {
-    return { ok: false, reason: "the excerpt does not show the analyte with its value and unit" };
-  }
-  const unitOriginal = findOriginalSpan(verifiedExcerpt, bound.unit) ?? claim.unit;
+  const section = sectionProblem(context.headings, "ferritin");
+  if (section) return { ok: false, reason: section };
+
+  if (Number(parsed.value) !== claim.value) return { ok: false, reason: `the source gives ${parsed.value}, not ${claim.value}` };
+  if (normalize(claim.unit) !== parsed.unit) return { ok: false, reason: `unit "${claim.unit}" does not match the source` };
+  if (parsed.rangeUnit && parsed.rangeUnit !== parsed.unit) return { ok: false, reason: "the supplied range is in a different unit" };
 
   let refLow: number | null = null;
   let refHigh: number | null = null;
@@ -379,86 +274,84 @@ export function verifyLabFact(
   if (claim.referenceRangeText) {
     const nums = normalize(claim.referenceRangeText).match(/\d+(?:\.\d+)?/g) ?? [];
     if (nums.length !== 2) return { ok: false, reason: "reference range is not two numbers" };
-    // The range must belong to THIS result: it directly follows the value and unit ("32 μg/l 15-150",
-    // "32 μg/l (reference range 15-150 μg/l)"). A range elsewhere is never borrowed.
-    const label = "(?:(?:reference|ref\\.?|normal) (?:range|interval)|reference|range|ref\\.?|rr)";
-    const rangeRe = new RegExp(`^ ?\\(? ?(?:${label} ?)?:? ?${escapeRegExp(nums[0])} ?- ?${escapeRegExp(nums[1])}(?![\\d.])`);
-    const range = rangeRe.exec(after.slice(bound.end));
-    if (!range) return { ok: false, reason: "the claimed reference range is not the one written with this result" };
-    if (quoteEnd < afterStart + bound.end + range[0].length) {
-      return { ok: false, reason: "the excerpt does not show the claimed reference range" };
+    if (!parsed.low || Number(nums[0]) !== Number(parsed.low) || Number(nums[1]) !== Number(parsed.high)) {
+      return { ok: false, reason: "the claimed reference range is not the one written with this result" };
     }
-    refLow = Number(nums[0]);
-    refHigh = Number(nums[1]);
-    refText = `${nums[0]}–${nums[1]}`;
+    refLow = Number(parsed.low);
+    refHigh = Number(parsed.high);
+    refText = `${parsed.low}–${parsed.high}`;
   }
 
   if (!isIsoDate(claim.measuredOn)) return { ok: false, reason: "measurement date is not a valid date" };
-  const lineDate = dates[0] ?? null;
+  const lineDate = parsed.day ? isoFromDate(parsed) : null;
+  if (parsed.day && !lineDate) return { ok: false, reason: "the result line gives an impossible date" };
   if (claim.measuredOn !== (lineDate ?? documentDate)) {
     return {
       ok: false,
       reason: lineDate ? "measurement date is not the date written with this result" : "measurement date is not the document date, and the result line has no date of its own",
     };
   }
-  return { ok: true, analyte, unit: unitOriginal, refLow, refHigh, refText };
-}
-
-/** Clauses of one source line: the status cue must sit in the same clause as the medication it is about. */
-function clauses(line: string): string[] {
-  return line.split(/,|\b(?:and|but|while|whereas|although|though|however|yet)\b/).map((c) => c.trim()).filter(Boolean);
+  return { ok: true, analyte, unit: findOriginalSpan(verifiedExcerpt, parsed.unit) ?? claim.unit, refLow, refHigh, refText };
 }
 
 /**
- * Medication: verified ONLY on the one source sentence that holds the excerpt (`context.sentence`); a sibling
- * sentence is never evidence. The excerpt must lie inside that sentence and itself name the medication with the
- * status cue in the same clause on the same line (that is what the patient is shown). The whole sentence is then
- * checked, and it fails closed when it:
- *  - asks a question, negates the status ("It is not true that …"), or makes it hypothetical, conditional,
- *    planned or recommended;
- *  - is about someone other than the patient ("Her mother is currently taking …");
- *  - describes an earlier time ("At the 27 Jan 2026 consultation …", "previously") or carries any date other
- *    than the document date — such a statement would otherwise be stored as if it held on the document date;
- *  - sits under a heading that makes it conditional, historical, uncertain or someone else's ("IF NEEDED").
- * "Current" also needs the patient as subject in the present tense (see `STATUS_CUES`).
- * Without a source context (direct calls), the excerpt is its own source.
+ * Medication (oral iron): the excerpt must be the complete source sentence, and that sentence must be one of the
+ * supported structures for the claimed status (`medicationStatusGrammar`): the status verb bound directly to oral
+ * iron, and — where a person is named — the patient as the subject. "The patient is currently taking vitamin D
+ * instead of oral iron", "Her niece completed oral iron", a question, a negation, a condition or an earlier date
+ * are simply not supported structures, so they fail. The sentence must occupy whole lines of its own (nothing on its
+ * line can qualify it) and sit in a supported medication section.
  */
 export function verifyMedicationFact(
   claim: Pick<ExtractedMedication, "medicationName" | "status">,
   verifiedExcerpt: string,
   episodes: MedicationEpisode[],
-  documentDate: string,
-  context: Pick<SourceContext, "sentence" | "headings"> = ownContext(verifiedExcerpt),
+  context: Pick<SourceContext, "sentence" | "sentenceOwnsLines" | "headings">,
 ): Check<{ episodeId: string; status: MedicationStatus }> {
   const status = toStatus(claim.status);
   if (!status) return { ok: false, reason: `unknown status "${claim.status}"` };
   const episodeId = episodeFor(claim.medicationName, episodes);
   if (!episodeId) return { ok: false, reason: `medication "${claim.medicationName}" is not a tracked episode` };
-
-  const aliases = MEDICATION_ALIASES[episodeId];
-  const names = (s: string) => aliases.some((a) => containsPhrase(s, a));
-  const cues = (s: string) => STATUS_CUES[status].some((re) => re.test(s));
-  const quoted = normalize(verifiedExcerpt);
-  if (!names(quoted)) return { ok: false, reason: "source excerpt does not name the medication" };
-  if (!cues(quoted)) return { ok: false, reason: `no "${status}" cue in the source excerpt` };
   if (context.sentence === null) return { ok: false, reason: "the excerpt is not within one sentence of the source" };
-  const sameClause = verifiedExcerpt.split("\n").some((line) => clauses(normalize(line)).some((c) => names(c) && cues(c)));
-  if (!sameClause) return { ok: false, reason: `no "${status}" cue in the same clause as the medication` };
+  if (!context.sentenceOwnsLines) return { ok: false, reason: "the source sentence shares its line with other text" };
+  if (!isWholeUnit(verifiedExcerpt, context.sentence)) return { ok: false, reason: "the excerpt is not the complete source sentence" };
 
-  const { dates, partial, rest } = readDates(normalize(context.sentence));
-  if (partial || dates.some((d) => d !== documentDate)) {
-    return { ok: false, reason: "the source dates this statement other than the document date, so it may not hold on the document date" };
+  const sentence = normalize(context.sentence);
+  if (!medicationStatusGrammar(episodeId)[status].some((re) => re.test(sentence))) {
+    return { ok: false, reason: `the source sentence is not a supported "${status}" statement about the patient's oral iron` };
   }
-  const rejected = unitRejection(rest) ?? headingRejection(context.headings);
-  if (rejected) return { ok: false, reason: rejected };
+  const section = sectionProblem(context.headings, "medication");
+  if (section) return { ok: false, reason: section };
   return { ok: true, episodeId, status };
 }
 
 /**
- * Document date: the claimed date must be THE date code derives from the document header (`headerDocumentDate`).
- * A date that merely occurs in the document — earlier blood results, a previous report, a historical
- * consultation section — never verifies.
+ * THE document date, derived by code from the document header: the lines of page 1 above the first section
+ * heading. A header line that sets out to give a document date must be a complete supported header line
+ * (`HEADER_DATE_LINE`: label, optional colon, one date, nothing else), or the header fails closed. Exactly one date
+ * must result. A later section ("HISTORICAL CONSULTATION / Consultation date: 27 Jan 2026") is below a heading, so
+ * it can never be — or override — the document date. Returns the date and the header line(s) stating it.
  */
+export function headerDocumentDate(firstPage: string): Check<{ date: string; lines: { from: number; to: number }[] }> {
+  const found: { date: string; from: number; to: number }[] = [];
+  let offset = 0;
+  for (const line of firstPage.split("\n")) {
+    const from = offset;
+    offset += line.length + 1;
+    if (isHeading(line)) break; // the header ends at the first section heading
+    const n = normalize(line);
+    if (!HEADER_DATE_INTRO.test(n)) continue;
+    const date = isoFromDate(HEADER_DATE_LINE.exec(n)?.groups);
+    if (!date) return { ok: false, reason: "a header date line is not in the supported form (label, one date, nothing else)" };
+    found.push({ date, from, to: from + line.length });
+  }
+  const distinct = [...new Set(found.map((f) => f.date))];
+  if (distinct.length === 0) return { ok: false, reason: "the document header does not state the document's date" };
+  if (distinct.length > 1) return { ok: false, reason: "the document header states more than one document date" };
+  return { ok: true, date: distinct[0], lines: found.map(({ from, to }) => ({ from, to })) };
+}
+
+/** Document date: the claimed date must be THE date code derives from the document header (`headerDocumentDate`). */
 export function verifyDocumentDate(documentDate: string, pages: string | string[]): Check {
   if (!isIsoDate(documentDate)) return { ok: false, reason: "document date is not a valid date" };
   const header = headerDocumentDate((Array.isArray(pages) ? pages[0] : pages) ?? "");
@@ -579,7 +472,7 @@ export function verifyExtraction(
   meds.forEach((med, i) => {
     const loc = locateExcerpt(pages, med.page, med.excerpt);
     if (!loc.ok) return void exclusions.push({ kind: "medication", reason: loc.reason });
-    const check = verifyMedicationFact(med, loc.verifiedExcerpt, ctx.episodes, doc.documentDate, loc.context);
+    const check = verifyMedicationFact(med, loc.verifiedExcerpt, ctx.episodes, loc.context);
     if (!check.ok) return void exclusions.push({ kind: "medication", reason: check.reason });
     verified.push({
       id: `${ctx.documentId}-med-${i + 1}`,
@@ -652,7 +545,7 @@ export function verifySeedState(state: TrustedState, pagesByDocId: Map<string, s
       case "medication_status": {
         const ep = state.episodes.find((e) => e.id === fact.episodeId);
         const r = ep
-          ? verifyMedicationFact({ medicationName: MEDICATION_ALIASES[ep.id]?.[0] ?? ep.name, status: fact.status }, loc.verifiedExcerpt, state.episodes, doc.date, loc.context)
+          ? verifyMedicationFact({ medicationName: MEDICATION_ALIASES[ep.id]?.[0] ?? ep.name, status: fact.status }, loc.verifiedExcerpt, state.episodes, loc.context)
           : ({ ok: false, reason: "episode does not exist" } as const);
         check = r.ok && r.episodeId !== fact.episodeId ? { ok: false, reason: "excerpt names a different episode" } : r;
         break;

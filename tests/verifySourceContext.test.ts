@@ -38,8 +38,8 @@ describe("medication meaning comes from the whole source sentence", () => {
   it.each([
     ["prescribed", "Prescribed: ferrous sulfate 200 mg tablets, one tablet once daily for 3 months."],
     ["current", "The patient continues to take oral iron (ferrous sulfate) once daily."],
-    ["completed", "The patient completed the course of oral iron."],
-    ["stopped", "Oral iron (ferrous sulfate) was stopped on 2 Oct 2026."], // the document's own date
+    ["completed", "The patient completed oral iron."],
+    ["stopped", "Oral iron (ferrous sulfate) was stopped."],
   ])("verifies an affirmative %s statement (a neighbouring negative sentence does not leak in)", (status, sentence) => {
     const r = run([page("No other regular medication is recorded at this visit.", "MEDICATION HISTORY", sentence)], { medicationStatements: [med(status, sentence)] });
     expect(verifiedKinds(r)).toEqual(["medication_status"]);
@@ -71,14 +71,14 @@ describe("the document date must be the current document's own date", () => {
     expect(r).toMatchObject({ status: "unusable", code: "document_date_unverified" });
   });
 
-  it("with several dates on the document-date line, only the labelled one counts", () => {
+  it("a document-date line that also gives another date is not a supported header line at all", () => {
     const pages = ["Elm Street Primary Care\nDate of consultation 3 Feb 2026 (results from 27 Jan 2026)\nMEDICATION HISTORY\nOral iron was stopped."];
     const claim = (documentDate: string, excerpt: string) => verifyExtraction(pages, {
       document: { documentType: "Consultation note", documentDate, page: 1, excerpt },
       labMeasurements: [], medicationStatements: [med("stopped", "Oral iron was stopped.")],
     }, ctx);
     expect(claim("2026-01-27", "results from 27 Jan 2026")).toMatchObject({ status: "unusable", code: "document_date_unverified" });
-    expect(verifiedKinds(claim("2026-02-03", "Date of consultation 3 Feb 2026"))).toEqual(["medication_status"]);
+    expect(claim("2026-02-03", "Date of consultation 3 Feb 2026")).toMatchObject({ status: "unusable", code: "document_date_unverified" });
   });
 });
 
@@ -98,8 +98,8 @@ describe("ferritin values must be exact scalars", () => {
 
   it.each([
     ["Ferritin on 2 Oct 2026: 41 μg/L (reference range 15–150 μg/L).", 41, "15–150 μg/L"],
-    ["Ferritin 19.6 μg/L 15–150", 19.6, "15–150"],
-    ["Ferritin 32 μg/L", 32, null],
+    ["Ferritin 19.6 μg/L (reference range 15–150).", 19.6, "15–150"],
+    ["Ferritin 32 μg/L.", 32, null],
   ])("verifies the exact value in '%s'", (line, value, range) => {
     const r = run([page("RESULTS", line)], { labMeasurements: [ferritin(value, line, range)] });
     expect(r.status === "ok" && r.verified.map((f) => (f.kind === "lab_measurement" ? [f.value, f.refText] : null))).toEqual([

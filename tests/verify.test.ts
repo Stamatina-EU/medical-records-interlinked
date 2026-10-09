@@ -74,101 +74,87 @@ describe("canonical verifiedExcerpt (the trust promise)", () => {
   });
 });
 
+/** Lines of a fictional page under a section heading (inside a lab table when `table`), located as the pipeline does. */
+function located(section: string, lines: string[], excerpt: string, table = false) {
+  const header = livePages[0].split("\n").slice(0, 4);
+  const pages = [[...header, section, ...(table ? ["TEST RESULT UNITS REFERENCE RANGE"] : []), ...lines].join("\n")];
+  const loc = locateExcerpt(pages, 1, excerpt);
+  if (!loc.ok) throw new Error(loc.reason);
+  return loc;
+}
+
 describe("lab facts: subject AND value must come from the source", () => {
   const claim = { analyteName: "ferritin", value: 32, unit: "μg/L", referenceRangeText: null, measuredOn: "2026-09-25" };
+  const lab = (c: typeof claim | (Omit<typeof claim, "referenceRangeText"> & { referenceRangeText: string | null }), lines: string[], table = true) => {
+    const loc = located(table ? "IRON STUDIES" : "RESULTS", lines, lines[0], table);
+    return verifyLabFact(c, loc.verifiedExcerpt, "2026-09-25", loc.context);
+  };
 
   it("wrong subject fails: the model labels a B12 result as ferritin", () => {
-    const r = verifyLabFact(claim, "Vitamin B12 32 μg/L 20–100", "2026-09-25");
+    const r = lab(claim, ["Vitamin B12 32 μg/L 20–100"]);
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toMatch(/does not name the analyte/);
+    if (!r.ok) expect(r.reason).toMatch(/not a supported ferritin result/);
   });
 
-  it("wrong binding fails: 32 belongs to B12, the value bound to ferritin is 20", () => {
-    const r = verifyLabFact(claim, "Ferritin 20 μg/L, Vitamin B12 32 μg/L", "2026-09-25");
+  it("wrong binding fails: 32 belongs to the next row, the ferritin row gives 20", () => {
+    const r = lab(claim, ["Ferritin 20 μg/L 15–150", "Transferrin saturation 32 % 20–50"]);
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toMatch(/binds 20/);
+    if (!r.ok) expect(r.reason).toMatch(/gives 20/);
   });
 
-  it("skips date numbers when binding the value to the analyte", () => {
-    const r = verifyLabFact(
-      { ...claim, referenceRangeText: "15–150" },
-      "Ferritin on 25 Sep 2026: 32 μg/L (reference range 15–150 μg/L).",
-      "2026-09-25",
-    );
+  it("skips date numbers when reading the value", () => {
+    const r = lab({ ...claim, referenceRangeText: "15–150" }, ["Ferritin on 25 Sep 2026: 32 μg/L (reference range 15–150 μg/L)."], false);
     expect(r.ok).toBe(true);
     if (r.ok) expect([r.refLow, r.refHigh, r.unit]).toEqual([15, 150, "μg/L"]);
   });
 
   it("a claimed range that is not in the source fails", () => {
-    const r = verifyLabFact({ ...claim, referenceRangeText: "30–400" }, "Ferritin 32 μg/L 15–150", "2026-09-25");
-    expect(r.ok).toBe(false);
+    expect(lab({ ...claim, referenceRangeText: "30–400" }, ["Ferritin 32 μg/L 15–150"]).ok).toBe(false);
   });
 
   it("a wrong unit fails", () => {
-    const r = verifyLabFact({ ...claim, unit: "ng/mL" }, "Ferritin 32 μg/L 15–150", "2026-09-25");
-    expect(r.ok).toBe(false);
+    expect(lab({ ...claim, unit: "ng/mL" }, ["Ferritin 32 μg/L 15–150"]).ok).toBe(false);
   });
 
   it("an untracked analyte fails", () => {
-    const r = verifyLabFact({ ...claim, analyteName: "Vitamin B12" }, "Vitamin B12 32 μg/L", "2026-09-25");
-    expect(r.ok).toBe(false);
+    expect(lab({ ...claim, analyteName: "Vitamin B12" }, ["Ferritin 32 μg/L 15–150"]).ok).toBe(false);
   });
 
-  it("a date that is neither in the excerpt nor the document date fails", () => {
-    const r = verifyLabFact({ ...claim, measuredOn: "2026-01-01" }, "Ferritin 32 μg/L 15–150", "2026-09-25");
-    expect(r.ok).toBe(false);
+  it("a date that is neither the result's own date nor the document date fails", () => {
+    expect(lab({ ...claim, measuredOn: "2026-01-01" }, ["Ferritin 32 μg/L 15–150"]).ok).toBe(false);
   });
 });
 
-describe("medication facts: identity and status cue in the same sentence", () => {
+describe("medication facts: one supported sentence about the patient's oral iron", () => {
+  const med = (medicationName: string, status: string, sentence: string) => {
+    const loc = located("MEDICATION HISTORY", [sentence], sentence);
+    return verifyMedicationFact({ medicationName, status }, loc.verifiedExcerpt, episodes, loc.context);
+  };
+
   it("a generic statement fails: 'Treatment completed.' does not name oral iron", () => {
-    const r = verifyMedicationFact({ medicationName: "oral iron", status: "completed" }, "Treatment completed.", episodes, "2026-09-25");
+    const r = med("oral iron", "completed", "Treatment completed.");
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toMatch(/does not name the medication/);
+    if (!r.ok) expect(r.reason).toMatch(/not a supported "Completed" statement/);
   });
 
-  it("a missing cue fails: naming ferrous sulfate is not evidence it was completed", () => {
-    const r = verifyMedicationFact(
-      { medicationName: "ferrous sulfate", status: "completed" },
-      "The patient takes ferrous sulfate daily.",
-      episodes,
-      "2026-09-25",
-    );
-    expect(r.ok).toBe(false);
+  it("a missing status fails: naming ferrous sulfate is not evidence it was completed", () => {
+    expect(med("ferrous sulfate", "completed", "The patient takes ferrous sulfate daily.").ok).toBe(false);
   });
 
-  it("the cue must be in the SAME sentence as the medication", () => {
-    const r = verifyMedicationFact(
-      { medicationName: "oral iron", status: "completed" },
-      "Oral iron was discussed. The course was completed.",
-      episodes,
-      "2026-09-25",
-    );
-    expect(r.ok).toBe(false);
+  it("the status must be in the SAME sentence as the medication", () => {
+    expect(med("oral iron", "completed", "Oral iron was discussed. The course was completed.").ok).toBe(false);
   });
 
   it("'the prescribed course' is not evidence of a Prescribed status", () => {
-    const r = verifyMedicationFact(
-      { medicationName: "oral iron", status: "prescribed" },
-      "The patient completed the prescribed course of oral iron (ferrous sulfate) in May 2026.",
-      episodes,
-      "2026-09-25",
-    );
-    expect(r.ok).toBe(false);
+    expect(med("oral iron", "prescribed", "The patient completed the prescribed course of oral iron (ferrous sulfate) in May 2026.").ok).toBe(false);
   });
 
   it("the live note sentence is not evidence of Completed", () => {
-    const r = verifyMedicationFact({ medicationName: "oral iron (ferrous sulfate)", status: "completed" }, "The patient continues to take oral iron (ferrous sulfate) once daily.", episodes, "2026-09-25");
-    expect(r.ok).toBe(false);
+    expect(med("oral iron (ferrous sulfate)", "completed", "The patient continues to take oral iron (ferrous sulfate) once daily.").ok).toBe(false);
   });
 
   it("the live note sentence verifies as Current (shown as Ongoing)", () => {
-    const r = verifyMedicationFact(
-      { medicationName: "oral iron (ferrous sulfate)", status: "current" },
-      "The patient continues to take oral iron (ferrous sulfate) once daily.",
-      episodes,
-      "2026-09-25",
-    );
+    const r = med("oral iron (ferrous sulfate)", "current", "The patient continues to take oral iron (ferrous sulfate) once daily.");
     expect(r.ok && [r.episodeId, r.status]).toEqual(["ep-oral-iron", "Current"]);
   });
 });
