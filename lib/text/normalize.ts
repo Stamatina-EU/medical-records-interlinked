@@ -10,7 +10,7 @@
  *  - `"search"` (default) — permissive, for non-authoritative matching only (a document title, the names the model
  *    wrote): the same unifications plus NFKC compatibility folding and more dash variants.
  *
- * `normalizeWithMap` also records, for every normalized character, where it came from in the
+ * `normalizeWithMap` also records, for every normalized UTF-16 code unit, where it came from in the
  * original string. Normalization changes lengths (collapsed whitespace, NFKC), so normalized
  * offsets cannot be reused on the original text — the map lets the verifier cut the canonical
  * `verifiedExcerpt` out of the ORIGINAL page text.
@@ -29,9 +29,9 @@ const GREEK_MU = "μ";
 
 export type NormalizedText = {
   text: string;
-  /** start[i] = index in the original string of the char that produced normalized char i */
+  /** start[i] = UTF-16 offset in the original string of the code point that produced normalized code unit i */
   start: number[];
-  /** end[i] = index just past that original char */
+  /** end[i] = UTF-16 offset just past that original code point */
   end: number[];
 };
 
@@ -54,7 +54,9 @@ export function normalizeWithMap(original: string, profile: NormalizationProfile
     else if (profile === "source") out = (ch === MICRO_SIGN ? GREEK_MU : ch).toLowerCase();
     else out = ch.normalize("NFKC").toLowerCase();
 
-    for (const o of out) {
+    // String.indexOf and String.slice use UTF-16 offsets: both halves of a surrogate pair need map entries.
+    for (let j = 0; j < out.length; j++) {
+      const o = out[j];
       // collapse runs of whitespace into a single space
       if (o === " " && (text.length === 0 || text.endsWith(" "))) continue;
       text += o;
@@ -99,6 +101,8 @@ export function findOriginalRanges(haystack: string, needle: string, profile: No
     let to = h.end[idx + n.length - 1];
     while (from < to && /\s/.test(haystack[from])) from++;
     while (to > from && /\s/.test(haystack[to - 1])) to--;
+    // A match must cover complete source segments, never part of a surrogate pair or a case/NFKC expansion.
+    if (normalize(haystack.slice(from, to), profile) !== n) continue;
     ranges.push({ from, to });
   }
   return ranges;
