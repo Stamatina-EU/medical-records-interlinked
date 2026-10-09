@@ -19,12 +19,12 @@ AI proposes → deterministic code verifies → you approve the evidence
 
 - **Live Add record support:** AI (OpenAI Responses API, structured output) only *proposes* ferritin measurements and oral-iron status, each with the page and quoted wording it relies on.
 - **The seeded synthetic history also contains** thyroid imaging facts and follow-up recommendations. These are pre-structured source facts, not currently extracted live.
-- **Deterministic verification** rejects anything it cannot find in the page text. Checks include:
-  - the quote occurs exactly once on that page, and only the one source sentence (medication) or result line (ferritin) holding it is checked — a neighbouring sentence is never evidence, and a heading above can only reject;
-  - the number and unit follow the named analyte on its own result line, as an exact value (`>150`, `(or more)`, `approximately` fail, even when the quote leaves them out);
-  - the medication and an affirmative status cue appear in the same clause, about the patient, at the document's own date (negated, planned, hypothetical, someone else's or earlier-dated wording fails);
-  - a reference range is the one written with that result, and the document date is derived by code from the document header;
-  - dates are real.
+- **Deterministic verification** is deliberately narrow: this POC verifies only a small set of supported ferritin and oral-iron source structures (`lib/extraction/grammar.ts`). A fact counts only when its complete source unit matches one of them. Anything else is rejected, even if it might be true; the verifier does not try to understand general medical language.
+  - The quote must occur exactly once on that page and be the complete source sentence (oral iron) or result line (ferritin).
+  - An oral-iron status counts only in a supported sentence that ties it to oral iron and, where a person is named, to the patient (for example "The patient continues to take oral iron …", "Oral iron was stopped.").
+  - A ferritin result counts only as one exact value with its unit, an optional date and at most one supplied range. It must be written as a result sentence or a laboratory table row.
+  - The document date comes only from a complete header line ("Date of consultation 25 Sep 2026").
+  - Each fact must sit in a supported section, and dates must be real.
 
   The excerpt you see is cut from the document itself, not from the model's output.
 - **You approve.** Nothing changes in your record until you choose what to add. You can exclude any proposed fact. Raw AI output is never stored. The verified facts awaiting review and the uploaded PDF are kept temporarily in `data/runtime/pending/` (gitignored), and deleted when you add them, cancel, upload the next record or run `demo:reset`.

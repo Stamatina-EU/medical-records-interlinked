@@ -305,22 +305,37 @@ The system prompt tells the model to:
 1. `normalizeWithMap(pageText)` (`lib/text/normalize.ts`) builds the normalized page string. It applies NFKC, collapses whitespace, unifies dash and quote variants, and lowercases. It also builds an **index map** from every normalized character back to its position in the original page text. That's needed because normalization changes string lengths, so normalized offsets can't be reused directly.
 2. `normalize(modelExcerpt)` must be found inside the normalized page **exactly once**. If it isn't there, or it occurs more than once (so which statement it means can't be told), the fact fails.
 3. The **`verifiedExcerpt`** is the *original* page text between the mapped start and end positions, trimmed of outer whitespace. From this point on, the model's excerpt string is discarded.
-4. Code determines the **source assertion unit** around that one occurrence (`sourceContext`): the **source sentence** holding it (it may wrap over lines; a sentence end, a heading or a blank line ends it) and, within it, the **result line** — the part on the excerpt's own line. An excerpt that runs across a sentence, heading, blank line (or, for a result, a line) has no single unit and fails. It also collects the **headings above** the excerpt in the document. The model's excerpt boundaries never define the semantic boundary, and a sibling sentence is never evidence.
+4. Code determines the **complete source unit** around that one occurrence (`sourceContext`): the **source sentence** holding it (it may wrap over lines; a sentence end, a heading or a blank line ends it), whether that sentence occupies whole lines of its own, and the **complete physical line**. It also collects the **headings above** the excerpt in the document. The model's excerpt boundaries never define the semantic boundary, and a sibling sentence is never evidence.
 
-**Step B: semantic checks, each run on the one assertion unit, never the model's text.** The excerpt itself must still show the evidence the patient sees (alias + cue; analyte + value + unit + any claimed range). The alias, cue and rejection-word lists live in one shared **lexicon** (`lib/extraction/lexicon.ts`). The same lexicon is used by the Seed Verifier. **Headings can only reject** (conditional, planned, historical, uncertain, negated or someone else's: `IF NEEDED`, `PLAN`, `PREVIOUS …`, `HISTORICAL …`, `PAST …`, `FAMILY …`); `HISTORY` alone, as in `MEDICATION HISTORY`, is not a rejecting word.
+**Step B: a positive grammar, not language understanding.** The POC verifies a deliberately narrow set of supported ferritin and oral-iron source structures, owned by code in `lib/extraction/grammar.ts` and taken from the committed corpus and live note. A fact is Verified only if its **complete** source unit matches one of them and that structure directly establishes exactly the claimed fact. Anything else fails closed: false negatives are accepted, semantic false positives are not, so there is no list of "bad" words to keep growing. The excerpt must be the complete unit (a missing final full stop aside), so what the patient sees is the whole evidence. The subject names (aliases) live in the shared **lexicon** (`lib/extraction/lexicon.ts`); the Seed Verifier uses the same grammar.
 
-| Check | Applies to | Rule (evaluated on the assertion unit) |
-|---|---|---|
-| Analyte identity | lab | The excerpt contains an accepted **ferritin alias** (`ferritin`, `serum ferritin`), and the model's `analyteName` maps to the same analyte. The **result line opens with that name** (only `the`/`plasma` may come before it) and names it once: `Approximately ferritin 32 μg/L`, `Previous ferritin 19.6 μg/L` and `32 μg/L ferritin` fail. |
-| Value bound to analyte | lab | The claimed value is the **first number + unit that follows the alias on its result line**, with only dates and linking words (`on`, `of`, `level`, `result`, `was`…) in between, and no other number. `Ferritin 20 μg/L, Vitamin B12 32 μg/L` does not verify 32 as ferritin, and `Ferritin pending, haemoglobin 12.9 g/dL` verifies nothing. Only **exact** values count: any comparator or qualifier **anywhere on the result line** (`>150`, `≤ 15`, `~32`, `150 μg/L (or more)`, `approximately`, `about`, `up to`…) fails, even when the excerpt leaves it out. |
-| Unit | lab | That number is immediately followed by the normalized unit (`µ`/`μ` unified by NFKC). |
-| Range | lab | If a range is claimed, it is the one written **with this result**: it directly follows the value and unit on the same line (optionally labelled, e.g. `(reference range 15–150 μg/L)`). A range elsewhere is never borrowed. It's parsed into `refLow`/`refHigh`. |
-| Date | lab | `measuredOn` is the **result line's own full date**, or — only when the line has no date — the verified document date. A line with two dates, or a partial one (`Jan 2026`), fails. |
-| Statement | lab | The result line is not negated, hypothetical, about someone else or historical (`previous`, `prior`…), and no heading above makes it so (`PREVIOUS RESULTS`): such a result would otherwise be stored under the document date. |
-| Medication identity | medication | The excerpt contains an accepted **oral iron episode alias** (`oral iron`, `ferrous sulfate`, `iron tablets`, `iron supplement`), and the model's `medicationName` maps to that episode. A generic phrase such as "treatment completed," with no alias, fails. |
-| Status cue | medication | The same **clause and line** of the excerpt that contains the alias also contains a cue for the claimed status: completed → `completed`/`finished`; stopped → `stopped`/`discontinued`; current → `the patient is currently taking`/`the patient continues to take` (the patient as subject, present tense — `was currently taking` is never Current); prescribed → `prescribed`. |
-| Statement | medication | Judged on the **one source sentence** holding the excerpt, failing closed even when the quote leaves the qualifying part out: a question; negation (`not`, `no longer`…); hypothetical, conditional, planned or recommended wording (`if`, `should`, `will`, `plan`, `recommend`…); a subject other than the patient (`mother`, `family`…); an earlier time (`previously`, `at the … consultation`…) or **any date other than the document date** (a full date, a month, a year) — such a statement would otherwise be stored as holding on the document date; or a rejecting heading above it. |
-| Document date | document | **Derived by code from the header** (`headerDocumentDate`): the lines of page 1 above the first section heading. A header line counts only when it **begins with** an allowed label (`Date`, `Date of consultation`, `Consultation date`, `Report date`, `Date of report`, `Date issued`, `Date of issue`, `Examination date`, `Date of examination`) directly followed by a full date. Exactly one such date must be found (none, or two different ones, fails). The model's `documentDate` must equal it and its excerpt must be that header line. A qualified label (`Previous report date`), a result, sample or collection date, or a later section (`HISTORICAL CONSULTATION / Consultation date: 27 Jan 2026`) never counts. If this fails, the whole extraction is `no_verified_facts` (`document_date_unverified`), because facts can't be dated. |
+**Sections.** Every heading above a fact must be one of the corpus's ordinary sections (`REASON FOR VISIT`, `MEDICATION`, `MEDICATION HISTORY`, `HISTORY`, `RESULTS`, `FULL BLOOD COUNT`, `IRON STUDIES`, `HAEMATOLOGY AND IRON STUDIES`, and the lab table's column header). The fact's own section must be one where it is supported (`MEDICATION`/`MEDICATION HISTORY`; `RESULTS`/`IRON STUDIES`/`HAEMATOLOGY AND IRON STUDIES`). Any other heading (`IF NEEDED`, `PLAN`, `HISTORICAL CONSULTATION`…) fails.
+
+| Fact | Supported structure (the complete unit, normalized) |
+|---|---|
+| Oral iron — Prescribed | `Prescribed: <oral iron> [dose] [, one tablet once daily for N months].` (seed D5) · `<oral iron> was prescribed.` |
+| Oral iron — Current | `The patient continues to take <oral iron> [once daily].` (live note) · `The patient is currently taking <oral iron>.` |
+| Oral iron — Completed | `The patient completed <oral iron>.` · `<oral iron> was completed.` |
+| Oral iron — Stopped | `The patient stopped <oral iron>.` · `<oral iron> was stopped.` / `was discontinued.` (test fixture) |
+| Ferritin — sentence | `Ferritin [on <date>]: <value> <unit> [(reference range <low>–<high> [<unit>])].` alone on its line (live note) |
+| Ferritin — table row | `Ferritin <value> <unit> <low>–<high>` inside a laboratory table: only well-formed rows between it and the column header `TEST RESULT UNITS REFERENCE RANGE`, and only rows after it until a heading, a blank line, the end of the page or the `Reference ranges are supplied by …` note (seed D1, D3) |
+| Document date | A page-1 header line (above the first heading): `Date` / `Date of consultation` / `Consultation date` / `Report date` / `Date issued` / `Examination date`, an optional colon, one date, nothing else |
+
+`<oral iron>` is an accepted name of the episode (`oral iron`, `ferrous sulfate`/`sulphate`, `iron tablets`, `iron supplement`), optionally followed by a dose (`200 mg tablets`) and a second name in brackets (`oral iron (ferrous sulfate)`). The oral-iron sentence must occupy whole lines of its own. `<unit>` is `μg/L` or `ng/mL` (`µ`/`μ` unified by NFKC), and `<date>` is the corpus form `25 Sep 2026`. One parse of a ferritin line gives its identity, the one exact value, the unit, the optional supplied range (`refLow`/`refHigh`) and the optional date. `measuredOn` must be that date; the verified document date is used only when the line has none. A claimed range must be the one on that line.
+
+These all fail because they are not supported structures, not because of a word list:
+- "The patient is currently taking vitamin D instead of oral iron."
+- "Her niece completed oral iron."
+- "Oral iron was stopped on 1 Sep 2026."
+- "Is the patient currently taking oral iron?"
+- `Ferritin 32 μg/L to 41 μg/L.`
+- `Ferritin 32 μg/L (corrected result: 41 μg/L).`
+- `Ferritin >150 μg/L.`
+- `Ferritin 150 μg/L (or more).`
+- `Approximately` on the line above `Ferritin 32 μg/L.`
+- `Date of consultation 25 Sep 2026 (previous consultation).`
+
+The document date is **derived by code from the header** (`headerDocumentDate`). A header line that sets out to give a date (an allowed label, then a colon, a digit or a bracket) must be a complete supported line, or the header fails. Exactly one date must result. The model's `documentDate` must equal it, and its excerpt must lie on that header line. A body line such as `HISTORICAL CONSULTATION / Consultation date: 27 Jan 2026` sits below a heading and never competes. If this fails, the whole extraction is `no_verified_facts` (`document_date_unverified`), because facts can't be dated.
 
 Result: `{ verified: SourceFact[], excludedCount: number }`. Verified facts get new IDs and review status `PROPOSED`. They never enter the trusted history before approval: the Extract Route keeps them, with the uploaded PDF, only as a pending proposal in `data/runtime/pending/` until apply, cancel, the next extraction or demo reset. Raw AI output is not stored. Their `source.verifiedExcerpt` is the canonical page text.
 
@@ -329,8 +344,8 @@ Result: `{ verified: SourceFact[], excludedCount: number }`. Verified facts get 
 ### Verifier Tests
 `tests/verify.test.ts` uses fixture page text written in the style of the synthetic corpus. It must prove at least:
 - **Canonical excerpt (the trust promise).** Take a model excerpt that differs from the page only by allowed normalization: collapsed spaces, straight quotes instead of curly ones, a hyphen instead of an en dash in `15–150`, different case. It **matches**, and the resulting `verifiedExcerpt` **equals the original page substring character for character** (with the en dash, curly quotes and original spacing). It is **not equal to the model's excerpt.**
-- **Wrong subject fails.** An excerpt `Vitamin B12 32 μg/L` labelled `analyteName: "ferritin"` fails the analyte-identity check.
-- **Wrong binding fails.** `Ferritin 20 μg/L, Vitamin B12 32 μg/L` claimed as ferritin 32 fails the value-bound-to-analyte check.
+- **Wrong subject fails.** A row `Vitamin B12 32 μg/L 20–100` labelled `analyteName: "ferritin"` is not a supported ferritin result.
+- **Wrong binding fails.** In a table, the row `Ferritin 20 μg/L 15–150` claimed as ferritin 32 fails: the 32 on the next row belongs to another test.
 - **Generic medication statement fails.** "Treatment completed." with `medicationName: "oral iron"` fails medication identity.
 - **Missing cue fails.** An excerpt naming ferrous sulfate but with no completion cue, claimed as `completed`, fails.
 - **Excerpt not on the stated page fails**, even if it exists on another page.
@@ -378,8 +393,8 @@ Implements `prd.md > Demo Reset`. `scripts/demo-reset.ts` (`npm run demo:reset`)
 | Seed fact | Checks (shared checkers from the Fact Verifier) |
 |---|---|
 | Every fact | Step A: the stored `verifiedExcerpt` is found on the stated page, **and is exactly equal to the canonical page text** that Step A produces. Seed excerpts are page wording, not paraphrase. |
-| Lab measurement | `verifyLabFact` on its result line: ferritin alias, exact value bound to the alias, unit, supplied range (if stored) and date |
-| Medication status event | `verifyMedicationFact` on its source sentence: episode alias + affirmative status cue in the same clause, about the patient, at the document date (e.g. D5 must say "prescribed") |
+| Lab measurement | `verifyLabFact`: the complete result line is a supported ferritin structure; value, unit, supplied range (if stored) and date match its parse |
+| Medication status event | `verifyMedicationFact`: the complete sentence is a supported structure for that status (e.g. D5 matches `Prescribed: <oral iron> …`) |
 | Follow-up | `verifyFollowUpFact`: a recommendation cue (`repeat`, `recheck`, `follow-up`, `recommended`) plus a target alias (ferritin alias, or the exam alias such as `ultrasound`), plus the stored interval text (e.g. "3 months") |
 | Imaging exam | `verifyImagingFact`: exam alias + `performedOn` date. If `comparesToDocumentId` is set, the excerpt must contain a comparison cue (`comparison`, `compared with`) **and** the referenced document's date |
 | Document record | `verifyDocumentDate`: the date code derives from its header is exactly the recorded date (e.g. "Report date 27 Jan 2026") |
@@ -537,7 +552,8 @@ medical-history/                     # repo root (current folder)
 │   ├── engine/                      # derive.ts, preview.ts, apply.ts, dedupe.ts, changes.ts — pure
 │   ├── extraction/                  # pdfText.ts, schema.ts, prompt.ts, extract.ts (server),
 │   │                                #   verify.ts (pure trust gate + shared checkers),
-│   │                                #   lexicon.ts (analyte/medication/exam aliases, status & follow-up cues)
+│   │                                #   grammar.ts (the supported source structures),
+│   │                                #   lexicon.ts (analyte/medication/exam aliases, follow-up cues)
 │   ├── summary/compose.ts           # Summary Composer — pure, no AI
 │   ├── store/                       # stateStore.ts, proposalStore.ts (server)
 │   └── text/normalize.ts            # normalize() + normalizeWithMap() (index map back to original text)
