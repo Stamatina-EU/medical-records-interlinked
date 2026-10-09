@@ -6,6 +6,10 @@
  * a fact only when that complete unit matches a supported structure (`grammar.ts`) that directly establishes exactly
  * that fact — a deliberately narrow positive grammar, not language understanding. Anything else fails closed.
  *
+ * Every comparison here — locating the excerpt included — uses the SOURCE-FAITHFUL normalization (`normalizeSource`):
+ * no Unicode compatibility folding, so a numeric notation outside the grammar ("10³", "½", "③", full-width digits)
+ * stays outside it and can never be read as a different, supported number.
+ *
  * The same checkers verify hand-authored seed facts (`verifySeedState`), so live and seed
  * data meet one definition of "what counts as evidence".
  */
@@ -18,7 +22,7 @@ import type {
   ProposedFact,
   TrustedState,
 } from "@/lib/model/types";
-import { findOriginalRanges, findOriginalSpan, normalize } from "@/lib/text/normalize";
+import { findOriginalRanges, findOriginalSpan, normalizeSource } from "@/lib/text/normalize";
 import { formatDate, isIsoDate } from "@/lib/text/dates";
 import {
   ANALYTE_ALIASES,
@@ -157,7 +161,7 @@ export function locateExcerpt(
     return { ok: false, reason: `page ${page} does not exist` };
   }
   const text = pages[page - 1];
-  const ranges = findOriginalRanges(text, excerpt);
+  const ranges = findOriginalRanges(text, excerpt, "source");
   if (ranges.length === 0) return { ok: false, reason: `excerpt not found on page ${page}` };
   if (ranges.length > 1) {
     return { ok: false, reason: `excerpt occurs ${ranges.length} times on page ${page}, so which statement it is cannot be told` };
@@ -168,11 +172,11 @@ export function locateExcerpt(
 
 // ─── helpers ──────────────────────────────────────────────────────────────────────────────
 function mentionsDate(n: string, iso: string): boolean {
-  return n.includes(normalize(formatDate(iso))) || n.includes(iso);
+  return n.includes(normalizeSource(formatDate(iso))) || n.includes(iso);
 }
 
 function analyteFor(name: string): "ferritin" | null {
-  const n = normalize(name);
+  const n = normalizeSource(name);
   for (const [key, aliases] of Object.entries(ANALYTE_ALIASES)) {
     if (aliases.some((a) => containsPhrase(n, a))) return key as "ferritin";
   }
@@ -180,7 +184,7 @@ function analyteFor(name: string): "ferritin" | null {
 }
 
 function episodeFor(name: string, episodes: MedicationEpisode[]): string | null {
-  const n = normalize(name);
+  const n = normalizeSource(name);
   for (const ep of episodes) {
     const aliases = MEDICATION_ALIASES[ep.id] ?? [];
     if (aliases.some((a) => containsPhrase(n, a))) return ep.id;
@@ -195,11 +199,11 @@ function toStatus(s: string): MedicationStatus | null {
     completed: "Completed",
     stopped: "Stopped",
   };
-  return map[normalize(s)] ?? null;
+  return map[normalizeSource(s)] ?? null;
 }
 
 /** The excerpt is the complete unit (a missing final full stop aside): what the patient sees is the whole evidence. */
-const isWholeUnit = (excerpt: string, unit: string) => normalize(excerpt).replace(/\.$/, "") === normalize(unit).replace(/\.$/, "");
+const isWholeUnit = (excerpt: string, unit: string) => normalizeSource(excerpt).replace(/\.$/, "") === normalizeSource(unit).replace(/\.$/, "");
 
 /**
  * The document structure around a fact: every heading above it must be one of the corpus's ordinary sections, and
@@ -207,9 +211,9 @@ const isWholeUnit = (excerpt: string, unit: string) => normalize(excerpt).replac
  * of fact is supported. Any other heading ("IF NEEDED", "HISTORICAL CONSULTATION", "PLAN") fails closed.
  */
 function sectionProblem(headings: string[], kind: "medication" | "ferritin"): string | null {
-  const unknown = headings.find((h) => !KNOWN_SECTIONS.includes(normalize(h)));
+  const unknown = headings.find((h) => !KNOWN_SECTIONS.includes(normalizeSource(h)));
   if (unknown) return `it sits below the heading "${unknown}", which is not a supported section`;
-  const section = headings.map(normalize).filter((h) => h !== TABLE_HEADER).pop();
+  const section = headings.map(normalizeSource).filter((h) => h !== TABLE_HEADER).pop();
   if (!section || !FACT_SECTIONS[kind].includes(section)) return `it is not in a supported ${kind} section`;
   return null;
 }
@@ -220,7 +224,7 @@ function sectionProblem(headings: string[], kind: "medication" | "ferritin"): st
  * reference-range note). A line that continues or qualifies the row makes the table unsupported.
  */
 function inLabTable(lines: string[], i: number): boolean {
-  const at = (k: number) => normalize(lines[k]);
+  const at = (k: number) => normalizeSource(lines[k]);
   let up = i - 1;
   while (up >= 0 && TABLE_ROW.test(at(up))) up--;
   if (up < 0 || at(up) !== TABLE_HEADER) return false;
@@ -249,11 +253,11 @@ export function verifyLabFact(
   if (context.line === null) return { ok: false, reason: "the excerpt is not within one line of the source" };
   if (!isWholeUnit(verifiedExcerpt, context.line)) return { ok: false, reason: "the excerpt is not the complete source result line" };
 
-  const line = normalize(context.line);
+  const line = normalizeSource(context.line);
   let parsed = FERRITIN_SENTENCE.exec(line)?.groups;
   if (parsed) {
     // a result sentence must be complete on its line: nothing of it on an earlier line ("Approximately\nFerritin …")
-    if (context.sentence === null || normalize(context.sentence) !== line) {
+    if (context.sentence === null || normalizeSource(context.sentence) !== line) {
       return { ok: false, reason: "the result line is not a complete sentence of its own" };
     }
   } else {
@@ -265,14 +269,14 @@ export function verifyLabFact(
   if (section) return { ok: false, reason: section };
 
   if (Number(parsed.value) !== claim.value) return { ok: false, reason: `the source gives ${parsed.value}, not ${claim.value}` };
-  if (normalize(claim.unit) !== parsed.unit) return { ok: false, reason: `unit "${claim.unit}" does not match the source` };
+  if (normalizeSource(claim.unit) !== parsed.unit) return { ok: false, reason: `unit "${claim.unit}" does not match the source` };
   if (parsed.rangeUnit && parsed.rangeUnit !== parsed.unit) return { ok: false, reason: "the supplied range is in a different unit" };
 
   let refLow: number | null = null;
   let refHigh: number | null = null;
   let refText: string | null = null;
   if (claim.referenceRangeText) {
-    const nums = normalize(claim.referenceRangeText).match(/\d+(?:\.\d+)?/g) ?? [];
+    const nums = normalizeSource(claim.referenceRangeText).match(/\d+(?:\.\d+)?/g) ?? [];
     if (nums.length !== 2) return { ok: false, reason: "reference range is not two numbers" };
     if (!parsed.low || Number(nums[0]) !== Number(parsed.low) || Number(nums[1]) !== Number(parsed.high)) {
       return { ok: false, reason: "the claimed reference range is not the one written with this result" };
@@ -291,7 +295,7 @@ export function verifyLabFact(
       reason: lineDate ? "measurement date is not the date written with this result" : "measurement date is not the document date, and the result line has no date of its own",
     };
   }
-  return { ok: true, analyte, unit: findOriginalSpan(verifiedExcerpt, parsed.unit) ?? claim.unit, refLow, refHigh, refText };
+  return { ok: true, analyte, unit: findOriginalSpan(verifiedExcerpt, parsed.unit, "source") ?? claim.unit, refLow, refHigh, refText };
 }
 
 /**
@@ -316,7 +320,7 @@ export function verifyMedicationFact(
   if (!context.sentenceOwnsLines) return { ok: false, reason: "the source sentence shares its line with other text" };
   if (!isWholeUnit(verifiedExcerpt, context.sentence)) return { ok: false, reason: "the excerpt is not the complete source sentence" };
 
-  const sentence = normalize(context.sentence);
+  const sentence = normalizeSource(context.sentence);
   if (!medicationStatusGrammar(episodeId)[status].some((re) => re.test(sentence))) {
     return { ok: false, reason: `the source sentence is not a supported "${status}" statement about the patient's oral iron` };
   }
@@ -339,7 +343,7 @@ export function headerDocumentDate(firstPage: string): Check<{ date: string; lin
     const from = offset;
     offset += line.length + 1;
     if (isHeading(line)) break; // the header ends at the first section heading
-    const n = normalize(line);
+    const n = normalizeSource(line);
     if (!HEADER_DATE_INTRO.test(n)) continue;
     const date = isoFromDate(HEADER_DATE_LINE.exec(n)?.groups);
     if (!date) return { ok: false, reason: "a header date line is not in the supported form (label, one date, nothing else)" };
@@ -364,15 +368,15 @@ export function verifyDocumentDate(documentDate: string, pages: string | string[
 
 /** Follow-up (seed): recommendation cue + target alias + interval, all in the excerpt. */
 export function verifyFollowUpFact(fu: FollowUp, verifiedExcerpt: string): Check {
-  const n = normalize(verifiedExcerpt);
+  const n = normalizeSource(verifiedExcerpt);
   if (!FOLLOW_UP_CUES.some((re) => re.test(n))) return { ok: false, reason: "no follow-up cue in the excerpt" };
   const aliases =
     "analyte" in fu.target ? ANALYTE_ALIASES[fu.target.analyte] : (EXAM_ALIASES[fu.target.examName] ?? []);
   if (!aliases.some((a) => containsPhrase(n, a))) return { ok: false, reason: "excerpt does not name the follow-up target" };
-  if (fu.intervalText && !n.includes(normalize(fu.intervalText))) {
+  if (fu.intervalText && !n.includes(normalizeSource(fu.intervalText))) {
     return { ok: false, reason: `interval "${fu.intervalText}" is not in the excerpt` };
   }
-  if (!n.includes(normalize(fu.recommendation))) {
+  if (!n.includes(normalizeSource(fu.recommendation))) {
     return { ok: false, reason: "stored recommendation wording is not in the excerpt" };
   }
   return { ok: true };
@@ -384,11 +388,11 @@ export function verifyImagingFact(
   verifiedExcerpt: string,
   documentsById: Map<string, DocumentRecord>,
 ): Check {
-  const n = normalize(verifiedExcerpt);
+  const n = normalizeSource(verifiedExcerpt);
   const aliases = EXAM_ALIASES[exam.examName] ?? [];
   if (!aliases.some((a) => containsPhrase(n, a))) return { ok: false, reason: "excerpt does not name the examination" };
   if (!mentionsDate(n, exam.performedOn)) return { ok: false, reason: "examination date is not in the excerpt" };
-  if (!n.includes(normalize(exam.statement))) return { ok: false, reason: "stored statement is not in the excerpt" };
+  if (!n.includes(normalizeSource(exam.statement))) return { ok: false, reason: "stored statement is not in the excerpt" };
   if (exam.comparesToDocumentId) {
     const earlier = documentsById.get(exam.comparesToDocumentId);
     if (!earlier) return { ok: false, reason: "comparison target document does not exist" };
@@ -421,7 +425,7 @@ export function verifyExtraction(
   // Subject gate: a candidate counts as a supported fact only if it names a supported subject
   // (ferritin / a supported medication episode) AND the document text itself names that subject.
   // Anything else is out of scope, not a failed verification, and is silently ignored.
-  const docText = normalize(pages.join("\n"));
+  const docText = normalizeSource(pages.join("\n"));
   const labs = extraction.labMeasurements.filter((lab) => {
     const analyte = analyteFor(lab.analyteName);
     return analyte !== null && ANALYTE_ALIASES[analyte].some((a) => containsPhrase(docText, a));
