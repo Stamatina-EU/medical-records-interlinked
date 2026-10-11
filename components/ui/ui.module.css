@@ -52,7 +52,7 @@
   color: var(--accent-ink);
 }
 .sourceRef:hover span {
-  border-bottom-color: currentColor;
+  border-bottom-color: transparent;
 }
 
 /* Calculated = derived by code, visibly different from what the record says */
@@ -118,3 +118,32 @@
 .calcTag {
   color: var(--ink-muted);
 }
+
+/* Compact timeline source controls match the other Direct affordances. */
+.sourceMarker { color: var(--accent); background: transparent; border: 1px solid currentColor; border-radius: 8px; min-height: 36px; padding: 4px 9px; }
+.sourceMarker:hover { color: var(--accent); background: var(--accent-wash); border-color: currentColor; }
+@media (max-width: 860px) { .sourceMarker { min-height: 44px; } }
+
+.sourceMarker {
+  min-width: min(100%, var(--control-min-width));
+  max-width: 100%;
+  flex-shrink: 0;
+  min-height: var(--control-height);
+  padding: var(--control-padding);
+  border-radius: var(--control-radius);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+/* Keep the calculation icon attached to its explanation when the badge wraps. */
+.calcLead {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Timeline source references share the same pale-blue highlight as Summary citations. */
+.sourceMarker { border: 0; background: var(--accent-wash); }
+.sourceMarker:hover { background: var(--accent); color: white; }

@@ -225,3 +225,69 @@
     min-height: 36px;
   }
 }
+
+/* A white clinical brief, with the shared system confined to its framing and references. */
+.sheet { background: #fff; border: 1px solid #c6e1e8; border-top: 4px solid #62d6df; border-radius: 8px; box-shadow: 0 8px 24px #123f4929; color: #16394f; }
+.head { border-bottom-color: #16455c; }
+.kicker { color: var(--accent); }
+.patient { font-size: 36px; letter-spacing: -.025em; }
+.meta, .scope, .synthetic, .sourceMeta { color: #4b6174; }
+.sectionTitle { color: #16394f; font-size: 22px; border-bottom-color: #c5dbe5; }
+.derivedText { color: #16394f; }
+.chip { background: #f2fafc; border-color: #aad7e2; color: var(--accent); border-radius: 8px; min-height: 28px; font-size: 12px; }
+.chip:hover { background: var(--accent-wash); border-color: var(--accent); }
+.chipDerived { color: var(--rb-derived); font-style: normal; }
+.calculationChip { color: var(--rb-derived); background: white; border-color: var(--rb-derived-line); }
+.calculationChip:hover { color: var(--rb-derived-hover); background: var(--rb-derived-tint); border-color: var(--rb-derived); }
+.sourceN, .sourceLink { color: var(--accent); }
+.updated { background: none; border-left: 3px solid #62d6df; }
+@media (max-width: 860px) {
+  .sheet { border: 1px solid #c6e1e8; border-top: 4px solid #62d6df; border-radius: 8px; padding: 24px 20px; }
+  .patient { font-size: 30px; }
+  .sectionTitle { font-size: 21px; }
+  .chip { min-height: 36px; }
+}
+
+/* The brief remains one open white sheet with internal document rules. */
+.sheet { border: 0; }
+
+/* Inline citations use a tinted highlight instead of an action-button outline. */
+.keep { white-space: nowrap; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  vertical-align: baseline;
+  margin-left: 3px;
+  min-width: 40px;
+  max-width: 100%;
+  min-height: 24px;
+  padding: 3px 7px;
+  border: 0;
+  border-radius: var(--control-radius);
+  background: var(--accent-wash);
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.chip:hover {
+  background: var(--accent);
+  color: white;
+}
+.chip.calculationChip {
+  background: var(--rb-derived-tint);
+  color: var(--rb-derived);
+}
+.chip.calculationChip:hover {
+  background: var(--rb-derived);
+  color: white;
+}
+.chipDerived { color: inherit; }
+.chip.calculationChip:focus-visible {
+  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--rb-derived);
+}
+@media (max-width: 860px) {
+  .chip { min-width: 48px; min-height: 28px; padding: 4px 8px; }
+}

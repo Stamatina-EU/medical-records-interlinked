@@ -1,3 +1,7 @@
+import { demoProfile } from "@/lib/demo/profile";
+import { readRichRecord } from "@/lib/demo/store";
+import RichShell from "@/components/rich/RichShell";
+import RichRecord from "@/components/rich/RichRecord";
 /**
  * Recordbook presentation of the existing snapshot and evidence models.
  * The deterministic engines and trusted state remain unchanged.
@@ -18,6 +22,7 @@ import { isEmptyRecord } from "@/lib/view/emptyRecord";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  if(demoProfile()==="rich"){const {record}=await readRichRecord();return <RichShell state={record} integrated><RichRecord state={record} integrated/></RichShell>;}
   let state;
   try {
     state = await readState();
@@ -34,7 +39,7 @@ export default async function HomePage() {
   if (isEmptyRecord(state)) {
     return (
       <EvidenceProvider index={index}>
-        <main className="page">
+        <main className="page utilityPage">
           <SnapshotHeader
             name={view.patientName}
             lastUpdated={view.lastUpdated}
@@ -48,8 +53,8 @@ export default async function HomePage() {
   }
 
   return (
-    <EvidenceProvider index={index}>
-      <main className={`page ${visual.theme} ${visual.pageCanvas}`}>
+    <EvidenceProvider index={index} visualDirection="proposal-1">
+      <main className={`page ${visual.theme} ${visual.pageCanvas} ${visual.proposalTheme} ${visual.lockedRecord}`}>
         <RecordBook state={state} view={view} index={index} />
       </main>
     </EvidenceProvider>

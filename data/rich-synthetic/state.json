@@ -1,0 +1,379 @@
+{
+  "version": 1,
+  "profile": "rich-synthetic",
+  "readOnly": true,
+  "patient": {
+    "displayName": "Laurence Mercer"
+  },
+  "seededAt": "2026-09-01T09:00:00.000Z",
+  "latestUpdate": null,
+  "documents": [
+    {
+      "id": "doc-02",
+      "title": "Imaging Report",
+      "documentType": "imaging_report",
+      "issuer": "Harbourview Imaging Centre",
+      "date": "2025-09-10",
+      "file": "d2-imaging-report-2025-09-10.pdf",
+      "pageCount": 1,
+      "origin": "seed"
+    },
+    {
+      "id": "doc-04",
+      "title": "Consultation Note",
+      "documentType": "consultation_note",
+      "issuer": "Elm Street Primary Care",
+      "date": "2026-02-03",
+      "file": "d4-consultation-note-2026-02-03.pdf",
+      "pageCount": 1,
+      "origin": "seed"
+    },
+    {
+      "id": "doc-05",
+      "title": "Prescription",
+      "documentType": "prescription",
+      "issuer": "Elm Street Primary Care",
+      "date": "2026-02-03",
+      "file": "d5-prescription-2026-02-03.pdf",
+      "pageCount": 1,
+      "origin": "seed"
+    },
+    {
+      "id": "doc-06",
+      "title": "Imaging Report",
+      "documentType": "imaging_report",
+      "issuer": "Harbourview Imaging Centre",
+      "date": "2026-03-12",
+      "file": "d6-imaging-report-2026-03-12.pdf",
+      "pageCount": 1,
+      "origin": "seed"
+    },
+    {
+      "id": "rich-lab-2025-03-14",
+      "title": "Laboratory Report",
+      "documentType": "lab_report",
+      "issuer": "Northfield Diagnostics",
+      "date": "2025-03-14",
+      "file": "rich-lab-2025-03-14.pdf",
+      "pageCount": 1,
+      "origin": "seed"
+    },
+    {
+      "id": "rich-lab-2026-01-27",
+      "title": "Laboratory Report",
+      "documentType": "lab_report",
+      "issuer": "Riverside Clinical Laboratory",
+      "date": "2026-01-27",
+      "file": "rich-lab-2026-01-27.pdf",
+      "pageCount": 1,
+      "origin": "seed"
+    },
+    {
+      "id": "rich-ed-2025-08-19",
+      "title": "Emergency Department Note",
+      "documentType": "other",
+      "issuer": "Harbourview Emergency Department",
+      "date": "2025-08-19",
+      "file": "rich-ed-2025-08-19.pdf",
+      "pageCount": 1,
+      "origin": "seed"
+    }
+  ],
+  "episodes": [
+    {
+      "id": "ep-oral-iron",
+      "topic": "iron",
+      "name": "Oral iron (ferrous sulfate)"
+    }
+  ],
+  "facts": [
+    {
+      "id": "img-thyroid-2025-09-10",
+      "source": {
+        "documentId": "doc-02",
+        "page": 1,
+        "verifiedExcerpt": "Thyroid ultrasound performed on 10 Sep 2025.\nThe thyroid gland is normal in size.\nA well-defined 9 mm nodule is seen in the right lobe."
+      },
+      "review": "APPROVED",
+      "kind": "imaging_exam",
+      "topic": "imaging",
+      "examName": "Thyroid ultrasound",
+      "performedOn": "2025-09-10",
+      "statement": "A well-defined 9 mm nodule is seen in the right lobe.",
+      "comparesToDocumentId": null
+    },
+    {
+      "id": "fu-imaging-2025-09-10",
+      "source": {
+        "documentId": "doc-02",
+        "page": 1,
+        "verifiedExcerpt": "Follow-up ultrasound in 6 months is recommended."
+      },
+      "review": "APPROVED",
+      "kind": "follow_up",
+      "topic": "imaging",
+      "recommendation": "Follow-up ultrasound in 6 months is recommended.",
+      "intervalText": "6 months",
+      "target": {
+        "examName": "Thyroid ultrasound"
+      },
+      "recommendedOn": "2025-09-10"
+    },
+    {
+      "id": "fu-ferritin-2026-02-03",
+      "source": {
+        "documentId": "doc-04",
+        "page": 1,
+        "verifiedExcerpt": "Repeat ferritin in 3 months."
+      },
+      "review": "APPROVED",
+      "kind": "follow_up",
+      "topic": "iron",
+      "recommendation": "Repeat ferritin in 3 months.",
+      "intervalText": "3 months",
+      "target": {
+        "analyte": "ferritin"
+      },
+      "recommendedOn": "2026-02-03"
+    },
+    {
+      "id": "med-oral-iron-2026-02-03-prescribed",
+      "source": {
+        "documentId": "doc-05",
+        "page": 1,
+        "verifiedExcerpt": "Prescribed: ferrous sulfate 200 mg tablets, one tablet once daily for 3 months."
+      },
+      "review": "APPROVED",
+      "kind": "medication_status",
+      "episodeId": "ep-oral-iron",
+      "status": "Prescribed",
+      "documentedOn": "2026-02-03"
+    },
+    {
+      "id": "img-thyroid-2026-03-12",
+      "source": {
+        "documentId": "doc-06",
+        "page": 1,
+        "verifiedExcerpt": "Thyroid ultrasound of 12 Mar 2026 compared with the thyroid ultrasound of 10 Sep 2025.\nThe right lobe nodule measures 9 mm, unchanged in size compared with the previous examination."
+      },
+      "review": "APPROVED",
+      "kind": "imaging_exam",
+      "topic": "imaging",
+      "examName": "Thyroid ultrasound",
+      "performedOn": "2026-03-12",
+      "statement": "The right lobe nodule measures 9 mm, unchanged in size compared with the previous examination.",
+      "comparesToDocumentId": "doc-02"
+    },
+    {
+      "id": "fu-imaging-2026-03-12",
+      "source": {
+        "documentId": "doc-06",
+        "page": 1,
+        "verifiedExcerpt": "Follow-up ultrasound in 12 months is recommended."
+      },
+      "review": "APPROVED",
+      "kind": "follow_up",
+      "topic": "imaging",
+      "recommendation": "Follow-up ultrasound in 12 months is recommended.",
+      "intervalText": "12 months",
+      "target": {
+        "examName": "Thyroid ultrasound"
+      },
+      "recommendedOn": "2026-03-12"
+    },
+    {
+      "id": "rich-ferritin-2025-03-14",
+      "source": {
+        "documentId": "rich-lab-2025-03-14",
+        "page": 1,
+        "verifiedExcerpt": "Ferritin on 14 Mar 2025: 11 μg/L (supplied range 30–400 μg/L)."
+      },
+      "review": "APPROVED",
+      "kind": "lab_measurement",
+      "value": 11,
+      "unit": "μg/L",
+      "refLow": 30,
+      "refHigh": 400,
+      "refText": "30–400",
+      "measuredOn": "2025-03-14",
+      "topic": "iron",
+      "analyte": "ferritin"
+    },
+    {
+      "id": "rich-tsh-2025-03-14",
+      "source": {
+        "documentId": "rich-lab-2025-03-14",
+        "page": 1,
+        "verifiedExcerpt": "TSH on 14 Mar 2025: 5.6 mIU/L (supplied range 0.4–4 mIU/L)."
+      },
+      "review": "APPROVED",
+      "kind": "lab_measurement",
+      "value": 5.6,
+      "unit": "mIU/L",
+      "refLow": 0.4,
+      "refHigh": 4,
+      "refText": "0.4–4",
+      "measuredOn": "2025-03-14",
+      "topic": "laboratory",
+      "analyte": "tsh"
+    },
+    {
+      "id": "rich-vitamin_d-2025-03-14",
+      "source": {
+        "documentId": "rich-lab-2025-03-14",
+        "page": 1,
+        "verifiedExcerpt": "Vitamin D (25-OH) on 14 Mar 2025: 18 ng/mL (supplied range 30–100 ng/mL)."
+      },
+      "review": "APPROVED",
+      "kind": "lab_measurement",
+      "value": 18,
+      "unit": "ng/mL",
+      "refLow": 30,
+      "refHigh": 100,
+      "refText": "30–100",
+      "measuredOn": "2025-03-14",
+      "topic": "laboratory",
+      "analyte": "vitamin_d"
+    },
+    {
+      "id": "rich-crp-2025-03-14",
+      "source": {
+        "documentId": "rich-lab-2025-03-14",
+        "page": 1,
+        "verifiedExcerpt": "C-reactive protein on 14 Mar 2025: 6.2 mg/L (supplied range 0–5 mg/L)."
+      },
+      "review": "APPROVED",
+      "kind": "lab_measurement",
+      "value": 6.2,
+      "unit": "mg/L",
+      "refLow": 0,
+      "refHigh": 5,
+      "refText": "0–5",
+      "measuredOn": "2025-03-14",
+      "topic": "laboratory",
+      "analyte": "crp"
+    },
+    {
+      "id": "rich-creatinine-2025-03-14",
+      "source": {
+        "documentId": "rich-lab-2025-03-14",
+        "page": 1,
+        "verifiedExcerpt": "Creatinine on 14 Mar 2025: 0.86 mg/dL (supplied range 0.6–1.2 mg/dL)."
+      },
+      "review": "APPROVED",
+      "kind": "lab_measurement",
+      "value": 0.86,
+      "unit": "mg/dL",
+      "refLow": 0.6,
+      "refHigh": 1.2,
+      "refText": "0.6–1.2",
+      "measuredOn": "2025-03-14",
+      "topic": "laboratory",
+      "analyte": "creatinine"
+    },
+    {
+      "id": "rich-ferritin-2026-01-27",
+      "source": {
+        "documentId": "rich-lab-2026-01-27",
+        "page": 1,
+        "verifiedExcerpt": "Ferritin on 27 Jan 2026: 19.6 μg/L (supplied range 15–150 μg/L)."
+      },
+      "review": "APPROVED",
+      "kind": "lab_measurement",
+      "value": 19.6,
+      "unit": "μg/L",
+      "refLow": 15,
+      "refHigh": 150,
+      "refText": "15–150",
+      "measuredOn": "2026-01-27",
+      "topic": "iron",
+      "analyte": "ferritin"
+    },
+    {
+      "id": "rich-tsh-2026-01-27",
+      "source": {
+        "documentId": "rich-lab-2026-01-27",
+        "page": 1,
+        "verifiedExcerpt": "TSH on 27 Jan 2026: 3.2 mIU/L (supplied range 0.4–4 mIU/L)."
+      },
+      "review": "APPROVED",
+      "kind": "lab_measurement",
+      "value": 3.2,
+      "unit": "mIU/L",
+      "refLow": 0.4,
+      "refHigh": 4,
+      "refText": "0.4–4",
+      "measuredOn": "2026-01-27",
+      "topic": "laboratory",
+      "analyte": "tsh"
+    },
+    {
+      "id": "rich-vitamin_d-2026-01-27",
+      "source": {
+        "documentId": "rich-lab-2026-01-27",
+        "page": 1,
+        "verifiedExcerpt": "Vitamin D (25-OH) on 27 Jan 2026: 24 ng/mL (supplied range 30–100 ng/mL)."
+      },
+      "review": "APPROVED",
+      "kind": "lab_measurement",
+      "value": 24,
+      "unit": "ng/mL",
+      "refLow": 30,
+      "refHigh": 100,
+      "refText": "30–100",
+      "measuredOn": "2026-01-27",
+      "topic": "laboratory",
+      "analyte": "vitamin_d"
+    },
+    {
+      "id": "rich-crp-2026-01-27",
+      "source": {
+        "documentId": "rich-lab-2026-01-27",
+        "page": 1,
+        "verifiedExcerpt": "C-reactive protein on 27 Jan 2026: 3.1 mg/L (supplied range 0–5 mg/L)."
+      },
+      "review": "APPROVED",
+      "kind": "lab_measurement",
+      "value": 3.1,
+      "unit": "mg/L",
+      "refLow": 0,
+      "refHigh": 5,
+      "refText": "0–5",
+      "measuredOn": "2026-01-27",
+      "topic": "laboratory",
+      "analyte": "crp"
+    },
+    {
+      "id": "rich-creatinine-2026-01-27",
+      "source": {
+        "documentId": "rich-lab-2026-01-27",
+        "page": 1,
+        "verifiedExcerpt": "Creatinine on 27 Jan 2026: 0.92 mg/dL (supplied range 0.6–1.2 mg/dL)."
+      },
+      "review": "APPROVED",
+      "kind": "lab_measurement",
+      "value": 0.92,
+      "unit": "mg/dL",
+      "refLow": 0.6,
+      "refHigh": 1.2,
+      "refText": "0.6–1.2",
+      "measuredOn": "2026-01-27",
+      "topic": "laboratory",
+      "analyte": "creatinine"
+    },
+    {
+      "id": "rich-incident-2025-08-18",
+      "source": {
+        "documentId": "rich-ed-2025-08-19",
+        "page": 1,
+        "verifiedExcerpt": "Incident date: 18 Aug 2025. Anaphylaxis occurred after amoxicillin. Epinephrine was administered in the\nemergency department."
+      },
+      "review": "APPROVED",
+      "kind": "documented_incident",
+      "topic": "incidents",
+      "statement": "Anaphylaxis occurred after amoxicillin. Epinephrine was administered in the emergency department.",
+      "occurredOn": "2025-08-18",
+      "documentedOn": "2025-08-19"
+    }
+  ]
+}

@@ -90,3 +90,16 @@ button {
     padding-top: 24px;
   }
 }
+
+/* Empty/error views remain legible within the shared blue environment. */
+.utilityPage {
+  margin: 28px auto;
+  background: #fff;
+  border: 0;
+  border-radius: 8px;
+  color: var(--ink);
+  box-shadow: 0 8px 24px #123f4929;
+}
+@media (max-width: 860px) {
+  .utilityPage { margin: 24px 16px; padding: 24px 20px; }
+}

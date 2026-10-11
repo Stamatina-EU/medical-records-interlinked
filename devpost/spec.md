@@ -5,6 +5,8 @@ status: approved
 
 # MRI — Technical Spec
 
+> Final implementation: [rich-record integration](rich-record-integration.md) documents the rich default, approved live overlay, completed Summary and preserved legacy profile. The original specification below describes the initial legacy story.
+
 *Positioning (`scope.md > Context and Positioning`): a trust layer for medical documents outside structured health records. It is not an EHR, an EHR or government health-system integration, or a patient portal. This note doesn't change the architecture below.*
 
 Implements `prd.md` (approved) within `scope.md > The POC Boundary`.

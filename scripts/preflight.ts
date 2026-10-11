@@ -8,6 +8,9 @@
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { demoProfile } from "../lib/demo/profile";
+import { readBaseline,emptyOverlay,composeRecord } from "../lib/demo/store";
+import { liveContext,dedupeLive } from "../lib/demo/record";
 import type { TrustedState } from "../lib/model/types";
 import { readPdfPages } from "../lib/extraction/pdfText";
 import { verifyExtraction } from "../lib/extraction/verify";
@@ -34,9 +37,11 @@ async function main() {
     process.exit(1);
   }
 
-  const seed = JSON.parse(await readFile(path.join(root, "data", "seed", "state.json"), "utf8")) as TrustedState;
+  const profile=demoProfile();
+  const rich=profile==="rich" ? await readBaseline() : null;
+  const seed=rich ? liveContext(composeRecord(rich.baseline,emptyOverlay(rich.digest))) : JSON.parse(await readFile(path.join(root,"data","seed","state.json"),"utf8")) as TrustedState;
   const pages = await readPdfPages(new Uint8Array(await readFile(NOTE)));
-  console.log(`Preflight: ${runs} run(s) · model ${model} · effort ${effort} · ${pages.length} page(s)\n`);
+  console.log(`Preflight (${profile} baseline): ${runs} run(s) · model ${model} · effort ${effort} · ${pages.length} page(s)\n`);
 
   let passed = 0;
   for (let i = 1; i <= runs; i++) {
@@ -54,7 +59,7 @@ async function main() {
         console.log(`${line}FAIL (${secs}s, ${call.model}) — unusable after verification: ${outcome.reason}\n`);
         continue;
       }
-      const { fresh, duplicates } = dedupe(seed.facts, outcome.verified);
+      const { fresh, duplicates } = (profile==="rich" ? dedupeLive : dedupe)(seed.facts, outcome.verified);
 
       const lab = fresh.find(
         (f) =>

@@ -11,6 +11,7 @@ import { useEvidence } from "@/components/evidence/EvidenceProvider";
 import { documentShortLabel } from "@/lib/evidence/index";
 import { DocIcon } from "@/components/shell/icons";
 import styles from "./ui.module.css";
+import VisualIcon from "./VisualIcon";
 
 export function FactValue({
   factId,
@@ -98,37 +99,53 @@ export function CalculatedLabel({
   claimKey: string;
   label?: string;
 }) {
-  const { open, index } = useEvidence();
+  const { open, index, visualDirection } = useEvidence();
+  const recordbookPresentation = visualDirection === "proposal-1";
   const claim = index.claims[claimKey];
   if (!claim) return null;
   const text = label ?? claim.text;
   // a label made of "·"-separated parts ("2 ferritin results · latest in record") breaks only after a separator,
   // never inside a part; a label without separators wraps as ordinary text
   const parts = text.split(" · ");
+  const inlineLabel = recordbookPresentation && Boolean(label);
+  const labelContent = (
+    <span className={styles.calcText}>
+      {parts.length === 1
+        ? text
+        : parts.map((part, i) => (
+            <Fragment key={i}>
+              {i > 0 && " "}
+              <span className={styles.calcPart}>
+                {i < parts.length - 1 ? `${part} ·` : part}
+              </span>
+            </Fragment>
+          ))}
+    </span>
+  );
   return (
     <button
       type="button"
       className={styles.calculated}
       data-evidence-kind="derived"
+      data-calculation-layout={inlineLabel ? "inline" : undefined}
       onClick={() => open({ type: "claim", key: claimKey })}
-      aria-label={`${text} (derived — show how this was determined)`}
-      title="Derived from your records — show how this was determined"
+      aria-label={recordbookPresentation ? `${text} (calculated from your records — show how this was determined)` : `${text} (derived — show how this was determined)`}
+      title={recordbookPresentation ? "Calculated from your records — show how this was determined" : "Derived from your records — show how this was determined"}
     >
-      {/* one inline run: the label wraps as text, and "· derived" stays attached to its last word */}
+      {/* Shared calculation presentation; claim text and evidence semantics remain unchanged. */}
       <span className={styles.calcRun}>
-        <span className={styles.calcText}>
-          {parts.length === 1
-            ? text
-            : parts.map((part, i) => (
-                <Fragment key={i}>
-                  {i > 0 && " "}
-                  <span className={styles.calcPart}>
-                    {i < parts.length - 1 ? `${part} ·` : part}
-                  </span>
-                </Fragment>
-              ))}
-        </span>
-        <span className={styles.calcTag}>derived</span>
+        {inlineLabel ? (
+          <span className={styles.calcLead}>
+            <VisualIcon name="network" size={16} />
+            {labelContent}
+          </span>
+        ) : (
+          <>
+            {recordbookPresentation && <VisualIcon name="network" size={16} />}
+            {labelContent}
+          </>
+        )}
+        <span className={styles.calcTag}>{recordbookPresentation ? (label ? "Calculated from your records" : "How this was calculated") : "derived"}</span>
       </span>
     </button>
   );

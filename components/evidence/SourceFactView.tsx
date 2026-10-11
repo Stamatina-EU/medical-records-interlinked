@@ -1,6 +1,6 @@
 "use client";
 /** Drawer view for a SOURCE FACT: value, document, date, page, verified excerpt. */
-import type { SourceFact } from "@/lib/model/types";
+import type { RecordSourceFact } from "@/lib/model/rich";
 import type { EvidenceIndex } from "@/lib/evidence/index";
 import { factHeadline } from "@/lib/evidence/index";
 import { formatDate } from "@/lib/text/dates";
@@ -8,7 +8,7 @@ import styles from "./evidence.module.css";
 import VisualIcon from "@/components/ui/VisualIcon";
 
 type Props = {
-  fact: SourceFact;
+  fact: RecordSourceFact;
   index: EvidenceIndex;
   onOpenDocument: (documentId: string, page: number) => void;
 };
@@ -18,7 +18,7 @@ export default function SourceFactView({ fact, index, onOpenDocument }: Props) {
   const { label, value } = factHeadline(fact, index.episodes);
 
   return (
-    <div className={styles.sourceView}>
+    <div className={styles.sourceView} data-fact-kind={fact.kind}>
       <div className={styles.factHeader}>
         <p className={styles.kind}>
           <VisualIcon name="files" size={19} />
@@ -30,6 +30,12 @@ export default function SourceFactView({ fact, index, onOpenDocument }: Props) {
           <p className={styles.factMeta}>
             Supplied range {fact.refText} {fact.unit} · measured{" "}
             {formatDate(fact.measuredOn)}
+          </p>
+        )}
+        {fact.kind === "documented_incident" && (
+          <p className={styles.factMeta}>
+            {fact.occurredOn ? `Incident date ${formatDate(fact.occurredOn)}` : "Incident date not supplied"}
+            {" · Document date "}{formatDate(fact.documentedOn)}
           </p>
         )}
         {fact.kind === "follow_up" && (
@@ -84,6 +90,8 @@ export default function SourceFactView({ fact, index, onOpenDocument }: Props) {
       <p className={styles.excerptNote}>
         {doc?.origin === "added"
           ? "Added with your approval"
+          : index.profile === "rich-synthetic"
+          ? "Code-owned synthetic fixture · verified against its PDF"
           : "Approved synthetic seed fact"}
       </p>
       {doc && (

@@ -11,7 +11,15 @@
     "verify:seed": "tsx scripts/verify-seed.ts",
     "corpus:build": "tsx scripts/build-corpus.ts",
     "preflight": "tsx scripts/preflight.ts",
-    "demo:reset": "tsx scripts/demo-reset.ts"
+    "demo:reset": "tsx scripts/demo-reset.ts",
+    "verify:rich": "tsx scripts/verify-rich.ts",
+    "corpus:rich": "tsx scripts/build-rich-corpus.ts",
+    "start:legacy": "tsx scripts/run-profile.ts legacy start",
+    "dev:legacy": "tsx scripts/run-profile.ts legacy dev",
+    "start:rich": "tsx scripts/run-profile.ts rich start",
+    "demo:reset:legacy": "tsx scripts/demo-reset.ts --legacy",
+    "demo:reset:rich": "tsx scripts/demo-reset.ts --rich",
+    "typecheck": "tsc --noEmit"
   },
   "engines": {
     "node": ">=22.12.0"

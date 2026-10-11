@@ -1,3 +1,5 @@
+import { demoProfile } from "@/lib/demo/profile";
+import { richDocument } from "@/lib/demo/document";
 /**
  * Document Route — streams the PDF for a KNOWN document id only. Spec: `spec.md > Document Route`.
  * Unknown id -> 404. The file name comes from trusted state, never from the request.
@@ -11,6 +13,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  if (demoProfile() === "rich") return richDocument(id);
   let doc;
   try {
     doc = (await readState()).documents.find((d) => d.id === id);

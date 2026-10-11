@@ -4,36 +4,37 @@
  * Colour signals INTERFACE STATE, never medical judgement: no red / amber / green anywhere.
  * Fonts are swappable in one place: app/layout.tsx maps next/font families to
  * --font-ui-family and --font-evidence-family; components only use --font-ui / --font-evidence
- * (plus --font-brand, used only by the logo descriptor in the nav shell).
+ * (plus --font-brand for the logo and --font-interface for desktop header navigation).
  */
 :root {
-  /* Flat, very pale seafoam atmosphere (no gradient); content surfaces stay warm white. */
-  --paper: #f5f3ed;
-  --nav-bg: #eeece5;
+  /* Approved Proposal 1: blue atmosphere around white medical reading surfaces. */
+  --paper: #236b87;
+  --nav-bg: #25233e;
   --surface: #ffffff;
-  --surface-raised: #fffdf9;
-  --surface-sunk: #e9eee9;
-  --ink: #1f2328;
-  --ink-muted: #5b6068;
-  --ink-faint: #8a8f96;
-  --rule: #dfddd4;
-  --rule-strong: #cfcec4;
+  --surface-raised: #ffffff;
+  --surface-sunk: #edf4f7;
+  --ink: #16394f;
+  --ink-muted: #4b6174;
+  --ink-faint: #6b8190;
+  --rule: #d6e3ea;
+  --rule-strong: #b9cdd8;
 
-  /* deep petrol teal: white text on --accent is ~7.8:1 (WCAG AAA) */
-  --accent: #235a5d;
-  --accent-hover: #1a474a;
-  --accent-wash: #d2e6e2;
-  --accent-ink: #173f42;
+  /* Source and document actions use indigo blue; clinical values remain neutral. */
+  --accent: #365ca8;
+  --accent-hover: #294782;
+  --accent-wash: #edf1fb;
+  --accent-ink: #16455c;
 
-  --evidence-paper: #fffdf7;
-  --evidence-border: #e6dfcf;
-  --evidence-mark: #f3ecd9;
+  --evidence-paper: #ffffff;
+  --evidence-border: #aad7e2;
+  --evidence-mark: #e0f6f8;
 
   --font-ui:
     var(--font-ui-family), "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-evidence:
     var(--font-evidence-family), Georgia, "Times New Roman", serif;
   --font-brand: var(--font-brand-family), "Segoe UI", system-ui, sans-serif;
+  --font-interface: var(--font-brand);
 
   --text-xs: 0.8125rem;
   --text-sm: 0.875rem;
@@ -51,7 +52,7 @@
   --space-6: 32px;
   --space-7: 48px;
 
-  --radius: 6px;
+  --radius: 8px;
   --radius-lg: 8px;
   --shadow-1:
     0 1px 2px rgba(31, 35, 40, 0.04), 0 1px 1px rgba(31, 35, 40, 0.03);
@@ -63,6 +64,26 @@
   --content-max: 1120px;
   --tabbar-height: 64px;
   --topbar-height: 56px;
+  --record-header-height: 177px;
+  --record-environment-offset: 93px;
   --drawer-width: 460px;
   --touch: 44px;
+}
+
+@media (max-width: 860px) {
+  :root { --record-header-height: 144px; --record-environment-offset: 110px; }
+}
+
+/* Shared action geometry; colour and wording keep their own roles. */
+:root {
+  --control-radius: 8px;
+  --control-padding: 8px 14px;
+  --control-height: 44px;
+  --control-min-width: 96px;
+  --reference-control-padding: 4px 8px;
+  --reference-control-height: 28px;
+  --reference-control-min-width: calc(2 * var(--reference-control-height));
+}
+@media (max-width: 860px) {
+  :root { --reference-control-height: 36px; }
 }

@@ -19,6 +19,7 @@ import DocumentViewerModal from "./DocumentViewerModal";
 type Ctx = {
   index: EvidenceIndex;
   open: (ref: EvidenceRef) => void;
+  visualDirection?: "proposal-1";
 };
 
 const EvidenceContext = createContext<Ctx | null>(null);
@@ -33,9 +34,11 @@ export function useEvidence(): Ctx {
 export default function EvidenceProvider({
   index,
   children,
+  visualDirection = "proposal-1",
 }: {
   index: EvidenceIndex;
   children: React.ReactNode;
+  visualDirection?: "proposal-1";
 }) {
   const [stack, setStack] = useState<EvidenceRef[]>([]);
   const [viewer, setViewer] = useState<{
@@ -54,7 +57,7 @@ export default function EvidenceProvider({
     setStack([]);
   }, []);
 
-  const value = useMemo(() => ({ index, open }), [index, open]);
+  const value = useMemo(() => ({ index, open, visualDirection }), [index, open, visualDirection]);
 
   return (
     <EvidenceContext.Provider value={value}>
@@ -64,6 +67,7 @@ export default function EvidenceProvider({
         {children}
       </div>
       <EvidenceDrawer
+        visualDirection={visualDirection}
         index={index}
         current={stack[stack.length - 1] ?? null}
         canGoBack={stack.length > 1}
@@ -76,6 +80,7 @@ export default function EvidenceProvider({
       {viewer && (
         <DocumentViewerModal
           document={index.documents[viewer.documentId]}
+          documentUrlBase={index.documentUrlBase}
           page={viewer.page}
           onClose={() => setViewer(null)}
         />

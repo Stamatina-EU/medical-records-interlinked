@@ -8,5 +8,7 @@ export default defineConfig({
   test: {
     include: ["tests/**/*.test.ts"],
     environment: "node",
+    // Original tests exercise the preserved legacy profile; integration tests explicitly select rich.
+    env: { MRI_DEMO_PROFILE: "legacy" },
   },
 });

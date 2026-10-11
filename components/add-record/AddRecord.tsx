@@ -8,6 +8,8 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { RecordState } from "@/lib/demo/model";
+import { previewRecord,liveContext } from "@/lib/demo/record";
 import type { Proposal, TrustedState } from "@/lib/model/types";
 import { preview } from "@/lib/engine/apply";
 import { formatDate } from "@/lib/text/dates";
@@ -32,7 +34,7 @@ type Phase =
   | {
       kind: "review";
       proposal: Proposal;
-      state: TrustedState;
+      state: TrustedState | RecordState;
       rejected: Set<string>;
       applyProblem?: ApprovalProblem;
       uncertainBefore?: boolean;
@@ -40,7 +42,7 @@ type Phase =
   | {
       kind: "applying";
       proposal: Proposal;
-      state: TrustedState;
+      state: TrustedState | RecordState;
       rejected: Set<string>;
       applyProblem?: undefined;
       uncertainBefore?: boolean;
@@ -435,7 +437,7 @@ export function Review({
     .filter((f) => !rejected.has(f.id))
     .map((f) => f.id);
   const lines = useMemo(
-    () => preview(state, proposal, approvedIds),
+    () => "profile" in state ? previewRecord(state,proposal,approvedIds) : preview(state, proposal, approvedIds),
     [state, proposal, approvedIds.join("|")],
   ); // eslint-disable-line react-hooks/exhaustive-deps
   const doc = proposal.document;
@@ -474,11 +476,12 @@ export function Review({
       </p>
       <ul className={styles.facts}>
         {proposal.facts.map((f) => {
-          const { label, value } = reviewFactHeadline(f, state);
+          const { label, value } = reviewFactHeadline(f, "profile" in state ? liveContext(state) : state);
           const isRejected = rejected.has(f.id);
           return (
             <li
               key={f.id}
+              data-fact-kind={f.kind}
               className={
                 isRejected
                   ? `${styles.fact} ${styles.factRejected}`
@@ -524,7 +527,7 @@ export function Review({
       {lines.length > 0 ? (
         <ul className={styles.consequences}>
           {lines.map((l) => (
-            <li key={l.text}>
+            <li key={l.text} data-consequence-kind={l.ref.type}>
               <span className={styles.previewKind}>
                 {l.ref.type === "claim"
                   ? "Calculated from your records"

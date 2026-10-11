@@ -3,7 +3,7 @@
 }
 .main {
   min-height: 100vh;
-  padding-top: 92px;
+  padding-top: var(--record-header-height);
 }
 .brand {
   display: flex;
@@ -25,7 +25,7 @@
 .sidebar {
   position: fixed;
   inset: 0 0 auto;
-  height: 92px;
+  height: var(--record-header-height);
   padding: 0 4vw;
   display: flex;
   align-items: center;
@@ -92,14 +92,14 @@
     display: none;
   }
   .main {
-    padding-top: 64px;
+    padding-top: var(--record-header-height);
     padding-bottom: calc(76px + env(safe-area-inset-bottom));
   }
   .topbar {
     display: flex;
     position: fixed;
     inset: 0 0 auto;
-    height: 64px;
+    height: var(--record-header-height);
     align-items: center;
     padding: 0 20px;
     background: var(--paper);
@@ -159,7 +159,7 @@
 .mobileAction {
   margin-left: auto;
 }
-.mobileAction button {
+.mobileAction > button {
   padding: 0 12px;
   font-size: 13px;
 }
@@ -176,4 +176,146 @@
   max-width: 78px;
   text-align: center;
   line-height: 1.15;
+}
+
+/* Approved indigo shell and spectral boundary across all destinations. */
+.recordNav { --record-radius: 8px; }
+.sidebar.recordNav,
+.topbar.recordNav {
+  background: #25284f;
+  color: #fff;
+  border-bottom: 0;
+  box-shadow: none;
+}
+.sidebar.recordNav::after,
+.topbar.recordNav::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 187px;
+  background-image: url('/recordbook/reference-satin-ribbon-v2.png');
+  background-size: 100% 300px;
+  background-repeat: no-repeat;
+  background-position: center top;
+  pointer-events: none;
+}
+.recordNav .mark { width: 128px; height: 40px; }
+.recordNav .descriptor { color: #f0edf8; font-size: 11px; }
+.recordNav .ownerNote { color: #d1cde4; }
+.recordNav .sideItem {
+  color: #f6f4fc;
+  background: #ffffff08;
+  border: 0;
+  border-radius: var(--record-radius);
+}
+.recordNav .sideItem:hover { color: white; background: #4773bf; border-color: #4773bf; }
+.recordNav .sideItemActive { color: white; background: var(--accent); box-shadow: none; }
+.recordNav .sideItemActive:hover { background: #4773bf; }
+.recordNav .sideItem:hover:not(:focus-visible) { box-shadow: none; }
+.recordNav .sideItem:focus-visible,
+.recordNav .brand:focus-visible { box-shadow: 0 0 0 2px #25233e, 0 0 0 4px #7de5ee; }
+.tabbar.recordNav { background: #fff; border: 0; }
+.recordNav .tab { color: #435c70; }
+.recordNav .tabActive { color: white; background: var(--accent); box-shadow: none; }
+@media (max-width: 860px) {
+  .topbar.recordNav .mark { width: 108px; height: 34px; }
+  .topbar.recordNav .descriptor { font-size: 11px; line-height: 1.4; }
+  .topbar.recordNav::after { top: 35px; bottom: auto; height: 109px; background-size: 100% 174px; }
+}
+
+.recordNav .navAction > button,
+.recordNav .mobileAction > button {
+  background: #fff;
+  color: #16455c;
+  border: 0;
+  border-radius: 8px;
+}
+.recordNav .navAction > button:hover,
+.recordNav .mobileAction > button:hover { background: var(--accent); color: white; border-color: var(--accent); }
+@media (max-width: 1000px) and (min-width: 861px) {
+  .recordNav .sideItem { padding: 0 9px; gap: 6px; }
+  .sidebar.recordNav { gap: 20px; }
+}
+
+/* Header-originated Add record modals cover sibling navigation and Evidence. */
+.sidebar:has([role="dialog"]),
+.topbar:has([role="dialog"]) {
+  z-index: 80;
+}
+
+/* Compact the space above the logo while preserving the ribbon and blue below it. */
+.sidebar.recordNav { padding-top: 30px; padding-bottom: 85px; }
+@media (max-width: 860px) {
+  .topbar.recordNav { padding-top: 10px; padding-bottom: 54px; }
+}
+
+/* The full coloured ribbon and its glow sit inside the opaque header. */
+.sidebar.recordNav::before, .topbar.recordNav::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 112px;
+  background: #25284f;
+  z-index: -1;
+  pointer-events: none;
+}
+@media (max-width: 860px) {
+  .topbar.recordNav::before { height: 76px; }
+}
+
+.recordNav .sideItem,
+.recordNav .navAction > button,
+.recordNav .mobileAction > button {
+  min-width: min(100%, var(--control-min-width));
+  max-width: 100%;
+  flex-shrink: 0;
+  min-height: var(--control-height);
+  padding: var(--control-padding);
+  border-radius: var(--control-radius);
+}
+
+/* Selective Montserrat: navigation repeats the logo descriptor's regular face. */
+.recordNav .sideItem {
+  font-family: var(--font-interface);
+  font-weight: 400;
+}
+.recordNav .sideItem { font-size: 13px; }
+@media (min-width: 861px) and (max-width: 1000px) {
+  .recordNav .sideItem { font-size: 12px; }
+}
+
+/* Supplied dark lockup: preserve its complete vector artwork and proportions. */
+.lockup { display: block; width: 154px; height: auto; }
+@media (max-width: 860px) {
+  .topbar.recordNav .lockup { width: 136px; }
+}
+
+/* The full-height dock reserves header space as well as the reading column. */
+@media (min-width: 1101px) {
+  .shell:has(:global([data-evidence-type][aria-label="Evidence"])) .sidebar.recordNav {
+    right: 440px;
+    padding-inline: 24px;
+    gap: 24px;
+  }
+  .shell:has(:global([data-evidence-type][aria-label="Evidence"])) .owner { display: none; }
+}
+@media (min-width: 1101px) and (max-width: 1400px) {
+  .shell:has(:global([data-evidence-type][aria-label="Evidence"])) .sidebar.recordNav {
+    gap: 16px;
+    padding-top: 16px;
+    padding-bottom: 57px;
+  }
+  .shell:has(:global([data-evidence-type][aria-label="Evidence"])) .sideNav {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    height: auto;
+  }
+  .shell:has(:global([data-evidence-type][aria-label="Evidence"])) .sideItem {
+    min-width: 0;
+    padding-inline: 10px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
 }

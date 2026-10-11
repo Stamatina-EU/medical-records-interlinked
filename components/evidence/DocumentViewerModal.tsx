@@ -10,12 +10,14 @@ type Props = {
   document: DocumentRecord | undefined;
   page: number;
   onClose: () => void;
+  documentUrlBase?: string;
 };
 
 export default function DocumentViewerModal({
   document: doc,
   page,
   onClose,
+  documentUrlBase = "/api/documents",
 }: Props) {
   const modalRef = useModalFocus(!!doc);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -61,7 +63,7 @@ export default function DocumentViewerModal({
         </div>
         <iframe
           className={styles.frame}
-          src={`/api/documents/${doc.id}#page=${page}`}
+          src={`${documentUrlBase}/${doc.id}#page=${page}`}
           title={`${doc.title}, page ${page}`}
         />
       </div>

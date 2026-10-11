@@ -3,18 +3,23 @@
  * Drawer can open any fact or calculated claim with no network call.
  * Spec: `spec.md > Evidence Drawer`.
  */
-import type { CalculatedClaim, DocumentRecord, SourceFact, TrustedState } from "@/lib/model/types";
+import type { CalculatedClaim, DocumentRecord, TrustedState } from "@/lib/model/types";
+import type { RecordSourceFact, RichSyntheticState } from "@/lib/model/rich";
+import { analyteLabel } from "@/lib/rich/catalog";
 import { formatDate } from "@/lib/text/dates";
 import { statusLabel } from "@/lib/text/status";
 
 export type EvidenceIndex = {
-  facts: Record<string, SourceFact>;
+  facts: Record<string, RecordSourceFact>;
+  documentUrlBase?: string;
+  routeBase?: string;
+  profile?: "rich-synthetic";
   documents: Record<string, DocumentRecord>;
   claims: Record<string, CalculatedClaim>;
   episodes: Record<string, string>;
 };
 
-export function buildEvidenceIndex(state: TrustedState, claims: CalculatedClaim[]): EvidenceIndex {
+export function buildEvidenceIndex(state: Pick<TrustedState | RichSyntheticState, "facts" | "documents" | "episodes">, claims: CalculatedClaim[]): EvidenceIndex {
   return {
     facts: Object.fromEntries(state.facts.map((f) => [f.id, f])),
     documents: Object.fromEntries(state.documents.map((d) => [d.id, d])),
@@ -31,10 +36,12 @@ export function documentShortLabel(doc: DocumentRecord): string {
 }
 
 /** A plain-language headline for a source fact (used in the drawer and in lists). */
-export function factHeadline(fact: SourceFact, episodes: Record<string, string>): { label: string; value: string } {
+export function factHeadline(fact: RecordSourceFact, episodes: Record<string, string>): { label: string; value: string } {
   switch (fact.kind) {
     case "lab_measurement":
-      return { label: "Ferritin", value: `${fact.value} ${fact.unit}` };
+      return { label: analyteLabel(fact.analyte), value: `${fact.value} ${fact.unit}` };
+    case "documented_incident":
+      return { label: "Documented incident", value: fact.statement };
     case "medication_status":
       return {
         label: episodes[fact.episodeId] ?? "Medication",

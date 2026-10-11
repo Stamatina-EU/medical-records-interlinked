@@ -38,7 +38,7 @@
   gap: 24px;
   padding: 28px 0;
   border-bottom: 1px solid var(--rule-strong);
-  scroll-margin-top: 110px;
+  scroll-margin-top: calc(var(--record-header-height) + 8px);
 }
 .date {
   display: flex;
@@ -154,4 +154,67 @@
   .open {
     justify-self: start;
   }
+}
+
+/* White source documents inside the approved blue Recordbook environment. */
+.header { padding: 12px 4px 28px; color: white; }
+.kicker { display: flex; align-items: center; gap: 8px; color: #c1eff3; font-weight: 600; }
+.header h1 { font-size: 44px; color: white; }
+.header > p:last-child { color: #e0f0f5; }
+.collectionHead { color: #e0f0f5; border-bottom-color: #83c6d5; margin-bottom: 18px; }
+.collection { display: flex; flex-direction: column; gap: 18px; }
+.document {
+  background: white;
+  border: 1px solid #c6e1e8;
+  border-left: 3px solid #62d6df;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 6px 20px #123f4926;
+}
+.date { color: #16394f; font-weight: 600; }
+.date span { color: #4b6174; font-weight: 400; }
+.documentIcon { color: var(--accent); margin-bottom: 6px; }
+.body h2 { color: #16394f; }
+.body > p, .supports > span, .page { color: #4b6174; }
+.supports a { color: var(--accent); }
+.body summary { color: var(--accent); }
+.body ul { border-left-color: #71cad7; }
+.body li button { color: #16394f; }
+.open { background: var(--accent); border-color: var(--accent); color: white; border-radius: 8px; }
+.open:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: white; }
+.empty { background: white; color: #4b6174; padding: 24px; border-radius: 8px; }
+@media (max-width: 860px) {
+  .header { padding: 8px 4px 24px; }
+  .header h1 { font-size: 36px; }
+  .collectionHead { gap: 12px; }
+  .document { padding: 20px; gap: 14px; }
+  .documentIcon { margin-bottom: 0; }
+  .date { align-items: center; justify-content: flex-start; gap: 10px; }
+  .date > span:last-child { width: 100%; padding-left: 36px; }
+}
+
+/* Documents stay open; document actions are outlined at rest and blue on hover. */
+.document { border: 0; }
+.open { color: var(--accent); background: transparent; border: 1px solid currentColor; transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease; }
+.open:hover { color: #fff; background: var(--accent); border-color: var(--accent); }
+
+.body summary { width: fit-content; padding: 8px 12px; border: 1px solid currentColor; border-radius: 8px; background: transparent; }
+.body summary:hover { background: var(--accent-wash); }
+
+.open,
+.body summary {
+  min-width: min(100%, var(--control-min-width));
+  max-width: 100%;
+  flex-shrink: 0;
+  min-height: var(--control-height);
+  padding: var(--control-padding);
+  border-radius: var(--control-radius);
+}
+
+/* Fact disclosures are evidence highlights; document-opening actions keep their outline. */
+.body summary { border: 0; background: var(--accent-wash); }
+.body summary:hover { background: var(--accent); color: white; }
+
+@media (prefers-reduced-motion: reduce) {
+  .open { transition: none; }
 }

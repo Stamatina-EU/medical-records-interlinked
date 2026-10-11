@@ -1,13 +1,15 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import type { DocumentRecord, SourceFact } from "@/lib/model/types";
+import type { DocumentRecord } from "@/lib/model/types";
+import type { RecordSourceFact } from "@/lib/model/rich";
 import { formatDate } from "@/lib/text/dates";
 import { FactValue } from "@/components/ui/EvidenceLinks";
 import { factHeadline } from "@/lib/evidence/index";
 import { useEvidence } from "@/components/evidence/EvidenceProvider";
 import DocumentViewerModal from "@/components/evidence/DocumentViewerModal";
 import styles from "./sources.module.css";
+import VisualIcon from "@/components/ui/VisualIcon";
 const TYPES: Record<string, string> = {
   lab_report: "Laboratory report",
   prescription: "Prescription",
@@ -20,14 +22,15 @@ export default function SourceCollection({
   facts,
 }: {
   documents: DocumentRecord[];
-  facts: SourceFact[];
+  facts: RecordSourceFact[];
 }) {
   const [viewer, setViewer] = useState<DocumentRecord | null>(null);
   const { index } = useEvidence();
+  const base=index.routeBase ?? "/rich";
   return (
     <>
       <header className={styles.header}>
-        <p className={styles.kicker}>The evidence collection</p>
+        <p className={styles.kicker}><VisualIcon name="files" size={19} />The evidence collection</p>
         <h1>Sources</h1>
         <p>
           The documents behind{" "}
@@ -58,13 +61,14 @@ export default function SourceCollection({
             const topics = [
               ...new Set(
                 supports.map((f) =>
-                  f.kind === "medication_status" ? "iron" : f.topic,
+                  index.profile === "rich-synthetic" ? (f.kind === "lab_measurement" ? "laboratory" : f.kind === "medication_status" ? "medication" : f.topic) : f.kind === "medication_status" ? "iron" : f.topic,
                 ),
               ),
             ];
             return (
               <li key={doc.id} id={doc.id} className={styles.document}>
                 <div className={styles.date}>
+                  <VisualIcon name="files" size={26} className={styles.documentIcon} />
                   <time dateTime={doc.date}>{formatDate(doc.date)}</time>
                   <span>{TYPES[doc.documentType]}</span>
                 </div>
@@ -77,8 +81,8 @@ export default function SourceCollection({
                   <div className={styles.supports}>
                     <span>Supports</span>
                     {topics.map((topic) => (
-                      <Link key={topic} href={"/history/" + topic}>
-                        {topic === "iron" ? "Iron / Ferritin" : "Imaging"} ↗
+                      <Link key={topic} href={index.profile === "rich-synthetic" ? (topic === "laboratory" ? base+"/laboratory" : `${base}/history#${topic === "iron" ? "recommendations" : topic}`) : "/history/" + topic}>
+                        {index.profile === "rich-synthetic" ? (topic === "laboratory" ? "Laboratory measurements" : topic === "medication" ? "Medication statements" : topic === "iron" ? "Documented recommendations" : topic === "incidents" ? "Documented incident" : "Imaging") : topic === "iron" ? "Iron / Ferritin" : "Imaging"} ↗
                       </Link>
                     ))}
                   </div>
@@ -120,6 +124,7 @@ export default function SourceCollection({
       {viewer && (
         <DocumentViewerModal
           document={viewer}
+          documentUrlBase={index.documentUrlBase}
           page={1}
           onClose={() => setViewer(null)}
         />

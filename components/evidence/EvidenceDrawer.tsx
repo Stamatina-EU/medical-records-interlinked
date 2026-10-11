@@ -8,6 +8,7 @@ import styles from "./evidence.module.css";
 import visual from "@/components/ui/recordbookVisual.module.css";
 
 type Props = {
+  visualDirection?: "proposal-1";
   index: EvidenceIndex;
   current: EvidenceRef | null;
   canGoBack: boolean;
@@ -19,6 +20,7 @@ type Props = {
 };
 
 export default function EvidenceDrawer({
+  visualDirection,
   index,
   current,
   canGoBack,
@@ -106,7 +108,8 @@ export default function EvidenceDrawer({
       <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
       <aside
         ref={drawerRef}
-        className={`${styles.drawer} ${styles.artDrawer} ${visual.theme}`}
+        className={`${styles.drawer} ${styles.artDrawer} ${visual.theme} ${visualDirection === "proposal-1" ? `${visual.proposalTheme} ${styles.proposalDrawer}` : ""}`}
+        data-evidence-type={current.type}
         role="dialog"
         aria-label="Evidence"
         aria-modal={modal ? true : undefined}

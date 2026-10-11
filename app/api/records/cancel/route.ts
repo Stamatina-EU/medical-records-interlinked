@@ -1,3 +1,5 @@
+import { demoProfile } from "@/lib/demo/profile";
+import { richCancel } from "@/lib/demo/api";
 /** Cancel Route — POST { proposalId }. Deletes the pending proposal; idempotent; imports nothing. */
 import { NextResponse } from "next/server";
 import { deleteProposal } from "@/lib/store/proposalStore";
@@ -7,6 +9,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  if (demoProfile() === "rich") return richCancel(req);
   const foreign = rejectForeignOrigin(req);
   if (foreign) return foreign;
 

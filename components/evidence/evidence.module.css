@@ -354,7 +354,7 @@
     display: none;
   }
   .drawer {
-    top: 92px;
+    top: calc(var(--record-header-height) + 6px);
     width: 440px;
     box-shadow: none;
     background: #faf9f4;
@@ -600,3 +600,126 @@
     min-height: 40px;
   }
 }
+
+/* Proposal 1: midnight chrome surrounds the light evidence reading surfaces. */
+.drawer.proposalDrawer { top: 0; bottom: 0; height: 100dvh; background: #050f3f; color: #e4e7f3; border-radius: 0; box-shadow: -4px 0 18px #050f3f33; }
+.proposalDrawer .drawerTop { background: #16455c; border-bottom-color: #5ed5df; }
+.proposalDrawer[data-evidence-type="claim"] .drawerTop { border-bottom-color: var(--rb-derived); }
+.proposalDrawer .drawerBody { padding: 24px; }
+.proposalDrawer .factHeader, .proposalDrawer .claimHeader {
+  background: white;
+  border: 1px solid var(--rb-line);
+  border-top: 3px solid #5ed5df;
+  border-radius: var(--record-radius);
+  padding: 20px;
+}
+.proposalDrawer .claimHeader { border-top-color: var(--rb-derived); }
+.proposalDrawer .kind { text-transform: none; font-size: 13px; letter-spacing: .02em; margin-bottom: 14px; }
+.proposalDrawer .factLabel { font-size: 25px; }
+.proposalDrawer .sourceView .factValue { font-size: 28px; color: var(--rb-ink); }
+.proposalDrawer [data-fact-kind="lab_measurement"] .factValue { font-size: 46px; letter-spacing: -.035em; }
+.proposalDrawer .factMeta { font-size: 14px; }
+.proposalDrawer .sectionHeading { font-size: 12px; color: var(--rb-muted); }
+.proposalDrawer .excerpt { background: white; border: 1px solid var(--rb-line); border-left: 3px solid #5ed5df; border-radius: 0 5px 5px 0; font-size: 18px; }
+.proposalDrawer .excerpt mark { background: #e0f6f8; }
+.proposalDrawer .sourceList { border-radius: var(--record-radius); font-size: 14px; padding: 16px; }
+.proposalDrawer .secondaryButton { background: var(--accent); border-color: var(--accent); border-radius: var(--record-radius); font-size: 15px; }
+.proposalDrawer .calculatedView .rule { background: white; border-left: 2px solid var(--rb-derived); padding: 4px 0 4px 14px; border-radius: 0; font-size: 14px; }
+.proposalDrawer .inputs { gap: 14px; }
+.proposalDrawer .inputs li { background: white; border-radius: var(--record-radius); padding: 16px; }
+.proposalDrawer .inputHeadline { color: var(--rb-ink); font-size: 16px; }
+.proposalDrawer .inputSource { color: var(--rb-teal); font-size: 13px; }
+.proposalDrawer .inputs .excerpt { background: white; font-size: 17px; }
+.proposalDrawer .textButton:focus-visible { outline: 2px solid #aaf4fa; outline-offset: 3px; box-shadow: none; }
+@media (max-width: 860px) {
+  .drawer.proposalDrawer { width: 100%; }
+  .proposalDrawer .drawerBody { padding: 20px 16px 32px; }
+  .proposalDrawer .factHeader, .proposalDrawer .claimHeader { padding: 18px; }
+  .proposalDrawer .factLabel { font-size: 24px; }
+}
+
+/* Full-source viewer has a light source-blue header, distinct from the navy app shell. */
+.modal { background: white; border-color: #b9cdd8; border-radius: 8px; }
+.modalTop { background: var(--accent-wash); color: var(--ink); border-bottom: 3px solid var(--accent); }
+.modalTitle { color: var(--ink); }
+.modalMeta { color: var(--ink-muted); }
+.modalTop .textButton { color: var(--accent); border: 1px solid currentColor; border-radius: 8px; padding: 0 14px; }
+.modalTop .textButton:hover { background: var(--accent); color: white; border-color: var(--accent); }
+.frame { background: #edf4f7; }
+@media (max-width: 860px) { .modal { border-radius: 0; } }
+
+/* Evidence surfaces are distinguished by type, spacing and tint, without frames. */
+.drawer.proposalDrawer, .modal { border: 0; }
+.proposalDrawer .factHeader, .proposalDrawer .claimHeader,
+.proposalDrawer .sourceList, .proposalDrawer .inputs li { border: 0; }
+.proposalDrawer .factHeader { background: #f2fafc; }
+.proposalDrawer .claimHeader { background: var(--rb-derived-tint); }
+.proposalDrawer .inputs li { background: #f5fafc; }
+.proposalDrawer .excerpt { border: 0; border-left: 3px solid #5ed5df; }
+.proposalDrawer .secondaryButton { border: 1px solid currentColor; background: transparent; color: var(--accent); }
+.proposalDrawer .textButton, .modalTop .textButton { border: 1px solid currentColor; border-radius: 8px; background: transparent; }
+
+.proposalDrawer .secondaryButton:hover { background: var(--accent-wash); color: var(--accent); border-color: currentColor; }
+.proposalDrawer .textButton:hover { background: #ffffff12; }
+
+/* Stable midnight chrome; source blue and muted berry distinguish evidence content. */
+.proposalDrawer {
+  --evidence-inset: 20px;
+}
+.proposalDrawer .drawerTop {
+  background: #050f3f;
+  border-bottom: 1px solid #ffffff24;
+}
+.proposalDrawer .drawerKicker { color: white; font-family: var(--font-evidence); font-size: 28px; line-height: 1.2; font-weight: 400; letter-spacing: 0; text-transform: none; }
+.proposalDrawer[data-evidence-type="claim"] .drawerTop { border-bottom-color: #ffffff24; }
+.proposalDrawer .textButton,
+.proposalDrawer .secondaryButton,
+.modalTop .textButton {
+  min-width: min(100%, var(--control-min-width));
+  max-width: 100%;
+  flex-shrink: 0;
+  padding: var(--control-padding);
+  border-radius: var(--control-radius);
+  min-height: var(--control-height);
+}
+.proposalDrawer .factHeader,
+.proposalDrawer .claimHeader,
+.proposalDrawer .sourceList,
+.proposalDrawer .inputs li {
+  padding: var(--evidence-inset);
+}
+.proposalDrawer .sectionHeading {
+  padding: 0 var(--evidence-inset) 8px;
+}
+.proposalDrawer .calculatedView .rule {
+  padding: 4px var(--evidence-inset) 4px calc(var(--evidence-inset) - 2px);
+}
+.proposalDrawer .excerpt {
+  padding: 16px var(--evidence-inset) 16px calc(var(--evidence-inset) - 3px);
+}
+.proposalDrawer .excerptNote { padding-inline: var(--evidence-inset); }
+.proposalDrawer .inputs .excerpt {
+  border: 0;
+  padding: 10px 0 0;
+}
+@media (max-width: 860px) {
+  .proposalDrawer { --evidence-inset: 16px; }
+  .proposalDrawer .drawerTop::before { content: none; }
+  .proposalDrawer .drawerKicker { font-size: 26px; }
+}
+
+/* Outside the paper surfaces, maintain contrast against the midnight panel. */
+.proposalDrawer .sectionHeading { color: #e4e7f3; border-color: #ffffff24; }
+.proposalDrawer .calculatedView .rule {
+  background: transparent;
+  color: #e4e7f3;
+  border-left-color: var(--rb-derived-line);
+}
+.proposalDrawer .excerptNote, .proposalDrawer .muted { color: #c7cde3; }
+.proposalDrawer .factHeader, .proposalDrawer .claimHeader,
+.proposalDrawer .sourceList, .proposalDrawer .inputs li { color: var(--rb-ink); }
+.proposalDrawer .secondaryButton { color: #b7d6ff; border-color: #829bc8; }
+.proposalDrawer .secondaryButton:hover { background: var(--accent); color: white; border-color: var(--accent); }
+.proposalDrawer .textButton { color: white; border-color: #829bc8; }
+.proposalDrawer .textButton:hover { background: var(--accent); color: white; border-color: var(--accent); }
+.proposalDrawer .drawerBody { min-height: 0; scrollbar-color: #829bc8 #050f3f; }

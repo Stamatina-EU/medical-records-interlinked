@@ -1,3 +1,5 @@
+import { demoProfile } from "@/lib/demo/profile";
+import { redirect } from "next/navigation";
 /**
  * History — one longitudinal topic across time, through one reusable template.
  * Spec: `spec.md > History Page (Topic Template)`; PRD: `prd.md > History (topic template)`.
@@ -32,6 +34,7 @@ export default async function HistoryPage({
   params: Promise<{ topic: string }>;
 }) {
   const { topic } = await params;
+  if(demoProfile()==="rich")redirect(topic==="iron" ? "/laboratory#ferritin" : "/history#imaging");
   if (!TOPICS.some((t) => t.topic === topic)) notFound();
 
   let state;
@@ -45,7 +48,7 @@ export default async function HistoryPage({
   // a genuinely empty record has no history to show yet (never the case for the seeded demo)
   if (isEmptyRecord(state)) {
     return (
-      <main className={`page ${visual.theme} ${visual.pageCanvas}`}>
+      <main className={`page ${visual.proposalTheme} ${visual.pageCanvas} ${visual.destinationPage}`}>
         <header className={styles.header}>
           <Link href="/" className={styles.back}>
             ← Record
@@ -69,7 +72,7 @@ export default async function HistoryPage({
 
   return (
     <EvidenceProvider index={index}>
-      <main className={`page ${visual.theme} ${visual.pageCanvas}`}>
+      <main className={`page ${visual.proposalTheme} ${visual.pageCanvas} ${visual.destinationPage}`}>
         <header className={styles.header}>
           <Link href="/" className={styles.back}>
             ← Record

@@ -700,3 +700,64 @@
 .chartNarrow .pointLabel {
   font-size: 12px;
 }
+
+/* Proposal 1: dated history in the same atmosphere as Record. */
+.header { background: transparent; padding: 12px 4px 24px; border: 0; border-radius: 0; }
+.back { color: #c5f1f6; min-height: 44px; }
+.title { color: white; }
+.subtitle { color: #e0f0f5; }
+.switcher { background: #174761b3; border-color: #72b4c6; border-radius: 8px; }
+.switch { border-radius: 8px; color: #e8f7fa; }
+.switch:hover { background: #285875; }
+.switchActive, .switchActive:hover { background: white; color: var(--accent); }
+.sectionTitle { color: #fff; }
+.sectionTitle > span:first-child { color: #9ceaf0; }
+.titleUnit, .sequenceNote { color: #d6eef4; }
+.chartSurface { border-top-color: #62d6df; border-radius: 8px; box-shadow: 0 8px 24px #123f4929; }
+.band { fill: #e8f1f6; stroke: #b6cad7; }
+.bandKey { background: #e8f1f6; border-color: #b6cad7; }
+.chartCaption { background: #f1f6f9; border-radius: 8px; }
+.sequence > li { border-left-color: #8bd5e3; }
+.sequence > li::before { background: #fff; border-color: #33a9bd; }
+.sequenceDate { color: #fff; }
+.sequenceDate span { color: #d9eef4; }
+.sequenceDate .eventIcon { color: #9ceaf0; }
+.sequenceBody { border-radius: 8px; border-color: #c6e1e8; box-shadow: 0 4px 16px #123f4920; }
+.sequence > li[data-fact-kind="follow_up"] .sequenceBody { background: white; border-color: #c6e1e8; }
+.comparisons[open] { background: white; border-left: 2px solid var(--rb-derived); border-radius: 0; }
+.emptyNote { background: white; color: var(--rb-muted); padding: 24px; border-radius: 8px; }
+@container (max-width: 760px) {
+  .sequence > li { grid-template-columns: 1fr; gap: 8px; }
+  .sequenceDate { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .sequenceDate span:last-child { margin-left: auto; }
+}
+@media (max-width: 860px) {
+  .header { padding: 8px 4px 20px; }
+  .switcher { margin-top: 16px; }
+  .sequenceDate { padding-top: 8px; }
+  .sequenceBody { padding: 16px; }
+}
+
+/* Keep plot marks and timeline spine; remove enclosing surface outlines. */
+.chartSurface, .switcher, .sequenceBody, .updated .sequenceBody { border: 0; }
+
+/* Navigation and disclosures use compact outlines, leaving event surfaces open. */
+.back { display: inline-flex; align-items: center; width: fit-content; padding: 8px 14px; border: 1px solid currentColor; border-radius: 8px; background: transparent; }
+.back:hover { background: #ffffff0d; }
+.comparisons summary { width: fit-content; padding: 8px 12px; border: 1px solid currentColor; border-radius: 8px; background: transparent; }
+.comparisons summary:hover { background: #fcf1f7; }
+
+.back,
+.switch,
+.comparisons summary {
+  min-width: min(100%, var(--control-min-width));
+  max-width: 100%;
+  flex-shrink: 0;
+  min-height: var(--control-height);
+  padding: var(--control-padding);
+  border-radius: var(--control-radius);
+}
+
+/* Calculated relationship disclosures use a berry highlight, matching Summary references. */
+.comparisons summary { border: 0; background: var(--rb-derived-tint); }
+.comparisons summary:hover { background: var(--rb-derived-tint-hover); }

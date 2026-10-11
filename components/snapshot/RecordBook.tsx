@@ -63,7 +63,14 @@ export default function RecordBook({
             Fictional patient · synthetic demo record
           </p>
         </div>
-        <VisualIcon name="files" size={128} className={styles.documentMotif} />
+        <img
+          src="/recordbook/interlinked-records.webp"
+          alt=""
+          aria-hidden="true"
+          width={700}
+          height={280}
+          className={styles.documentMotif}
+        />
         <AddRecord />
       </header>
       {latest && (
@@ -243,7 +250,7 @@ export default function RecordBook({
       <Link href="/summary" className={styles.summary}>
         <VisualIcon
           name="notebook-tabs"
-          size={48}
+          size={24}
           className={styles.summaryIcon}
         />
         <div>

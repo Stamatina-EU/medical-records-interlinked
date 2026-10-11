@@ -38,6 +38,8 @@ export type PipelineDeps = {
   extract: (pages: string[]) => Promise<ExtractionCallResult>;
   newProposalId: () => string;
   now: () => string;
+  /** Optional code-owned duplicate policy; never affects verification or supported fact types. */
+  dedupeFacts?: typeof dedupe;
 };
 
 export async function runExtractionPipeline(bytes: Uint8Array, state: TrustedState, deps: PipelineDeps): Promise<PipelineOutcome> {
@@ -73,7 +75,7 @@ export async function runExtractionPipeline(bytes: Uint8Array, state: TrustedSta
       : { status: "no_verified_facts", code: outcome.code };
   }
 
-  const { fresh } = dedupe(state.facts, outcome.verified);
+  const { fresh } = (deps.dedupeFacts ?? dedupe)(state.facts, outcome.verified);
   if (fresh.length === 0) return { status: "no_changes" };
 
   return {

@@ -5,6 +5,8 @@ status: approved
 
 # MRI — Product Requirements
 
+> Final implementation: [rich-record integration](rich-record-integration.md) documents the rich default, approved live overlay, completed Summary and preserved legacy profile. The original specification below describes the initial legacy story.
+
 An evidence-linked medical history for an adult patient about to see a new doctor. It focuses on medical documents that aren't already represented in a structured health record. A new record proposes changes, the patient approves the evidence, code derives the consequences, and every claim stays traceable to its source.
 Source: `scope.md > The Unique Kernel`, `scope.md > Who It's For`, `scope.md > Context and Positioning`.
 

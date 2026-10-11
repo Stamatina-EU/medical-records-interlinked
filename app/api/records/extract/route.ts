@@ -1,3 +1,5 @@
+import { demoProfile } from "@/lib/demo/profile";
+import { richExtract } from "@/lib/demo/api";
 /**
  * Extract Route — POST multipart/form-data { file: PDF }. Spec: `spec.md > Extract Route`.
  *
@@ -18,6 +20,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  if (demoProfile() === "rich") return richExtract(req);
   const foreign = rejectForeignOrigin(req);
   if (foreign) return foreign; // before reading the upload or touching pending proposals
 

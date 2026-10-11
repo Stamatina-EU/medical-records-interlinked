@@ -1,3 +1,5 @@
+import { demoProfile } from "@/lib/demo/profile";
+import { richApply } from "@/lib/demo/api";
 /**
  * Apply Route — POST { proposalId, approvedFactIds }. Spec: `spec.md > Apply Route`.
  * The browser sends ONLY ids. The server reloads its own copy of the proposal and never trusts
@@ -19,6 +21,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  if (demoProfile() === "rich") return richApply(req);
   const foreign = rejectForeignOrigin(req);
   if (foreign) return foreign;
 

@@ -14,9 +14,6 @@
   --rb-derived-line: #d9c4ce;
   --rb-derived-tint: #f4edf1;
 }
-:global(body):has(.pageCanvas) {
-  background: #f5faf9;
-}
 .pageCanvas {
   color: var(--rb-ink);
 }
@@ -75,3 +72,175 @@
     min-height: 44px;
   }
 }
+
+/* Approved Proposal 1 now provides the shared Recordbook visual system. */
+.proposalTheme {
+  --record-radius: 8px;
+  --rb-petrol: #16455c;
+  --rb-teal: var(--accent);
+  --rb-turquoise: #5ed5df;
+  --rb-tint: var(--accent-wash);
+  --rb-canvas: #ffffff;
+  --rb-white: #ffffff;
+  --rb-ink: #16394f;
+  --rb-muted: #4b6174;
+  --rb-line: #d6e3ea;
+  --rb-derived: #b02078;
+  --rb-derived-hover: #951564;
+  --rb-derived-line: #d789b8;
+  --rb-derived-tint: #f8e5f1;
+  --rb-derived-tint-hover: #f0cde3;
+  --focus: 0 0 0 2px #fff, 0 0 0 4px var(--accent);
+}
+:global(body):has(.lockedRecord) {
+  background-color: #236b87;
+  background-image: url('/recordbook/record-environment.webp');
+  background-position: center var(--record-environment-offset);
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.lockedRecord {
+  max-width: 1248px;
+  padding-top: 20px;
+  padding-bottom: 48px;
+}
+.proposalTheme [data-evidence-kind="source"] {
+  color: var(--rb-teal);
+  border-color: #aad7e2;
+  border-radius: var(--record-radius);
+  padding: 6px 10px;
+  font-size: 13px;
+  min-height: 36px;
+}
+.proposalTheme [data-evidence-kind="derived"] { color: var(--rb-derived); font-size: 14px; line-height: 1.5; padding: 6px 0; }
+.proposalTheme [data-evidence-kind="derived"] > span {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 2px 8px;
+  align-items: start;
+}
+.proposalTheme [data-evidence-kind="derived"] > span > span:first-child { margin-top: 3px; }
+.proposalTheme [data-evidence-kind="derived"] > span > span:nth-child(2) { border-bottom-color: var(--rb-derived-line); }
+.proposalTheme [data-evidence-kind="derived"] > span > span:last-child {
+  display: block;
+  grid-column: 2;
+  padding: 0;
+  margin-left: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 400;
+  font-style: normal;
+  color: var(--rb-derived);
+  white-space: normal;
+}
+.proposalTheme [data-evidence-kind="derived"]:hover > span > span:nth-child(2) { color: var(--rb-derived-hover); border-bottom-color: var(--rb-derived); }
+@media (max-width: 860px) {
+  :global(body):has(.lockedRecord) { background-position: center var(--record-environment-offset); background-size: cover; }
+  .lockedRecord { padding-top: 20px; padding-left: 16px; padding-right: 16px; padding-bottom: 24px; }
+  .proposalTheme [data-evidence-kind="source"], .proposalTheme [data-evidence-kind="derived"] { min-height: 44px; }
+}
+
+/* The app atmosphere stays outside white reading surfaces and dialogs. */
+:global(body).appCanvas {
+  background-color: #236b87;
+  background-image: url('/recordbook/record-environment.webp');
+  background-position: center var(--record-environment-offset);
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.destinationPage { max-width: 1248px; padding-top: 28px; padding-bottom: 48px; }
+.documentPage { padding-top: 32px; }
+@media (max-width: 860px) {
+  :global(body).appCanvas { background-position: center var(--record-environment-offset); }
+  .destinationPage { padding: 24px 16px 32px; }
+  .documentPage { padding: 24px 16px 32px; }
+}
+
+/* Content surfaces stay open; actionable source references have source-blue outlines. */
+.proposalTheme [data-evidence-kind="source"] { border: 1px solid currentColor; background: transparent; }
+.proposalTheme [data-evidence-kind="source"]:hover { background: var(--accent-wash); }
+
+/* The short calculation affordance is outlined; the clinical claim stays unframed. */
+.proposalTheme [data-evidence-kind="derived"] > span > span:last-child {
+  width: fit-content;
+  padding: 4px 8px;
+  margin-top: 2px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: transparent;
+}
+.proposalTheme [data-evidence-kind="derived"]:hover > span > span:last-child { background: var(--rb-derived-tint); }
+
+.proposalTheme [data-evidence-kind="derived"] > span > span:last-child::before { content: none; }
+
+/* Source and calculation controls share one left edge and one size system. */
+.proposalTheme [data-evidence-kind="source"] {
+  min-width: min(100%, var(--control-min-width));
+  max-width: 100%;
+  flex-shrink: 0;
+  justify-content: center;
+  padding: var(--control-padding);
+  border-radius: var(--control-radius);
+  min-height: var(--control-height);
+}
+.proposalTheme [data-evidence-kind="derived"] > span > span:last-child {
+  min-width: min(100%, var(--control-min-width));
+  max-width: 100%;
+  flex-shrink: 0;
+  justify-content: center;
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  padding: var(--control-padding);
+  border-radius: var(--control-radius);
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+/* Named Derived explanations and their badge form one responsive action. */
+.proposalTheme [data-calculation-layout="inline"] {
+  max-width: 100%;
+  min-height: var(--control-height);
+  padding: 0;
+  margin: 6px 0;
+}
+.proposalTheme [data-calculation-layout="inline"] > span {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  max-width: 100%;
+}
+.proposalTheme [data-calculation-layout="inline"] > span > span:first-child {
+  margin-top: 0;
+  border: 0;
+}
+.proposalTheme [data-calculation-layout="inline"] > span > span:first-child > span:last-child {
+  border-bottom: 1px dotted var(--rb-derived-line);
+}
+.proposalTheme [data-calculation-layout="inline"] > span > span:last-child {
+  margin: 0;
+  max-width: 100%;
+  border-color: currentColor;
+}
+.proposalTheme [data-calculation-layout="inline"]:hover > span > span:first-child > span:last-child {
+  color: var(--rb-derived-hover);
+  border-bottom-color: var(--rb-derived);
+}
+
+/* Evidence references repeat the Summary highlights while preserving their shared action geometry. */
+.proposalTheme [data-evidence-kind="source"] {
+  border: 0;
+  background: var(--accent-wash);
+}
+.proposalTheme [data-evidence-kind="source"]:hover { background: var(--accent); color: white; }
+.proposalTheme [data-evidence-kind="source"]:hover svg { color: white; }
+.proposalTheme [data-evidence-kind="derived"] > span > span:last-child {
+  border: 0;
+  background: var(--rb-derived-tint);
+}
+.proposalTheme [data-evidence-kind="derived"]:hover > span > span:last-child { background: var(--rb-derived); color: white; }

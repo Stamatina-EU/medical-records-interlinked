@@ -1,3 +1,8 @@
+import { demoProfile } from "@/lib/demo/profile";
+import { readRichRecord } from "@/lib/demo/store";
+import RichShell from "@/components/rich/RichShell";
+import RichDoctorSummary from "@/components/rich/RichDoctorSummary";
+import visual from "@/components/ui/recordbookVisual.module.css";
 /**
  * Doctor Summary — a concise, user-controlled, evidence-linked view of the history represented
  * in MRI (Medical Records Interlinked), to show or discuss with a new doctor. The one deliberately typeset clinical brief.
@@ -20,6 +25,7 @@ import styles from "@/components/summary/summary.module.css";
 export const dynamic = "force-dynamic";
 
 export default async function DoctorSummaryPage() {
+  if(demoProfile()==="rich"){const {record}=await readRichRecord();return <RichShell state={record} integrated><RichDoctorSummary state={record}/></RichShell>;}
   let state;
   try {
     state = await readState();
@@ -31,7 +37,7 @@ export default async function DoctorSummaryPage() {
   // a genuinely empty record has nothing to summarize yet (never the case for the seeded demo)
   if (isEmptyRecord(state)) {
     return (
-      <main className="page">
+      <main className={`page ${visual.proposalTheme} ${visual.pageCanvas} ${visual.destinationPage} ${visual.documentPage}`}>
         <article className={styles.sheet} aria-labelledby="summary-title">
           <header className={styles.head}>
             <p className={styles.kicker}>Doctor Summary</p>
@@ -54,7 +60,7 @@ export default async function DoctorSummaryPage() {
 
   return (
     <EvidenceProvider index={index}>
-      <main className="page">
+      <main className={`page ${visual.proposalTheme} ${visual.pageCanvas} ${visual.destinationPage} ${visual.documentPage}`}>
         <article className={styles.sheet} aria-labelledby="summary-title">
           <header className={styles.head}>
             <p className={styles.kicker}>Doctor Summary</p>

@@ -21,3 +21,9 @@ The wording follows the rules in `devpost/spec.md > Synthetic Demo Corpus` so ev
 To rebuild only the live note (leaving the seed PDFs byte-identical): `npm run corpus:build -- live`.
 
 Never add real medical documents to this repository.
+
+## Rich synthetic baseline
+
+The default rich record uses seven PDFs in `data/rich-synthetic/documents/`. Three new sources in `corpus/rich/` provide two laboratory reports with five analytes each and the explicitly documented incident; `npm run corpus:rich` rebuilds only these three PDFs. The other four rich PDFs are unchanged copies of original imaging, consultation and prescription sources. The original six-document seed and its sources remain preserved.
+
+`npm run verify:rich` verifies all 17 authored rich source facts against their PDFs. This fixture verifier is separate from the narrow live extraction verifier. See [the integration note](../devpost/rich-record-integration.md) for the composed record and approval boundary.

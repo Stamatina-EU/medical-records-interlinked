@@ -466,3 +466,60 @@
     font-size: 25px;
   }
 }
+
+/* Shared Add record / approval presentation; selection and application logic stay unchanged. */
+.addRecord { background: white; color: #16455c; border-color: white; border-radius: 8px; }
+.addRecord:hover { background: var(--accent); color: white; border-color: var(--accent); }
+.backdrop { background: #152a4680; }
+.panel { background: white; color: #16394f; border-color: #b9cdd8; border-radius: 8px; overflow: hidden; box-shadow: 0 20px 60px #14213f4d; }
+.panelTop { background: #25233e; color: white; border-bottom: 3px solid #5ed5df; }
+.panelTitle { color: white; }
+.panelTop .textButton { color: white; border: 1px solid #82799d; border-radius: 8px; padding: 0 14px; }
+.panelTop .textButton:hover { background: var(--accent); color: white; border-color: var(--accent); }
+.chooseTitle { color: #16394f; }
+.docLine { color: #4b6174; }
+.pending { background: #edf4f7; color: #16394f; border-left-color: #9fb8c7; border-radius: 0 8px 8px 0; }
+.fact { background: white; border-color: #c5dbe5; border-left: 3px solid #5ed5df; border-radius: 8px; }
+.factValue { color: #16394f; font-size: 21px; }
+.fact[data-fact-kind="lab_measurement"] .factValue { font-size: 30px; line-height: 1.25; }
+.factLabel { color: #4b6174; }
+.factRejected { background: #f4f7f9; border-color: #b9cdd8; }
+.factRejected .factValue { color: #4b6174; }
+.excerpt { background: white; border-color: #c5dbe5; border-left: 3px solid #5ed5df; border-radius: 0 8px 8px 0; color: #16394f; font-size: 17px; }
+.include input { accent-color: var(--accent); }
+.consequences li { padding: 4px 0 4px 14px; border-left: 2px solid #5ed5df; color: #16394f; }
+.consequences .previewKind { color: var(--accent); }
+.consequences li[data-consequence-kind="claim"] { border-left-color: #b02175; }
+.consequences li[data-consequence-kind="claim"] .previewKind { color: #b02175; }
+.primary, .secondary { border-radius: 8px; }
+.primary { background: var(--accent); border-color: var(--accent); }
+.primary:hover:not(:disabled) { background: var(--accent-hover); }
+.secondary { background: white; color: #16394f; border-color: #b9cdd8; }
+.reviewFooter { background: white; border-top-color: #c5dbe5; }
+.applyError { background: #edf4f7; color: #16394f; }
+@media (max-width: 860px) {
+  .panel { border-radius: 8px 8px 0 0; }
+  .fact[data-fact-kind="lab_measurement"] .factValue { font-size: 25px; }
+}
+
+/* Approval facts retain inclusion state and source cues without outlined cards. */
+.addRecord, .panel, .fact, .factRejected, .primary, .secondary, .panelTop .textButton { border: 0; }
+.fact { background: #f5fafc; }
+.factRejected { background: #f4f7f9; }
+.excerpt { border: 0; border-left: 3px solid #5ed5df; }
+.secondary { background: transparent; color: var(--accent); border: 1px solid currentColor; }
+.secondary:hover:not(:disabled) { background: var(--accent); color: white; border-color: var(--accent); }
+.panelTop .textButton { background: transparent; border: 1px solid currentColor; }
+
+.addRecord,
+.primary,
+.secondary,
+.textButton,
+.panelTop .textButton {
+  min-width: min(100%, var(--control-min-width));
+  max-width: 100%;
+  flex-shrink: 0;
+  min-height: var(--control-height);
+  padding: var(--control-padding);
+  border-radius: var(--control-radius);
+}

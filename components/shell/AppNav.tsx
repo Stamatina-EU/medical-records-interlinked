@@ -33,37 +33,44 @@ const ITEMS = [
   },
 ];
 
-function Brand() {
+function Brand({ inverse = false, href = "/" }: { inverse?: boolean; href?: string }) {
   return (
-    // Primary mark + descriptor only; the tagline is a presentation line, not part of the nav shell.
-    // The mark is an outlined SVG (public/brand/mark.svg); the link's aria-label names it, so the image is decorative.
+    // The dark-header lockup includes the outlined descriptor.
+    // The link's aria-label names the brand, so the image is decorative.
     <Link
-      href="/"
+      href={href}
       className={styles.brand}
       aria-label="MRi, Medical Records Interlinked, record"
     >
       <img
-        src="/brand/mark.svg"
+        src={inverse ? "/brand/mri-lockup-on-dark.svg" : "/brand/mark.svg"}
         alt=""
-        width={166}
-        height={52}
-        className={styles.mark}
+        width={inverse ? 494.55 : 166}
+        height={inverse ? 185.92 : 52}
+        className={inverse ? styles.lockup : styles.mark}
       />
-      <span className={styles.descriptor}>Medical Records Interlinked</span>
+      {!inverse && (
+        <span className={styles.descriptor}>Medical Records Interlinked</span>
+      )}
     </Link>
   );
 }
 
-export default function AppNav({ patientName }: { patientName: string }) {
+export default function AppNav({ patientName, demoProfile="legacy" }: { patientName: string;demoProfile?:"rich"|"legacy" }) {
   const pathname = usePathname() ?? "/";
+  const study = pathname === "/rich" || pathname.startsWith("/rich/");
+  const rich=study || demoProfile==="rich";
+  const base=study ? "/rich" : "";
+  const activePath = study ? (pathname.slice(5) || "/") : pathname;
+  const items = rich ? ITEMS.map(item => ({ ...item, href: item.href === "/history/iron" ? base+"/history" : (item.href === "/" ? (base || "/") : base + item.href), match: item.label === "History" ? (p: string) => p.startsWith("/history") || p.startsWith("/laboratory") : item.match })) : ITEMS;
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className={styles.sidebar}>
-        <Brand />
+      <aside className={`${styles.sidebar} ${styles.recordNav}`}>
+        <Brand inverse href={study ? "/rich" : "/"} />
         <nav aria-label="Primary" className={styles.sideNav}>
-          {ITEMS.map(({ href, label, Icon, match }) => {
-            const active = match(pathname);
+          {items.map(({ href, label, Icon, match }) => {
+            const active = match(activePath);
             return (
               <Link
                 key={href}
@@ -81,21 +88,21 @@ export default function AppNav({ patientName }: { patientName: string }) {
             );
           })}
         </nav>
-        {pathname !== "/" && (
+        {!study && pathname !== "/" && (
           <div className={styles.navAction}>
             <AddRecord />
           </div>
         )}
         <div className={styles.owner}>
           <span className={styles.ownerName}>{patientName}</span>
-          <span className={styles.ownerNote}>Synthetic demo record</span>
+          <span className={styles.ownerNote}>{study ? "Read-only rich synthetic demo" : "Synthetic demo record"}</span>
         </div>
       </aside>
 
       {/* Mobile top bar */}
-      <header className={styles.topbar}>
-        <Brand />
-        {pathname !== "/" && (
+      <header className={`${styles.topbar} ${styles.recordNav}`}>
+        <Brand inverse href={study ? "/rich" : "/"} />
+        {!study && pathname !== "/" && (
           <div className={styles.mobileAction}>
             <AddRecord />
           </div>
@@ -103,9 +110,9 @@ export default function AppNav({ patientName }: { patientName: string }) {
       </header>
 
       {/* Mobile bottom tab bar */}
-      <nav aria-label="Primary" className={styles.tabbar}>
-        {ITEMS.map(({ href, label, Icon, match }) => {
-          const active = match(pathname);
+      <nav aria-label="Primary" className={`${styles.tabbar} ${styles.recordNav}`}>
+        {items.map(({ href, label, Icon, match }) => {
+          const active = match(activePath);
           return (
             <Link
               key={href}
