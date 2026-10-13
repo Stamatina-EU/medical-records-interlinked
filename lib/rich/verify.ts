@@ -31,12 +31,21 @@ export function verifyRichState(state: RichSyntheticState, pagesByDocId: Map<str
     if(!loc.ok) {fail(fact.id,fact.source.page,loc.reason);continue;}
     if(loc.verifiedExcerpt!==fact.source.verifiedExcerpt) {fail(fact.id,fact.source.page,"excerpt is not exactly canonical source text");continue;}
     const source=loc.verifiedExcerpt.replace(/\s+/g," ");
-    if(fact.kind==="lab_measurement" || fact.kind==="documented_incident") {
+    if(fact.kind==="lab_measurement" || fact.kind==="documented_incident" || fact.kind==="imaging_exam") {
       const page=pages[fact.source.page-1];
       const before=page.slice(page.lastIndexOf("\n",loc.from-1)+1,loc.from).trim();
       const nextNewline=page.indexOf("\n",loc.to);
       const after=page.slice(loc.to,nextNewline<0?page.length:nextNewline).trim();
       if(before || after) fail(fact.id,fact.source.page,"excerpt must own complete source lines, not a fragment inside qualified wording");
+    }
+    if(fact.kind==="imaging_exam") {
+      // Fixture-only examination-role grammar: the first examination date is the performed date.
+      // The comparison date stays in the verified quotation and is checked separately below.
+      const performed=/^Thyroid ultrasound performed on (\d{1,2} [A-Z][a-z]{2} \d{4})\./.exec(source);
+      const comparison=/^Thyroid ultrasound of (\d{1,2} [A-Z][a-z]{2} \d{4}) compared with the thyroid ultrasound of \d{1,2} [A-Z][a-z]{2} \d{4}\./.exec(source);
+      const examinationDate=performed?.[1] ?? comparison?.[1];
+      if(fact.examName!=="Thyroid ultrasound" || examinationDate!==formatDate(fact.performedOn))
+        fail(fact.id,fact.source.page,"performedOn does not match the examination date source role");
     }
     if(fact.kind==="medication_status" && fact.documentedOn!==doc.date) fail(fact.id,fact.source.page,"medication statement date does not match its document");
     if(fact.kind==="follow_up" && fact.recommendedOn!==doc.date) fail(fact.id,fact.source.page,"recommendation date does not match its document");

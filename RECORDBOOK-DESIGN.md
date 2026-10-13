@@ -1,10 +1,10 @@
 # The Medical Recordbook experiment
 
-Workspace: F:\Tina\HACKATHONS\Medical Devpost-recordbook
+Repository: Medical Recordbook checkout
 Branch: design/medical-recordbook
 Baseline: 7cfdec4
 
-This is a presentation experiment. Changes remain uncommitted; nothing has been merged. The original working tree was not edited.
+This note records the initial presentation experiment, now preserved in committed Recordbook checkpoints. The scope and validation below describe that initial stage; the current rich integration is documented in [the integration note](devpost/rich-record-integration.md). The original repository was not edited.
 
 ## Experience
 

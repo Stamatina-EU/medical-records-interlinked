@@ -107,8 +107,8 @@ describe("C · value, unit and supplied range must belong to the same ferritin r
   it("never borrows an unrelated range from another row or another test on the line", () => {
     const rows = [TABLE, "Ferritin 32 μg/L 15–150", "Haemoglobin 12.9 g/dL 12.0–15.5"];
     expect(lab(32, "μg/L", "12.0–15.5", rows, "Ferritin 32 μg/L 15–150", "IRON STUDIES").ok).toBe(false);
-    // without a claimed range the ferritin row itself still verifies
-    expect(lab(32, "μg/L", null, rows, "Ferritin 32 μg/L 15–150", "IRON STUDIES")).toMatchObject({ ok: true, refText: null });
+    // without a claimed range, only the range supplied by the ferritin row is retained
+    expect(lab(32, "μg/L", null, rows, "Ferritin 32 μg/L 15–150", "IRON STUDIES")).toMatchObject({ ok: true, refLow: 15, refHigh: 150, refText: "15–150" });
     // another test on the same line is not part of the grammar at all
     expect(lab(32, "μg/L", "12.0–15.5", ["Ferritin 32 μg/L, haemoglobin 12.9 g/dL 12.0–15.5"]).ok).toBe(false);
     expect(lab(32, "μg/L", null, ["Ferritin 32 μg/L, haemoglobin 12.9 g/dL 12.0–15.5"]).ok).toBe(false);

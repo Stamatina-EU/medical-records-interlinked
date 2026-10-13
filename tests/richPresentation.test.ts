@@ -58,10 +58,15 @@ describe("rich presentation boundaries",()=>{
   expect(original).toContain(`src="/api/documents/${props.document.id}#page=1"`);
   expect(rich).toContain(`src="/rich/api/documents/${props.document.id}#page=1"`);
  });
- it("rich Summary is an explicit scope notice, not the old summary presented as complete",async()=>{
+ it("retained rich Summary study links to the completed default composed-record Summary",async()=>{
   const html=renderToStaticMarkup(await RichSummaryScopePage());
-  expect(html).toContain("A complete summary of this rich synthetic record has not been implemented.");
-  expect(html).toContain("It does not represent this rich record");expect(html).not.toContain("Current documented picture");
+  expect(html).toContain("retained read-only design study");
+  expect(html).toContain("does not include patient-approved live additions");
+  expect(html).toContain("completed composed-record Doctor Summary");
+  expect(html).toContain('href="/summary">Open the completed Doctor Summary');
+  expect(html).not.toContain("has not been implemented");
+  expect(html).not.toContain("six-document hackathon demo");
+  expect(html).not.toContain("Current documented picture");
  });
  it("renders dense calculation labels as correctly encoded text",()=>{
   const html=render(createElement(LaboratoryRecord,{state}));

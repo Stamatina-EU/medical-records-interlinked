@@ -60,6 +60,19 @@ describe("rich default approval integration against real PDF verification",()=>{
   expect(recordCalculations(record).some(c=>c.kind==="followup_match")).toBe(true);expect(overlay.facts).toHaveLength(2);expect(overlay.documents).toHaveLength(1);
   expect(record.latestUpdate?.affected).toEqual(expect.arrayContaining(["rich:laboratory-overview","rich:latest:ferritin","followup-match:fu-ferritin-2026-02-03"]));
  });
+ it("M1: an AI-omitted source range survives real-PDF verification, approval, persistence and rich Summary",async()=>{
+  const payload=structuredClone(extraction);payload.labMeasurements[0].referenceRangeText=null;
+  const out=await propose(payload);if(out.status!=="proposal")throw new Error(out.status);
+  const p=out.proposal;
+  expect(p.facts.find(f=>f.kind==="lab_measurement")).toMatchObject({refLow:15,refHigh:150,refText:"15–150"});
+  expect((await applyRoute(request(p.facts.map(f=>f.id),p.proposalId))).status).toBe(200);
+  const {record,overlay}=await readRichRecord();
+  expect(overlay.facts.find(f=>f.kind==="lab_measurement")).toMatchObject({value:32,unit:"μg/L",measuredOn:"2026-09-25",refLow:15,refHigh:150,refText:"15–150"});
+  expect([record.documents.length,record.facts.length,record.facts.filter(f=>f.kind==="lab_measurement").length,laboratoryGroups(record).length]).toEqual([8,19,11,5]);
+  const summary=composeRichSummary(record).sections.flatMap(s=>s.statements).map(s=>s.text).join("\n");
+  expect(summary).toContain("Ferritin — 32 μg/L · 25 Sep 2026 · supplied range 15–150 μg/L.");
+  expect(summary).not.toContain("supplied range not provided");
+ });
  it.each(["lab_measurement","medication_status"] as const)("supports %s-only approval",async kind=>{
   const p=await proposal(),f=p.facts.find(f=>f.kind===kind)!;await applyRoute(request([f.id],p.proposalId));const {record,overlay}=await readRichRecord();
   expect(overlay.facts).toHaveLength(1);expect(overlay.facts[0].kind).toBe(kind);expect(record.facts).toHaveLength(18);

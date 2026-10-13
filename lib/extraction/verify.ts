@@ -272,19 +272,18 @@ export function verifyLabFact(
   if (normalizeSource(claim.unit) !== parsed.unit) return { ok: false, reason: `unit "${claim.unit}" does not match the source` };
   if (parsed.rangeUnit && parsed.rangeUnit !== parsed.unit) return { ok: false, reason: "the supplied range is in a different unit" };
 
-  let refLow: number | null = null;
-  let refHigh: number | null = null;
-  let refText: string | null = null;
   if (claim.referenceRangeText) {
     const nums = normalizeSource(claim.referenceRangeText).match(/\d+(?:\.\d+)?/g) ?? [];
     if (nums.length !== 2) return { ok: false, reason: "reference range is not two numbers" };
     if (!parsed.low || Number(nums[0]) !== Number(parsed.low) || Number(nums[1]) !== Number(parsed.high)) {
       return { ok: false, reason: "the claimed reference range is not the one written with this result" };
     }
-    refLow = Number(parsed.low);
-    refHigh = Number(parsed.high);
-    refText = `${parsed.low}–${parsed.high}`;
   }
+  // The supported source parse owns the trusted range. AI omission is not source absence.
+  // A supplied AI range must still agree with the source; it never sets or overrides these fields.
+  const refLow = parsed.low === undefined ? null : Number(parsed.low);
+  const refHigh = parsed.high === undefined ? null : Number(parsed.high);
+  const refText = parsed.low === undefined ? null : `${parsed.low}–${parsed.high}`;
 
   if (!isIsoDate(claim.measuredOn)) return { ok: false, reason: "measurement date is not a valid date" };
   const lineDate = parsed.day ? isoFromDate(parsed) : null;

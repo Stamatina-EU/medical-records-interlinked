@@ -2,7 +2,7 @@ import { beforeAll,describe,expect,it,expectTypeOf } from "vitest";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { RichSyntheticState,DocumentedIncident,LaboratoryMeasurement } from "@/lib/model/rich";
-import type { ProposedFact,TrustedState } from "@/lib/model/types";
+import type { ProposedFact,TrustedState,ImagingExam } from "@/lib/model/types";
 import { parseRichState } from "@/lib/rich/schema";
 import { verifyRichState } from "@/lib/rich/verify";
 import { laboratoryGroups,richClaims,richFactDate } from "@/lib/rich/derive";
@@ -19,6 +19,7 @@ beforeAll(async()=>{
  pages=new Map(await Promise.all(state.documents.map(async d=>[d.id,await readPdfPages(new Uint8Array(await readFile(path.join("data/rich-synthetic/documents",d.file))))] as [string,string[]])));
 });
 const clone=()=>structuredClone(state);
+const imagingComparison=(s:RichSyntheticState)=>s.facts.find((f):f is ImagingExam=>f.kind==="imaging_exam" && f.comparesToDocumentId!==null)!;
 const lab=(s:RichSyntheticState)=>s.facts.find((f):f is LaboratoryMeasurement=>f.kind==="lab_measurement")!;
 const incident=(s:RichSyntheticState)=>s.facts.find((f):f is DocumentedIncident=>f.kind==="documented_incident")!;
 describe("rich immutable fixture: actual PDFs and deterministic verification",()=>{
@@ -122,5 +123,26 @@ describe("technical live-scope fence and separate default story",()=>{
   const result=await GET(new Request("http://localhost"),{params:Promise.resolve({id:doc.id})});
   expect(result.status).toBe(200);expect(result.headers.get("Content-Type")).toBe("application/pdf");expect(Buffer.from(await result.arrayBuffer()).subarray(0,5).toString()).toBe("%PDF-");
   const missing=await GET(new Request("http://localhost"),{params:Promise.resolve({id:"../../seed/state.json"})});expect(missing.status).toBe(404);
+ });
+});
+
+describe("M2 · fixture-only imaging examination date role",()=>{
+ it("accepts 12 Mar 2026 as performedOn and preserves the 10 Sep 2025 comparison wording",()=>{
+  const s=clone(),f=imagingComparison(s),before=structuredClone(f);
+  expect(f.performedOn).toBe("2026-03-12");
+  expect(f.source.verifiedExcerpt).toContain("Thyroid ultrasound of 12 Mar 2026 compared with the thyroid ultrasound of 10 Sep 2025.");
+  expect(verifyRichState(s,pages)).toEqual([]);
+  expect(f).toEqual(before);
+ });
+ it("rejects 10 Sep 2025 as performedOn even though that comparison date occurs in the verified excerpt",()=>{
+  const s=clone(),f=imagingComparison(s),excerpt=f.source.verifiedExcerpt;
+  f.performedOn="2025-09-10";
+  expect(verifyRichState(s,pages)).toContainEqual({factId:f.id,page:f.source.page,check:"performedOn does not match the examination date source role"});
+  expect(f.source.verifiedExcerpt).toBe(excerpt);
+ });
+ it("rejects an examination-looking fragment inside a differently qualified source line",()=>{
+  const s=clone(),f=imagingComparison(s),p=new Map(pages);
+  p.set(f.source.documentId,p.get(f.source.documentId)!.map(text=>text.replace(f.source.verifiedExcerpt,"Comparison reference: "+f.source.verifiedExcerpt)));
+  expect(verifyRichState(s,p).some(x=>x.factId===f.id && x.check.includes("complete source lines"))).toBe(true);
  });
 });

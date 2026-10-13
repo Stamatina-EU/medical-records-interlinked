@@ -215,3 +215,51 @@ describe("verifyExtraction (the live pipeline)", () => {
     );
   });
 });
+
+describe("M1 · source-owned supplied range, including AI omissions", () => {
+  it("recovers 15–150 μg/L when the verified source supplies it but AI returns null", () => {
+    const extraction: Extraction = {
+      ...goodExtraction,
+      labMeasurements: [{ ...goodExtraction.labMeasurements[0], referenceRangeText: null }],
+    };
+    const result = verifyExtraction(livePages, extraction, { documentId: "doc-new", episodes });
+    if (result.status !== "ok") throw new Error(result.reason);
+    expect(result.verified.find(f => f.kind === "lab_measurement")).toMatchObject({
+      value: 32, unit: "μg/L", measuredOn: "2026-09-25", refLow: 15, refHigh: 150, refText: "15–150",
+      source: { page: 2, verifiedExcerpt: goodExtraction.labMeasurements[0].excerpt },
+    });
+  });
+
+  it("preserves genuine range absence in the existing supported result-sentence grammar", () => {
+    const excerpt = "Ferritin on 25 Sep 2026: 32 μg/L.";
+    const pages = [livePages[0], livePages[1].replace(goodExtraction.labMeasurements[0].excerpt, excerpt)];
+    const extraction: Extraction = { ...goodExtraction, medicationStatements: [],
+      labMeasurements: [{ ...goodExtraction.labMeasurements[0], excerpt, referenceRangeText: null }] };
+    const result = verifyExtraction(pages, extraction, { documentId: "doc-new", episodes });
+    if (result.status !== "ok") throw new Error(result.reason);
+    expect(result.verified[0]).toMatchObject({ value: 32, unit: "μg/L", refLow: null, refHigh: null, refText: null,
+      source: { verifiedExcerpt: excerpt } });
+  });
+
+  it("recovers the supplied range from a supported laboratory table row when AI omits it", () => {
+    const excerpt = "Ferritin 32 μg/L 15–150";
+    const loc = located("IRON STUDIES", [excerpt], excerpt, true);
+    const result = verifyLabFact({ ...goodExtraction.labMeasurements[0], referenceRangeText: null },
+      loc.verifiedExcerpt, "2026-09-25", loc.context);
+    expect(result).toMatchObject({ ok: true, unit: "μg/L", refLow: 15, refHigh: 150, refText: "15–150" });
+  });
+
+  it("rejects an AI range that overrides the source's supplied bounds", () => {
+    const extraction: Extraction = { ...goodExtraction, medicationStatements: [],
+      labMeasurements: [{ ...goodExtraction.labMeasurements[0], referenceRangeText: "30–400 μg/L" }] };
+    expect(verifyExtraction(livePages, extraction, { documentId: "doc-new", episodes }).status).toBe("unusable");
+  });
+
+  it("rejects an AI-invented range when the complete supported source line has none", () => {
+    const excerpt = "Ferritin on 25 Sep 2026: 32 μg/L.";
+    const pages = [livePages[0], livePages[1].replace(goodExtraction.labMeasurements[0].excerpt, excerpt)];
+    const extraction: Extraction = { ...goodExtraction, medicationStatements: [],
+      labMeasurements: [{ ...goodExtraction.labMeasurements[0], excerpt }] };
+    expect(verifyExtraction(pages, extraction, { documentId: "doc-new", episodes }).status).toBe("unusable");
+  });
+});

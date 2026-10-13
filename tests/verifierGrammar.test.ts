@@ -139,12 +139,12 @@ const SEED_D1 = ["HAEMATOLOGY AND IRON STUDIES", TABLE, "Haemoglobin 12.6 g/dL 1
 const SEED_D3 = ["IRON STUDIES", TABLE, "Ferritin 19.6 μg/L 15–150", "Reference ranges are supplied by Riverside Clinical Laboratory and may differ from other laboratories."];
 const LIVE = "Ferritin on 25 Sep 2026: 32 μg/L (reference range 15–150 μg/L).";
 
-const FERRITIN_POSITIVE: [string, string[], string, number, string | null, string][] = [
-  // [why, page body, excerpt (= the complete line), value, claimed range, measured on]
+const FERRITIN_POSITIVE: [string, string[], string, number, string | null, string, expectedSourceRange?: string][] = [
+  // [why, page body, excerpt (= the complete line), value, claimed range, measured on, source range when AI omits it]
   ["seed doc-01 (table row)", SEED_D1, "Ferritin 11 μg/L 30–400", 11, "30–400", "2026-09-25"],
   ["seed doc-03 (table row)", SEED_D3, "Ferritin 19.6 μg/L 15–150", 19.6, "15–150", "2026-09-25"],
   ["live demo note (sentence)", ["RESULTS", LIVE], LIVE, 32, "15–150 μg/L", "2026-09-25"],
-  ["a table row, range not claimed", SEED_D3, "Ferritin 19.6 μg/L 15–150", 19.6, null, "2026-09-25"],
+  ["a table row, range not claimed", SEED_D3, "Ferritin 19.6 μg/L 15–150", 19.6, null, "2026-09-25", "15–150"],
   ["a table row ending the page", ["IRON STUDIES", TABLE, "Ferritin 19.6 μg/L 15–150"], "Ferritin 19.6 μg/L 15–150", 19.6, "15–150", "2026-09-25"],
   ["a table row followed by another row, then a heading", ["IRON STUDIES", TABLE, "Ferritin 19.6 μg/L 15–150", "Haemoglobin 12.9 g/dL 12.0–15.5", "PLAN"], "Ferritin 19.6 μg/L 15–150", 19.6, "15–150", "2026-09-25"],
   ["a sentence, no date, no range", ["RESULTS", "Ferritin 32 μg/L."], "Ferritin 32 μg/L.", 32, null, "2026-09-25"],
@@ -195,9 +195,9 @@ const FERRITIN_NEGATIVE: [string, string[], string, number, string | null][] = [
 ];
 
 describe("ferritin · strict result-line grammar", () => {
-  it.each(FERRITIN_POSITIVE)("A · verifies %s", (_why, body, excerpt, value, range, measuredOn) => {
+  it.each(FERRITIN_POSITIVE)("A · verifies %s", (_why, body, excerpt, value, range, measuredOn, expectedSourceRange) => {
     const fact = ferritinFact(body, excerpt, value, range, measuredOn, /ng\/mL/.test(excerpt) ? "ng/mL" : "μg/L");
-    expect(fact).toMatchObject({ kind: "lab_measurement", value, measuredOn, refText: range ? range.replace(/ ?μg\/L$/, "").replace(/ ?[-–] ?/, "–") : null });
+    expect(fact).toMatchObject({ kind: "lab_measurement", value, measuredOn, refText: range ? range.replace(/ ?μg\/L$/, "").replace(/ ?[-–] ?/, "–") : expectedSourceRange ?? null });
   });
 
   it("A · a result with no date of its own is dated by the document, never a borrowed date", () => {
@@ -312,7 +312,7 @@ describe("C · invariant: a unit that does not match a supported structure can n
     expect(verifiedMutations).toEqual([]);
   });
 
-  it.each(FERRITIN_POSITIVE)("ferritin · every mutation of the line in: %s", (_why, body, excerpt, value, range, measuredOn) => {
+  it.each(FERRITIN_POSITIVE)("ferritin · every mutation of the line in: %s", (_why, body, excerpt, value, range, measuredOn, expectedSourceRange) => {
     const at = body.indexOf(excerpt);
     const unit = /ng\/mL/.test(excerpt) ? "ng/mL" : "μg/L";
     expect(ferritinFact(body, excerpt, value, range, measuredOn, unit)).not.toBeNull();
