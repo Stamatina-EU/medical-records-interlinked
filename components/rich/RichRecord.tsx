@@ -1,4 +1,5 @@
 import AddRecord from "@/components/add-record/AddRecord";
+import { RichDemoNotice } from "./RichShell";
 import WhatChanged from "@/components/snapshot/WhatChanged";
 import { recordChangesSummary,recordCalculations } from "@/lib/demo/record";
 import Link from "next/link";
@@ -12,7 +13,7 @@ import VisualIcon from "@/components/ui/VisualIcon";
 import styles from "./rich.module.css";
 export function IncidentSection({incident}:{incident:DocumentedIncident}) {
   return <section className={styles.chapter} id="incidents">
-    <div className={styles.chapterHead}><h2><VisualIcon name="clipboard-list" />Documented incident</h2><span className={styles.direct}>Direct · source wording</span></div>
+    <div className={styles.chapterHead}><h2><VisualIcon name="incident-mark" />Documented incident</h2><span className={styles.direct}>Direct · source wording</span></div>
     <p className={styles.meta}>{incident.occurredOn ? `Incident date ${formatDate(incident.occurredOn)}` : "Incident date not supplied"} · Document date {formatDate(incident.documentedOn)}</p>
     <FactValue factId={incident.id} className={styles.statement}>{incident.statement}</FactValue>
     <div className={styles.sourceLine}><SourceRef factId={incident.id}/><span>Exact wording retained from the emergency department note.</span></div>
@@ -28,13 +29,24 @@ export default function RichRecord({state,integrated=false}:{state:RecordState;i
   const incident=state.facts.find((f):f is DocumentedIncident=>f.kind==="documented_incident");
   const followups=state.facts.filter(f=>f.kind==="follow_up");
   return <>
-    <header className={styles.recordHead}>
-      <p className={styles.kicker}><VisualIcon name="notebook-tabs" size={19}/>{integrated ? "Your medical record" : "Your medical record · density study"}</p>
+    {integrated ? <>
+      <header className={styles.productIntro}>
+        <p className={styles.kicker}><VisualIcon name="notebook-tabs" size={19}/>Your evidence-linked medical record</p>
+        <h1>Your medical history, linked back to the evidence.</h1>
+        <p className={styles.productCopy}>MRI brings external medical documents into one longitudinal record. AI proposes facts, deterministic code verifies them against the source, and you decide what becomes part of your history.</p>
+        <p className={styles.processLine}><span className={styles.processPair}>AI proposes <span aria-hidden="true">→</span> Source verified</span>{" "}<span className={styles.processBridge} aria-hidden="true">→</span>{" "}<span className={styles.processPair}>You approve <span aria-hidden="true">→</span> Record updates</span></p>
+      </header>
+      <RichDemoNotice integrated compact/>
+      <header className={styles.currentRecord}>
+        <div><h2>{state.patient.displayName}</h2><p>Fictional patient · synthetic demo record</p></div>
+        <div className={styles.mobileRecordAction}><AddRecord/></div>
+      </header>
+    </> : <header className={styles.recordHead}>
+      <p className={styles.kicker}><VisualIcon name="notebook-tabs" size={19}/>Your medical record · density study</p>
       <h1>{state.patient.displayName}</h1>
       <p>Fictional patient · longitudinal synthetic record</p>
-      {integrated && <AddRecord/>}
-    </header>
-    {update && <div className={styles.approvedUpdate}><WhatChanged document={update} changes={recordChangesSummary(state)} compact/></div>}
+    </header>}
+    {update && <div className={styles.approvedUpdate}><WhatChanged document={update} changes={recordChangesSummary(state)} compact heading={integrated ? "Latest approved update" : undefined}/></div>}
     <section className={styles.chapter}>
       <div className={styles.chapterHead}><h2><VisualIcon name="flask-conical"/>Laboratory measurements</h2><Link className={styles.action} href={base+"/laboratory"}>View all dated measurements →</Link></div>
       <div className={styles.overviewNote}><CalculatedLabel claimKey="rich:laboratory-overview" label={`${groups.reduce((n,g)=>n+g.measurements.length,0)} measurements · ${groups.length} analytes`}/><p>Latest documented dates. Fixed analyte order; no clinical ranking.</p></div>

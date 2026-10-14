@@ -22,7 +22,7 @@ import { isEmptyRecord } from "@/lib/view/emptyRecord";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  if(demoProfile()==="rich"){const {record}=await readRichRecord();return <RichShell state={record} integrated><RichRecord state={record} integrated/></RichShell>;}
+  if(demoProfile()==="rich"){const {record}=await readRichRecord();return <RichShell state={record} integrated showDemoNotice={false}><RichRecord state={record} integrated/></RichShell>;}
   let state;
   try {
     state = await readState();

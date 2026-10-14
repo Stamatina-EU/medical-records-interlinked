@@ -235,12 +235,12 @@
 /* Evidence references repeat the Summary highlights while preserving their shared action geometry. */
 .proposalTheme [data-evidence-kind="source"] {
   border: 0;
-  background: var(--accent-wash);
+  background: #ced8f1;
 }
 .proposalTheme [data-evidence-kind="source"]:hover { background: var(--accent); color: white; }
 .proposalTheme [data-evidence-kind="source"]:hover svg { color: white; }
 .proposalTheme [data-evidence-kind="derived"] > span > span:last-child {
   border: 0;
-  background: var(--rb-derived-tint);
+  background: #ebdce5;
 }
 .proposalTheme [data-evidence-kind="derived"]:hover > span > span:last-child { background: var(--rb-derived); color: white; }

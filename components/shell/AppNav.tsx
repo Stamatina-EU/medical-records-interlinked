@@ -88,7 +88,7 @@ export default function AppNav({ patientName, demoProfile="legacy" }: { patientN
             );
           })}
         </nav>
-        {!study && pathname !== "/" && (
+        {!study && (pathname !== "/" || demoProfile === "rich") && (
           <div className={styles.navAction}>
             <AddRecord />
           </div>

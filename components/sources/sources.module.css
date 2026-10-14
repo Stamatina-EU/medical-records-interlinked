@@ -193,9 +193,9 @@
   .date > span:last-child { width: 100%; padding-left: 36px; }
 }
 
-/* Documents stay open; document actions are outlined at rest and blue on hover. */
+/* Documents stay open; source actions share a pale blue fill and solid blue hover. */
 .document { border: 0; }
-.open { color: var(--accent); background: transparent; border: 1px solid currentColor; transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease; }
+.open { color: var(--accent); background: #ced8f1; border: 0; transition: background-color 140ms ease, color 140ms ease; }
 .open:hover { color: #fff; background: var(--accent); border-color: var(--accent); }
 
 .body summary { width: fit-content; padding: 8px 12px; border: 1px solid currentColor; border-radius: 8px; background: transparent; }
@@ -211,8 +211,8 @@
   border-radius: var(--control-radius);
 }
 
-/* Fact disclosures are evidence highlights; document-opening actions keep their outline. */
-.body summary { border: 0; background: var(--accent-wash); }
+/* Fact disclosures share the document action background. */
+.body summary { border: 0; background: #ced8f1; }
 .body summary:hover { background: var(--accent); color: white; }
 
 @media (prefers-reduced-motion: reduce) {

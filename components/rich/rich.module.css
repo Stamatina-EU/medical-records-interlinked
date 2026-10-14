@@ -115,3 +115,55 @@
 
 /* The approved-update surface keeps the existing document ink on the rich canvas. */
 .approvedUpdate { color:#183e55; margin-bottom:22px; container-type:inline-size; }
+
+/* The selected linked-record introduction shares the existing blue environment. */
+:global(body):has(.productIntro) { position:relative; isolation:isolate; }
+/* Feather the real background asset into the existing canvas; the mask adds no illustration. */
+:global(body):has(.productIntro)::before {
+ content:""; position:absolute; top:var(--record-header-height); left:0; right:0; height:430px;
+ background:url('/recordbook/record-introduction.webp') center / cover no-repeat;
+ mask-image:linear-gradient(to bottom,#000 65%,transparent); z-index:-1; pointer-events:none;
+}
+.productIntro { position:relative; isolation:isolate; margin:0 0 32px; padding:8px 6px 0; }
+.productIntro::after { content:""; position:absolute; z-index:-1; right:-36px; top:12px; width:600px; height:240px; background:url('/recordbook/interlinked-records.webp') center / contain no-repeat; pointer-events:none; }
+.productIntro .kicker { margin:0 0 10px; color:#b2ace9; }
+.productIntro h1 { text-wrap:balance; max-width:32ch; margin:0 0 14px; color:#fff; font-family:var(--font-evidence); font-size:46px; line-height:1.16; font-weight:400; }
+.productCopy { max-width:90ch; margin:0; color:#f1f5ff; font-size:17px; line-height:1.55; }
+.processLine { margin:16px 0 0; color:#b2ace9; font-size:15px; line-height:1.7; font-weight:600; }
+.processLine span { padding:0 5px; }
+.processLine .processPair { padding:0; white-space:nowrap; }
+.demoBannerCompact { padding:10px 14px; margin-bottom:0; gap:14px; background:#4a265e; font-size:13px; line-height:1.5; }
+.demoBannerCompact > div { display:flex; flex-wrap:wrap; align-items:baseline; gap:3px 8px; }
+.demoBannerCompact span { margin:0; color:#f1eaf0; }
+.demoBanner .liveScope { display:inline; margin:0; color:inherit; }
+.demoBannerCompact a { color:#fff; }
+.currentRecord { margin:32px 0 34px; padding:0 6px; }
+.currentRecord h2 { margin:0 0 4px; color:#fff; font-family:var(--font-evidence); font-size:28px; line-height:1.2; font-weight:400; }
+.currentRecord p { margin:0; color:#f1f5ff; font-size:14px; line-height:1.5; }
+.mobileRecordAction { display:none; }
+@media(max-width:1100px) {
+ .productIntro::after { opacity:.55; right:-20px; width:440px; height:176px; top:18px; }
+ .productCopy { max-width:75ch; }
+}
+@media(max-width:860px) {
+ :global(body):has(.productIntro)::before { height:680px; background-position:left top; }
+ .productIntro::after { display:none; }
+ .mobileRecordAction { display:block; margin-top:12px; }
+}
+@media(max-width:650px) {
+ .productIntro { padding:0; margin-bottom:14px; }
+ .productIntro .kicker { font-size:11px; line-height:1.5; align-items:start; }
+ .productIntro .kicker > span { flex-shrink:0; }
+ .productIntro h1 { font-size:32px; margin-bottom:10px; }
+ .productCopy { font-size:16px; line-height:1.45; }
+ .processLine { display:grid; gap:2px; margin-top:10px; font-size:13px; line-height:1.5; }
+ .processLine span { padding:0 2px; }
+ .processLine .processPair { padding:0; }
+ .processLine .processBridge { display:none; }
+ .demoBannerCompact { padding:8px 12px; }
+ .demoBannerCompact .liveScope { display:block; white-space:nowrap; }
+ .demoBannerCompact a { min-height:0; margin-top:6px; }
+ .currentRecord { padding:0; margin-top:18px; margin-bottom:18px; }
+ .currentRecord .mobileRecordAction { margin-top:8px; }
+ .currentRecord h2 { font-size:25px; }
+}

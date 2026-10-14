@@ -95,9 +95,11 @@ export function SourceRef({ factId }: { factId: string }) {
 export function CalculatedLabel({
   claimKey,
   label,
+  explanationLabel,
 }: {
   claimKey: string;
   label?: string;
+  explanationLabel?: string;
 }) {
   const { open, index, visualDirection } = useEvidence();
   const recordbookPresentation = visualDirection === "proposal-1";
@@ -145,7 +147,7 @@ export function CalculatedLabel({
             {labelContent}
           </>
         )}
-        <span className={styles.calcTag}>{recordbookPresentation ? (label ? "Calculated from your records" : "How this was calculated") : "derived"}</span>
+        <span className={styles.calcTag}>{explanationLabel ?? (recordbookPresentation ? (label ? "Calculated from your records" : "How this was calculated") : "derived")}</span>
       </span>
     </button>
   );

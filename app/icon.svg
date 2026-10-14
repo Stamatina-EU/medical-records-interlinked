@@ -1,7 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="MRI">
-<title>MRI</title>
-<rect width="128" height="128" rx="18" fill="#0e2f3d"/>
-<rect x="40" y="24" width="64" height="64" rx="8" fill="#68b1b1"/>
-<rect x="24" y="40" width="64" height="64" rx="8" fill="#6fcdc7"/>
-<path fill="#278f8f" d="M40 40H80A8 8 0 0 1 88 48V88H48A8 8 0 0 1 40 80Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" role="img" aria-label="MRi mark">
+<title>MRi mark</title>
+<g transform="translate(8.5 7)">
+<rect x="27" width="100" height="100" rx="12" fill="#5fc6e0"/>
+<rect y="30" width="100" height="100" rx="12" fill="#b9b4e6"/>
+<path fill="#1b86b3" d="M27 30H88A12 12 0 0 1 100 42V100H39A12 12 0 0 1 27 88Z"/>
+</g>
 </svg>

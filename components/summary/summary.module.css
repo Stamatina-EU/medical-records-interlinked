@@ -1,10 +1,11 @@
 /*
  * Doctor Summary — the one deliberately typeset clinical brief inside the app:
- * a single paper sheet, ~68ch measure, serif section titles over thin rules, compact sans body,
+ * a full-width paper sheet, serif section titles over thin rules, compact sans body,
  * small source chips, and a numbered source list at the foot.
  */
 .sheet {
-  max-width: 820px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
   background: var(--surface-raised);
   border: 1px solid var(--rule);
@@ -56,7 +57,7 @@
   font-size: var(--text-sm);
   color: var(--ink-muted);
   margin-top: var(--space-2);
-  max-width: 68ch;
+  max-width: 100%;
 }
 
 /* a genuinely empty record: one quiet line instead of empty sections */
@@ -85,14 +86,14 @@
 }
 
 .statement {
-  max-width: 68ch;
+  max-width: 100%;
   font-size: var(--text-base);
   line-height: 1.6;
   padding: var(--space-1) 0;
 }
 
 .picture {
-  max-width: 68ch;
+  max-width: 100%;
   font-size: var(--text-base);
   line-height: 1.7;
   padding: var(--space-1) 0;

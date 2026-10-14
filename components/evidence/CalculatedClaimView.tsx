@@ -51,6 +51,7 @@ export default function CalculatedClaimView({
 
       <h3 className={styles.sectionHeading}>How this was determined</h3>
       <p className={styles.rule}>{claim.ruleDescription}</p>
+      {claim.kind === "followup_match" && <p className={styles.rule}>This match establishes chronology only, not care completion. It does not confirm that the later result fulfilled the recommendation.</p>}
       {note && <p className={styles.rule}>{note}</p>}
 
       <h3 className={styles.sectionHeading}>Input facts</h3>

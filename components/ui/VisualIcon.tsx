@@ -8,10 +8,11 @@ type IconName =
   | "files"
   | "network"
   | "clipboard-list"
+  | "incident-mark"
   | "notebook-tabs"
   | "chart-no-axes-combined"
   | "arrow-up-right";
-/** Decorative official Lucide glyphs; source files and license are in public/visual-icons. */
+/** Decorative Lucide glyphs and a simple incident marker; assets and license are in public/visual-icons. */
 export default function VisualIcon({
   name,
   size = 24,
