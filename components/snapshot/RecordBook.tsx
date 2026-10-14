@@ -237,7 +237,7 @@ export default function RecordBook({
                   <div className={styles.consequence}>
                     <p className={styles.label}>
                       <VisualIcon name="network" size={17} />
-                      Calculated from your records
+                      Calculated from your record
                     </p>
                     <CalculatedLabel claimKey={item.stateKey} />
                   </div>

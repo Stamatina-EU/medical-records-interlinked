@@ -13,9 +13,9 @@ export default function SourceChip({ refItem, numbers, derived }: { refItem: Sum
       type="button"
       className={`${styles.chip} ${derived ? styles.calculationChip : ""}`}
       onClick={() => open(refItem.type === "fact" ? { type: "fact", id: refItem.id } : { type: "claim", key: refItem.key })}
-      aria-label={`${derived ? "Derived — " : ""}${label}: show evidence`}
+      aria-label={`${derived ? "Calculated — " : ""}${label}: show evidence`}
     >
-      {derived && <span className={styles.chipDerived}>derived · </span>}
+      {derived && <span className={styles.chipDerived}>Calculated · </span>}
       {numbers.join(", ")}
     </button>
   );

@@ -49,7 +49,7 @@ describe("rich presentation boundaries",()=>{
  it("incident evidence shows separate dates, exact excerpt and curated fixture attribution",()=>{
   const fact=state.facts.find(f=>f.kind==="documented_incident")!;
   const html=renderToStaticMarkup(createElement(SourceFactView,{fact,index,onOpenDocument(){}}));
-  expect(html).toContain("18 Aug 2025");expect(html).toContain("19 Aug 2025");expect(html).toContain("Exact source wording");expect(html).toContain("Code-owned synthetic fixture");
+  expect(html).toContain("18 Aug 2025");expect(html).toContain("19 Aug 2025");expect(html).toContain("Exact source wording");expect(html).toContain("Curated synthetic baseline");
  });
  it("uses scoped PDF endpoints without changing the default viewer endpoint",()=>{
   const props={document:state.documents[0],page:1,onClose(){}};

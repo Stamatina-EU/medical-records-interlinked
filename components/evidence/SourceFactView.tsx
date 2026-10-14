@@ -22,7 +22,7 @@ export default function SourceFactView({ fact, index, onOpenDocument }: Props) {
       <div className={styles.factHeader}>
         <p className={styles.kind}>
           <VisualIcon name="files" size={19} />
-          From a document
+          Direct
         </p>
         <h2 className={styles.factLabel}>{label}</h2>
         <p className={styles.factValue}>{value}</p>
@@ -91,7 +91,7 @@ export default function SourceFactView({ fact, index, onOpenDocument }: Props) {
         {doc?.origin === "added"
           ? "Added with your approval"
           : index.profile === "rich-synthetic"
-          ? "Code-owned synthetic fixture · verified against its PDF"
+          ? "Curated synthetic baseline · source wording checked against its PDF"
           : "Approved synthetic seed fact"}
       </p>
       {doc && (

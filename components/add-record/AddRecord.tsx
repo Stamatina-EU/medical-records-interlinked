@@ -13,6 +13,7 @@ import { previewRecord,liveContext } from "@/lib/demo/record";
 import type { Proposal, TrustedState } from "@/lib/model/types";
 import { preview } from "@/lib/engine/apply";
 import { formatDate } from "@/lib/text/dates";
+import { calculationText } from "@/lib/view/calculationCopy";
 import { reviewFactHeadline } from "@/lib/view/reviewFact";
 import {
   APPROVAL_PROBLEM_TEXT,
@@ -264,13 +265,13 @@ function Panel({
               <p className={styles.chooseTitle}>
                 Choose what enters your record.
               </p>
-              <p>This proof of concept reads text PDFs and proposes only:</p>
+              <p>Live Add record is deliberately narrow in this proof of concept. It reads text PDFs and AI proposes only:</p>
               <ul>
                 <li>Ferritin measurements</li>
                 <li>Documented oral-iron status</li>
               </ul>
               <p className={styles.messageText}>
-                You review the exact source wording and choose which facts to
+                The curated synthetic baseline demonstrates the broader record model. You review the exact source wording and choose which facts to
                 include. Scanned PDFs and other medical content are outside the
                 live extraction scope.
               </p>
@@ -327,7 +328,7 @@ function Panel({
           {phase.kind === "no_supported_facts" && (
             <Message
               title="No supported history changes were found in this record."
-              text="This prototype currently extracts a limited set of demonstrated facts. Your history hasn't changed."
+              text="Live Add record supports only ferritin results and documented oral-iron status in this proof of concept. The curated synthetic baseline demonstrates the broader record model. Your history hasn't changed."
             >
               <button
                 type="button"
@@ -469,7 +470,7 @@ export function Review({
               ? "This review is no longer available."
               : "This document has not been added yet."}
       </p>
-      <h3 className={styles.sectionHeading}>Verified source facts</h3>
+      <h3 className={styles.sectionHeading}>Direct facts</h3>
       <p className={styles.sectionNote}>
         Checked against source wording. Include the facts you want in your
         record.
@@ -530,10 +531,10 @@ export function Review({
             <li key={l.text} data-consequence-kind={l.ref.type}>
               <span className={styles.previewKind}>
                 {l.ref.type === "claim"
-                  ? "Calculated from your records"
+                  ? "Calculated from your record"
                   : "Fact to add"}
               </span>
-              {l.text}
+              {l.ref.type === "claim" ? calculationText(l.text) : l.text}
             </li>
           ))}
         </ul>

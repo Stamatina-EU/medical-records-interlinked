@@ -33,8 +33,8 @@ export default function RichRecord({state,integrated=false}:{state:RecordState;i
       <header className={styles.productIntro}>
         <p className={styles.kicker}><VisualIcon name="notebook-tabs" size={19}/>Your evidence-linked medical record</p>
         <h1>Your medical history, linked back to the evidence.</h1>
-        <p className={styles.productCopy}>MRI brings external medical documents into one longitudinal record. AI proposes facts, deterministic code verifies them against the source, and you decide what becomes part of your history.</p>
-        <p className={styles.processLine}><span className={styles.processPair}>AI proposes <span aria-hidden="true">→</span> Source verified</span>{" "}<span className={styles.processBridge} aria-hidden="true">→</span>{" "}<span className={styles.processPair}>You approve <span aria-hidden="true">→</span> Record updates</span></p>
+        <p className={styles.productCopy}>MRI brings external medical documents into one longitudinal record. AI proposes facts, deterministic code checks their wording against the source, and you decide what becomes part of your history.</p>
+        <p className={styles.processLine}><span className={styles.processPair}>AI proposes <span aria-hidden="true">→</span> Source wording checked</span>{" "}<span className={styles.processBridge} aria-hidden="true">→</span>{" "}<span className={styles.processPair}>You approve <span aria-hidden="true">→</span> Record updates</span></p>
       </header>
       <RichDemoNotice integrated compact/>
       <header className={styles.currentRecord}>

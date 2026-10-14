@@ -7,6 +7,7 @@
  *  - CalculatedLabel: a visibly "derived" label that opens "How this was determined"
  */
 import { Fragment } from "react";
+import { calculationText } from "@/lib/view/calculationCopy";
 import { useEvidence } from "@/components/evidence/EvidenceProvider";
 import { documentShortLabel } from "@/lib/evidence/index";
 import { DocIcon } from "@/components/shell/icons";
@@ -105,7 +106,7 @@ export function CalculatedLabel({
   const recordbookPresentation = visualDirection === "proposal-1";
   const claim = index.claims[claimKey];
   if (!claim) return null;
-  const text = label ?? claim.text;
+  const text = calculationText(label ?? claim.text);
   // a label made of "·"-separated parts ("2 ferritin results · latest in record") breaks only after a separator,
   // never inside a part; a label without separators wraps as ordinary text
   const parts = text.split(" · ");
@@ -131,8 +132,8 @@ export function CalculatedLabel({
       data-evidence-kind="derived"
       data-calculation-layout={inlineLabel ? "inline" : undefined}
       onClick={() => open({ type: "claim", key: claimKey })}
-      aria-label={recordbookPresentation ? `${text} (calculated from your records — show how this was determined)` : `${text} (derived — show how this was determined)`}
-      title={recordbookPresentation ? "Calculated from your records — show how this was determined" : "Derived from your records — show how this was determined"}
+      aria-label={recordbookPresentation ? `${text} (calculated from your record — show how this was determined)` : `${text} (calculated — show how this was determined)`}
+      title={recordbookPresentation ? "Calculated from your record — show how this was determined" : "Calculated from your record — show how this was determined"}
     >
       {/* Shared calculation presentation; claim text and evidence semantics remain unchanged. */}
       <span className={styles.calcRun}>
@@ -147,7 +148,7 @@ export function CalculatedLabel({
             {labelContent}
           </>
         )}
-        <span className={styles.calcTag}>{explanationLabel ?? (recordbookPresentation ? (label ? "Calculated from your records" : "How this was calculated") : "derived")}</span>
+        <span className={styles.calcTag}>{explanationLabel ?? (recordbookPresentation ? (label ? "Calculated from your record" : "How this was calculated") : "Calculated")}</span>
       </span>
     </button>
   );

@@ -79,7 +79,7 @@ describe("recordbook review preserves the approval selection", () => {
     const html = render(p, new Set([med.id]));
     expect(html.match(/checked=""/g)).toHaveLength(1);
     expect(html).toContain("Add 1 fact to my record");
-    expect(html).toContain("Matching follow-up result found");
+    expect(html).toContain("Later ferritin result documented");
     expect(html).not.toContain("Oral iron marked Ongoing");
   });
   it("excluding the lab removes its calculated consequence from the preview", async () => {
@@ -87,7 +87,7 @@ describe("recordbook review preserves the approval selection", () => {
     const lab = p.facts.find((f) => f.kind === "lab_measurement")!;
     const html = render(p, new Set([lab.id]));
     expect(html).toContain("Add 1 fact to my record");
-    expect(html).not.toContain("Matching follow-up result found");
+    expect(html).not.toContain("Later ferritin result documented");
     expect(html).toContain("Oral iron marked Ongoing");
   });
   it.each(["uncertain", "gone-after-uncertain"] as const)(

@@ -3,6 +3,7 @@ import type { RecordState } from "@/lib/demo/model";
 import { composeRichSummary } from "@/lib/demo/summary";
 import { refKey,type Statement } from "@/lib/summary/compose";
 import { formatDate } from "@/lib/text/dates";
+import { calculationText } from "@/lib/view/calculationCopy";
 import { plural } from "@/lib/text/plural";
 import SourceChip from "@/components/summary/SourceChip";
 import styles from "@/components/summary/summary.module.css";
@@ -21,7 +22,7 @@ export default function RichDoctorSummary({state}:{state:RecordState}) {
             </p>
             <p className={styles.scope}>
               A concise, evidence-linked view of the documented history held in this record. Every statement links to its source;
-              statements marked “derived” were calculated from the documents, not written in them.
+              statements marked “Calculated” describe relationships computed from the record rather than wording stated in a document.
             </p>
           </header>
 
@@ -29,12 +30,13 @@ export default function RichDoctorSummary({state}:{state:RecordState}) {
             // the sentence's last word and its chips never wrap apart, so a lone source number
             // can't start the next line or appear to belong to the next sentence
             const sentence = (st: Statement) => {
-              const cut = st.text.lastIndexOf(" ") + 1;
+              const text = st.derived ? calculationText(st.text) : st.text;
+              const cut = text.lastIndexOf(" ") + 1;
               return (
                 <span className={st.derived ? styles.derivedText : undefined}>
-                  {st.text.slice(0, cut)}
+                  {text.slice(0, cut)}
                   <span className={styles.keep}>
-                    {st.text.slice(cut)}{" "}
+                    {text.slice(cut)}{" "}
                     {st.refs.map((r, i) => (
                       <SourceChip key={refKey(r)} refItem={r} numbers={summary.sourceNumbers[refKey(r)] ?? []} derived={st.derived && i === 0} />
                     ))}

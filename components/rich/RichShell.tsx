@@ -7,8 +7,8 @@ import styles from "./rich.module.css";
 
 export function RichDemoNotice({integrated=false,compact=false}:{integrated?:boolean;compact?:boolean}) {
   return <aside className={`${styles.demoBanner}${compact ? ` ${styles.demoBannerCompact}` : ""}`} aria-label="Rich demo scope">
-    <div><strong>{integrated ? "Synthetic demo record" : "Rich synthetic demo · Read only"}</strong><span>{integrated ? <>{"Verified synthetic baseline + patient-approved additions. "}<span className={styles.liveScope}>Live Add record: ferritin and oral iron only.</span></> : "Prepared fixtures with verified PDF sources. Separate from live Add record."}</span></div>
-    <Link href={integrated ? "/sources" : "/"}>{integrated ? "Explore source documents ↗" : "Open the hackathon demo ↗"}</Link>
+    <div><strong>{integrated ? "Synthetic demo record" : "Rich synthetic demo · Read only"}</strong><span>{integrated ? <>{"Curated synthetic baseline · "}<span className={styles.liveScope}>Live Add record: ferritin + oral iron only.</span></> : "Curated synthetic baseline with source wording checked against its PDFs. Separate from live Add record."}</span></div>
+    <Link href={integrated ? "/sources" : "/"}>{integrated ? "Explore source documents" : "Open the hackathon demo ↗"}</Link>
   </aside>;
 }
 

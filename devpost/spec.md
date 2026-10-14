@@ -30,7 +30,7 @@ The **starting history** for the fictional patient is a committed **seed**: `dat
 | Step | Who does it | What happens |
 |---|---|---|
 | 1 | **Code** | Reads the PDF's text, page by page. No AI. |
-| 2 | **AI (OpenAI model, set by `EXTRACTION_MODEL`)** | Proposes facts in a strict format. Only two kinds are allowed: a lab measurement and a medication status statement. Each comes with its page and a word-for-word excerpt. |
+| 2 | **AI (OpenAI model, set by `EXTRACTION_MODEL`)** | In the live Add record proof-of-concept workflow, proposes facts in a strict format. Only two kinds are allowed: a lab measurement and a medication status statement. Each comes with its page and a word-for-word excerpt. |
 | 3 | **Code** | Checks each fact on its own. Is the excerpt really on that page, word for word? Does the source text itself name the subject (ferritin, oral iron) *and* contain the value, unit or status? Facts that fail are left out. The excerpt shown to the patient is then taken from the page, never from the model. |
 | 4 | **Code** | Previews what would change if the verified facts were approved. |
 | 5 | **Patient** | Approves evidence (source facts). Consequences aren't approvable. |

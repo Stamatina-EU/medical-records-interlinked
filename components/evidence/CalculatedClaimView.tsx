@@ -2,7 +2,7 @@
 /**
  * Drawer view for a CALCULATED claim: "How this was determined" + the structured input facts.
  * A derived (CALCULATED) claim never shows a single excerpt as though a document stated it.
- * User-facing wording is "Derived"; `CalculatedClaim` stays the internal data-model term.
+ * User-facing wording is "Calculated"; `CalculatedClaim` stays the internal data-model term.
  */
 import type {
   CalculatedClaim,
@@ -12,6 +12,7 @@ import type {
 import type { EvidenceIndex } from "@/lib/evidence/index";
 import { documentShortLabel, factHeadline } from "@/lib/evidence/index";
 import { monthsBetween } from "@/lib/text/dates";
+import { calculationText, calculationExplanation } from "@/lib/view/calculationCopy";
 import styles from "./evidence.module.css";
 import VisualIcon from "@/components/ui/VisualIcon";
 
@@ -44,14 +45,14 @@ export default function CalculatedClaimView({
       <div className={styles.claimHeader}>
         <p className={styles.kind}>
           <VisualIcon name="network" size={20} />
-          Calculated from your records
+          Calculated from your record
         </p>
-        <h2 className={styles.factLabel}>{claim.text}</h2>
+        <h2 className={styles.factLabel}>{calculationText(claim.text)}</h2>
       </div>
 
       <h3 className={styles.sectionHeading}>How this was determined</h3>
-      <p className={styles.rule}>{claim.ruleDescription}</p>
-      {claim.kind === "followup_match" && <p className={styles.rule}>This match establishes chronology only, not care completion. It does not confirm that the later result fulfilled the recommendation.</p>}
+      <p className={styles.rule}>{calculationExplanation(claim)}</p>
+      {claim.kind === "followup_match" && <p className={styles.rule}>This match establishes chronology only, not care completion. It does not confirm that the later result fulfilled the recommendation or that care was appropriate.</p>}
       {note && <p className={styles.rule}>{note}</p>}
 
       <h3 className={styles.sectionHeading}>Input facts</h3>

@@ -139,7 +139,7 @@ function RecordSequence({
               <SourceRef factId={e.fact.id} />
               {e.claims.length > 0 && (
                 <details className={styles.comparisons}>
-                  <summary>Calculated from your records</summary>
+                  <summary>Calculated from your record</summary>
                   <div className={styles.rowClaims}>
                     {e.claims.map((k) => (
                       <CalculatedLabel key={k} claimKey={k} />
@@ -237,7 +237,7 @@ export function ImagingHistory({
               <SourceRef factId={e.fact.id} />
               {e.claims.length > 0 && (
                 <details className={styles.comparisons}>
-                  <summary>Calculated from your records</summary>
+                  <summary>Calculated from your record</summary>
                   <div className={styles.rowClaims}>
                     {e.claims.map((k) => (
                       <CalculatedLabel key={k} claimKey={k} />
