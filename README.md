@@ -10,6 +10,10 @@ MRI stands for Medical Records Interlinked. It is a hackathon proof of concept f
 
 > *MRI* is a working hackathon name, not a registered trademark.
 
+![MRI Record: product introduction and latest approved update](docs/screenshots/01-record-top-desktop.png)
+
+*Record after approval of the synthetic demo note.*
+
 ## The idea
 
 ```
@@ -30,6 +34,25 @@ AI proposes → Source wording checked → You approve → Record updates
 - **You approve.** Nothing changes in your record until you choose what to add. You can exclude any proposed fact. Raw AI output is never stored. In the default rich profile, each server-owned verified proposal and its uploaded PDF are kept temporarily in `data/runtime/rich-default/pending/` (gitignored). Approval or cancellation removes that proposal; rich reset clears all rich pending proposals. A new rich upload does not automatically delete or invalidate older pending proposals: they still require a valid server-owned proposal, verified facts and your explicit approval, and duplicate approvals remain idempotent. In the legacy profile, pending files use `data/runtime/pending/`, and a new upload clears earlier pending proposals.
 - **Calculated statements are recomputed, never stored.** The default interface shows counts, latest documented dates, comparisons with each result's own supplied range, and whether a later ferritin result is documented after a recommendation. These statements are recomputed from approved facts and marked "Calculated". Follow-up chronology does not establish timely, completed or appropriate care.
 - **The Doctor Summary** is composed from templates with no AI. MRI does not infer diagnoses or introduce diagnostic labels of its own. It may preserve diagnostic wording explicitly stated in a source, such as the documented word “anaphylaxis”. It does not invent absence statements such as “no current medication”. Every line has numbered source chips.
+
+### Inspect the evidence
+
+<table>
+  <tr>
+    <th width="50%">Direct</th>
+    <th width="50%">Calculated</th>
+  </tr>
+  <tr>
+    <td>
+      <a href="docs/screenshots/04-direct-evidence-desktop.png"><img src="docs/screenshots/04-direct-evidence-desktop.png" alt="Direct ferritin evidence: exact source wording, document, page and approval attribution" width="440"></a>
+      <p>Exact source wording, document, page and approval attribution.</p>
+    </td>
+    <td>
+      <a href="docs/screenshots/05-calculated-evidence-desktop.png"><img src="docs/screenshots/05-calculated-evidence-desktop.png" alt="Calculated evidence: Later ferritin result documented, with its rule and source-backed inputs" width="440"></a>
+      <p>Deterministic rule plus source-backed inputs, labelled “Calculated from your record”.</p>
+    </td>
+  </tr>
+</table>
 
 ## Where this fits
 
@@ -84,9 +107,27 @@ Open http://localhost:3000. The server binds to 127.0.0.1 only, so it is not rea
 1. **Record** starts with the rich synthetic baseline: five analytes with two dated results each, imaging, medication statements, recommendations and one documented incident. Values link to Direct evidence; counts and latest selections link to Calculated evidence.
 2. Choose **Add record** and pick `demo-files/follow-up-consultation-2026-09-25.pdf`.
 3. Review the proposed facts. Direct facts are shown with the source wording checked against the document. Exclude any you don't want, then add them.
+
+   ![Review before approval: both supported facts selected, exact excerpts and calculated consequences](docs/screenshots/03-review-desktop.png)
+
 4. **Latest approved update** appears on Record: a new ferritin result, oral iron documented as ongoing, and “Later ferritin result documented” after the earlier recommendation. The Evidence explanation establishes chronology only, not care completion.
 5. Open **History** for dated measurements grouped by analyte and the separate source chronology. Each measurement retains its original unit and its own supplied range.
+
+   <details>
+   <summary>View the longitudinal record</summary>
+
+   ![History: dated laboratory measurements alongside the non-laboratory source record](docs/screenshots/06-history-desktop.png)
+
+   </details>
+
 6. Open **Doctor Summary** for a concise, source-numbered brief to show or discuss with a doctor.
+
+   <details>
+   <summary>View Doctor Summary</summary>
+
+   ![Doctor Summary: Current documented picture, laboratory measurements and evidence references](docs/screenshots/08-doctor-summary-desktop.png)
+
+   </details>
 
 **Expected outcome after approving both supported facts** from the demo PDF:
 
@@ -144,6 +185,10 @@ devpost/             original planning documents and final integration note
 - Live Add record extraction is intentionally restricted to ferritin measurements and documented oral-iron status in this POC; additional laboratory analytes, imaging, recommendations and the incident are included only through the verified curated baseline.
 - A single local user. There are no accounts, no sharing and no deployment.
 - The verifier checks that a fact is **faithfully stated in the document**. It does not establish clinical correctness or document authenticity.
+
+## Responsive interface
+
+<a href="docs/screenshots/09-record-mobile-390.png"><img src="docs/screenshots/09-record-mobile-390.png" alt="MRI Record at 390 pixels: product introduction, synthetic disclosure and latest approved update" width="280"></a>
 
 ## Acknowledgements and licensing
 
