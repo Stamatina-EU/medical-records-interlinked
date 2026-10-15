@@ -29,7 +29,7 @@ AI proposes → Source wording checked → You approve → Record updates
   The excerpt you see is cut from the document itself, not from the model's output.
 - **You approve.** Nothing changes in your record until you choose what to add. You can exclude any proposed fact. Raw AI output is never stored. In the default rich profile, each server-owned verified proposal and its uploaded PDF are kept temporarily in `data/runtime/rich-default/pending/` (gitignored). Approval or cancellation removes that proposal; rich reset clears all rich pending proposals. A new rich upload does not automatically delete or invalidate older pending proposals: they still require a valid server-owned proposal, verified facts and your explicit approval, and duplicate approvals remain idempotent. In the legacy profile, pending files use `data/runtime/pending/`, and a new upload clears earlier pending proposals.
 - **Calculated statements are recomputed, never stored.** The default interface shows counts, latest documented dates, comparisons with each result's own supplied range, and whether a later ferritin result is documented after a recommendation. These statements are recomputed from approved facts and marked "Calculated". Follow-up chronology does not establish timely, completed or appropriate care.
-- **The Doctor Summary** is composed from templates with no AI. It never states an absence ("no current medication") and never uses a diagnostic label. Every line has numbered source chips.
+- **The Doctor Summary** is composed from templates with no AI. MRI does not infer diagnoses or introduce diagnostic labels of its own. It may preserve diagnostic wording explicitly stated in a source, such as the documented word “anaphylaxis”. It does not invent absence statements such as “no current medication”. Every line has numbered source chips.
 
 ## Where this fits
 
@@ -43,11 +43,13 @@ See [the final integration note](devpost/rich-record-integration.md) for profile
 
 ## Run it locally
 
+Run the commands below from the cloned repository root. Dependency installation and the build may require network access, including font downloads.
+
 You'll need:
 
 - Node.js 22.12 or later
 - Chrome or Edge. Their built-in PDF viewer honours `#page=N`, which the evidence links use.
-- An OpenAI API key, for adding a record. Everything else works without one.
+- `OPENAI_API_KEY` and provider/network access for live Add record extraction. The configured model must be available to your API account. Browsing the synthetic record works without an API key.
 
 ```bash
 npm install
@@ -86,6 +88,17 @@ Open http://localhost:3000. The server binds to 127.0.0.1 only, so it is not rea
 5. Open **History** for dated measurements grouped by analyte and the separate source chronology. Each measurement retains its original unit and its own supplied range.
 6. Open **Doctor Summary** for a concise, source-numbered brief to show or discuss with a doctor.
 
+**Expected outcome after approving both supported facts** from the demo PDF:
+
+| | Before (rich baseline) | After approval |
+|---|---:|---:|
+| Documents | 7 | 8 |
+| Source facts | 17 | 19 |
+| Laboratory measurements | 10 | 11 |
+| Analytes | 5 | 5 |
+
+The new ferritin result is **32 μg/L · 25 Sep 2026**; oral iron is documented as **Ongoing**. The earlier ferritin recommendation now has a later documented ferritin result. This establishes chronology only, not timely, completed or medically appropriate care. The immutable baseline remains unchanged.
+
 **Why the demo starts with history.** A fresh clone starts with seven verified rich synthetic documents by design, so one live addition can demonstrate an updated latest ferritin result, a later result documented after a recommendation, and medication statements over time. Empty-record bootstrap and first-use UI are implemented and tested (`tests/bootstrap.test.ts`, `tests/emptyRecord.test.ts`): approving the first supported facts creates the first measurement and/or medication episode. The default interface presents dated results grouped by analyte alongside a separate source chronology.
 
 ## Reset and checks
@@ -93,7 +106,7 @@ Open http://localhost:3000. The server binds to 127.0.0.1 only, so it is not rea
 | Command | What it does |
 |---|---|
 | `npm run demo:reset` | Clears only the selected profile’s additions and restores its baseline. Refresh afterwards |
-| `npm run preflight` | Runs the demo note through the real AI + verification pipeline 5 times and reports pass/fail per run. Needs the API key, costs well under a cent per run, and never writes state |
+| `npm run preflight` | Runs the demo note through the real AI + verification pipeline 5 times and reports pass/fail per run. Requires `OPENAI_API_KEY` and provider/network/model access, makes real provider calls that may incur normal API usage costs, and never writes state |
 | `npm test` | Full original + rich integration suite, then `verify:seed` |
 | `npm run verify:rich` | Checks the immutable rich baseline against its seven real source PDFs using the separate fixture verifier |
 | `npm run typecheck` | TypeScript validation |
@@ -110,16 +123,19 @@ Rich Doctor Summary uses deterministic templates for all five latest analytes, m
 ## What's in the repo
 
 ```
-app/            Next.js App Router pages (Home, History, Doctor Summary) and API routes
-components/     UI: app shell, evidence drawer, Add record review, dated history grouped by analyte, summary
-lib/extraction/ PDF text, AI extraction (schema + prompt), deterministic verifier
-lib/engine/     derive (calculated claims), dedupe, change description, apply
-lib/summary/    Doctor Summary composer (deterministic templates)
-lib/store/      file-based state and pending proposals (atomic writes)
-corpus/         synthetic document sources (HTML) → PDFs
-data/seed/      the synthetic starting record
-demo-files/     the synthetic document added live in the demo
-devpost/        scope, PRD, spec and build checklist
+app/                 Record, History, Sources, Laboratory, Doctor Summary and API routes
+components/          Recordbook UI, Evidence and Add record review
+lib/demo/            rich baseline + approved additions; completed rich Doctor Summary
+lib/rich/            broader record model support and separate fixture verification
+lib/extraction/      narrow live AI proposal schema/prompt and deterministic verifier
+lib/engine/          live calculations, deduplication and approval application
+lib/summary/         shared Summary types and preserved legacy composer
+lib/store/           preserved legacy state and proposal storage
+corpus/              editable synthetic document sources (HTML → PDFs)
+data/rich-synthetic/ immutable seven-document baseline for the DEFAULT demo
+data/seed/           preserved six-document LEGACY baseline
+demo-files/          synthetic PDF uploaded live in the demo
+devpost/             original planning documents and final integration note
 ```
 
 ## Limits (on purpose)
@@ -128,3 +144,16 @@ devpost/        scope, PRD, spec and build checklist
 - Live Add record extraction is intentionally restricted to ferritin measurements and documented oral-iron status in this POC; additional laboratory analytes, imaging, recommendations and the incident are included only through the verified curated baseline.
 - A single local user. There are no accounts, no sharing and no deployment.
 - The verifier checks that a fact is **faithfully stated in the document**. It does not establish clinical correctness or document authenticity.
+
+## Acknowledgements and licensing
+
+Original MRI project code and content are available under the [MIT License](LICENSE). Third-party components and separately licensed assets remain subject to their respective licenses; MRI’s license does not relicense them. Existing third-party notices are preserved.
+
+MRI was developed using the [Devpost Learn Skill Pack](https://github.com/challengepost/learn-ai-basics) workflow: `1-start` → `2-scope` → `3-prd` → `4-spec` → `5-build` → `6-ship`. The Skill Pack itself is [MIT-licensed](https://github.com/challengepost/learn-ai-basics/blob/main/LICENSE). MRI’s project license is separate.
+
+Visual and font resources:
+
+- **Lucide icons**, including Feather-derived icons: notices are retained in [public/visual-icons/LICENSE](public/visual-icons/LICENSE).
+- **Source Sans 3**, **Source Serif 4** and **Montserrat**: interface, evidence/heading and navigation typography, loaded through `next/font/google`. No system font installation is required.
+- **MRi brand artwork**: the overlapping-square mark and outlined wordmark. The outlined wordmark lettering originated in Corporate E Demi via Adobe Fonts; no font software is committed.
+- **Recordbook backgrounds, ribbon and interlinked-record illustrations**: developed for MRI with AI-assisted visual generation.

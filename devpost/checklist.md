@@ -5,6 +5,8 @@ status: approved
 
 # Build Checklist
 
+> **Current product status:** Product development and design are complete and frozen. The approved product was promoted to `main` at `522a87705ae6c196186016227d2a1f18d3f66177` after an independent SHIP audit and final presentation/copy review. Submission documentation and publication are separate from product completion. The slices and revisions below preserve the original six-document build history; [README](../README.md) and [the integration note](rich-record-integration.md) describe the completed rich default.
+
 Build mode: fast (concise explanations, no full code walkthroughs; extra trust checkpoints after slices 2 and 4)
 
 ## Slices
@@ -129,16 +131,18 @@ Slice 1 → mechanically verified only · Slice 5 → continue unless a material
 - [x] Trust-pipeline checkpoint (report, no visual review) — after slice 2. It covers the corpus that exists, the `verify:seed` result, preflight results across all runs, the model used, whether both expected facts passed deterministic verification every run, and any verifier or extraction compromise or deviation from spec. Don't proceed silently if the pipeline differs materially from spec.
 - [x] Early usable behavior explored — after slice 3 (Snapshot + evidence drawer): hands-on visual and provenance review. Covers visual direction, typography pairing and drawer feel.
 - [x] Kernel hands-on review — **STOP** after slice 4. The learner tries Add record → AI proposes → code verifies → patient reviews evidence → Apply → deterministic consequences → trusted state updates, before History and the Doctor Summary are built.
-- [ ] Final kick-the-tires exploration and feedback completed — after slice 6, on the production build
+- [x] Final production-build exploration and feedback completed; final presentation and terminology were reviewed before product freeze.
 
 ## Final Review
 
-- [ ] Final review complete — feedback resolved and learner confirms ready to ship
-- [ ] Provenance fix: "Ferritin has been measured N times" cites every counted measurement (all N source facts), so the 27 Jan 2026 laboratory report appears in Sources; regression test added
-- [ ] Copy: medication line reads "— Ongoing. Status documented in … dated 25 Sep 2026. Earlier: Prescribed, documented 3 Feb 2026." (semantics unchanged)
-- [ ] Timestamp clarity: header reads "latest source dated <newest document date>" instead of the render time
+- [x] Final product review complete — feedback resolved, independent audit returned SHIP, and the learner approved the frozen product state.
+- [x] Provenance fix: measurement counts cite every counted measurement; regression coverage is retained. The historical implementation is recorded under Revisions.
+- [x] Medication copy reviewed: status dates are documentation dates, with each source statement retaining its evidence reference.
+- [x] Timestamp clarity reviewed: source dates describe the source document, not the render time.
 
 ## Code Tour and App Map
+
+Historical learning-workflow placeholders follow. Completion was not recorded in these fields; they are not unfinished product tasks or evidence that an app-map artifact exists.
 
 - [ ] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
 - [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
@@ -154,11 +158,11 @@ Activity mode:
 
 **Deadline:** Monday, 26 October 2026, 5:00 PM ET (23:00 Greece time).
 
-- [ ] Skill Pack field: a short explanation of how we used the Devpost Learn Skill Pack. The project followed the Skill Pack workflow 1-start → 2-scope → 3-prd → 4-spec → 5-build → 6-ship (6-ship still ahead at the time of this note). The learner writes it at submission time; it is not drafted yet.
+- [ ] Submission form: the learner supplies the Skill Pack explanation. The project used the 1-start → 2-scope → 3-prd → 4-spec → 5-build → 6-ship workflow; README includes the repository acknowledgement. This checkbox tracks the submission form, not product development.
 - [ ] Eligibility: confirm the age-of-majority checkbox (required, final submission check).
 - [ ] "Try it out" field includes the public GitHub repository link.
 
-Reference only: the Devpost Learn Skill Pack repository is now MIT-licensed. This does not decide our own project LICENSE, which is still open.
+The Devpost Learn Skill Pack is MIT-licensed. MRI’s original project code/content has its own root MIT LICENSE; third-party components and separately licensed assets retain their respective licenses.
 
 ## Revisions
 
@@ -228,7 +232,7 @@ Reference only: the Devpost Learn Skill Pack repository is now MIT-licensed. Thi
   - The ferritin sentence ("Three ferritin measurements are documented, most recently …") and the detailed "Ferritin has been measured N times …" line are Derived from one claim over all ferritin results. The imaging sentence is split into a Derived "latest documented thyroid ultrasound" (inputs: every thyroid ultrasound) and a Direct report-stated comparison. The medication status stays Direct and cites only the status fact that states it. The follow-up sentence reads "A later ferritin result matching the recommended test is documented." ("matching" refers to the test type, never timing).
   - Regression tests: counts, ordering and matching are Derived with every input exposed; a sourced medication status is Direct with one ref; and Direct statements must rest on exactly one source fact with no counting/ordering/matching language.
   - Learner decisions after round 3: the detailed "Ferritin has been measured N times …" line stays Derived, so a count has one provenance meaning everywhere. The detailed medication line drops the ordering word: "… — Ongoing. Status documented in follow-up consultation note dated 25 Sep 2026. Also documented: Prescribed, 3 Feb 2026." Each status fact keeps its own source chip, listed in text order.
-- Final review round 4 (truthful failure states, learner request after a private real-PDF test). The single "couldn't be read into structured facts" message hid several different outcomes. `lib/extraction/pipeline.ts` now returns one outcome per real pipeline result:
+- Final review round 4 (truthful failure states, learner request). The single "couldn't be read into structured facts" message hid several different outcomes. `lib/extraction/pipeline.ts` now returns one outcome per real pipeline result:
   - `no_text`: no text layer; the AI is never called.
   - `no_supported_facts`: `no_candidate_facts`, `document_date_unverified` or `none_verified`.
   - `processing_failed`: `ai_unavailable`, `ai_incomplete` and `ai_invalid_output` are retryable; `ai_refused` is not.
@@ -237,7 +241,7 @@ Reference only: the Devpost Learn Skill Pack repository is now MIT-licensed. Thi
 
   The route is a thin wrapper that saves proposals. Outcomes and server logs carry only status + fixed reason code. The extractor no longer keeps raw provider or parser error messages, and the route no longer logs verifier reasons, which could include extracted values. No schema, fact type, OCR or extraction-scope change. `tests/pipeline.test.ts` covers every state against the real synthetic demo PDF, with a stub in place of the AI and a generated text-less PDF, and asserts no outcome or log line contains document text.
   - Refinement (learner decision): case 2 is split so the two trust states can't be confused. `no_supported_facts` means the model proposed no supported fact type ("No supported history changes…"). `no_verified_facts` means supported facts were proposed but every one failed deterministic verification, including an unverifiable document date ("No verified history changes… Possible facts were found, but they couldn't be verified against the source wording."). If even one fact verifies, it's a normal proposal. Regression tests pin each mapping and assert the two states differ in status, code and log line. Neither message nor log exposes model output, rejected values, excerpts or verifier reasons.
-- Final review round 5 (learner's private real-PDF test and a bootstrap check; the document itself was never inspected, stored or logged):
+- Final review round 5 (supported-category handling and an empty-record bootstrap check):
   - **Why an unrelated lab report reached "none verified" (2B).** The only evidence used was the content-free server log line (`no_verified_facts: document_date_unverified`, twice). The prompt asked for *every* laboratory measurement and *every* medication status, and the 2A check fired only when both lists were empty. A report full of other tests therefore always had candidates. The document-date check then failed before any candidate was checked for being ferritin. The log can't show whether any candidate was literally labelled "ferritin"; the classification was wrong either way.
   - **Fix, no schema change:**
     - A deterministic subject gate in `verifyExtraction`: a candidate counts only if it names ferritin / a supported medication episode AND the document text names that subject. Out-of-scope candidates are ignored, not counted in `excludedCount`.
@@ -245,7 +249,7 @@ Reference only: the Devpost Learn Skill Pack repository is now MIT-licensed. Thi
     - Live checks: preflight 5/5 again, and two unrelated synthetic reports now return `no_supported_facts`.
   - **Empty-record bootstrap bug found and fixed.** Medication verification looked the episode up only in the stored history, and `apply` never created episodes, so an empty record could not accept its first oral-iron status. Episode identity is now code-owned (`MEDICATION_EPISODES` in the lexicon, next to the aliases), and `apply` creates the episode with its first approved status. The summary composer is safe on an empty record. `tests/bootstrap.test.ts` covers empty state → first document → verified facts → approval → first measurement, topic and episode. It also checks that longitudinal claims wait for history, and that it fails against the old lookup and the old `apply`. The demo still starts from the synthetic seed, and the README explains why.
 - Devpost's official submission update was recorded under **Devpost Submission Requirements**: the deadline (26 Oct 2026, 5:00 PM ET / 23:00 Greece), the new required Skill Pack explanation field, the age-of-majority eligibility checkbox, and the public repo link in "Try it out". The Skill Pack's MIT licence was noted as reference only. Planning record only; no app change.
-- **Rename (learner decision):** the working brand "MyHeDo — My health, documented." is replaced by **MRI** (primary mark) · **Medical Records Interlinked** (descriptor) · "Every claim, back to its source." (tagline, kept out of the logo lockup and the nav shell). The sidebar and mobile header show the mark + descriptor (mark only below 340px). The browser title is "MRI — Medical Records Interlinked". The Doctor Summary header reads "Prepared in Medical Records Interlinked (MRI) …" and "…documented history held in this record."; its medical content, chips, derived claims and sources are unchanged. README, PRD and spec are updated. Historical mentions of MyHeDo in these Revisions stay as written. Logo redesign is still to come.
+- **Rename (learner decision):** the working brand "MyHeDo — My health, documented." is replaced by **MRI** (primary mark) · **Medical Records Interlinked** (descriptor) · "Every claim, back to its source." (tagline, kept out of the logo lockup and the nav shell). The sidebar and mobile header show the mark + descriptor (mark only below 340px). The browser title is "MRI — Medical Records Interlinked". The Doctor Summary header reads "Prepared in Medical Records Interlinked (MRI) …" and "…documented history held in this record."; its medical content, chips, derived claims and sources are unchanged. README, PRD and spec are updated. Historical mentions of MyHeDo in these Revisions stay as written. Logo design followed in a later revision.
 
 - **Logo (learner decision):** the final logo system is in the app. Two overlapping squares (symbol) and **MRi** set in Corporate E Demi, outlined; the typeface comes through the learner's Adobe Fonts licence, and no font file is in the repository. The app ships only the outlined assets it uses (`public/brand/mark.svg`, `app/icon.svg`). The working logo files and the brand kit stay local and git-ignored, and so do font files. The sidebar shows the mark at 52 px tall; the mobile header shows it at 26 px. The descriptor "Medical Records Interlinked" is set in Montserrat 400 at 12 px; it is hidden at 340 px and below, as before. The tagline stays out of the shell. `app/icon.svg` is the new app icon / favicon, and `applicationName` is "MRI". `tests/brandAssets.test.ts` checks that those assets are flat, outlined SVGs (no live text, font references or embedded data) and that no font file ships under `public/` or `app/`. Medical copy, layout logic and trust/provenance behaviour are unchanged.
 - **Derived-label wrap (final review):** a long derived label now wraps as one run of text. On the desktop Home, "· derived" had fallen onto its own line beside a wrapped "2 ferritin results · latest in record". The tag is now attached to the label's last word. This lives in the shared `CalculatedLabel`: one inline wrapper plus CSS, with no wording, layout-width or provenance change. It was checked at every width from 320 to 1600 px (step 10) on Home and History.

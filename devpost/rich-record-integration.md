@@ -35,11 +35,11 @@ The new source facts are ferritin 32 μg/L, supplied range 15–150 μg/L, measu
 
 ## Presentation and provenance
 
-Record provides the current documented overview. History groups measurements by analyte and presents the other dated source statements separately. Laboratory shows every dated result with its literal unit and individual supplied range. Sources lists the original PDFs and the facts they support. Evidence opens either a Direct source fact or a Derived calculation with its rule and all input facts.
+Record provides the current documented overview. History groups measurements by analyte and presents the other dated source statements separately. Laboratory shows every dated result with its literal unit and individual supplied range. Sources lists the original PDFs and the facts they support. Evidence opens either a Direct source fact or a Calculated statement with its rule and all input facts.
 
 Every source fact has its document ID, page and exact verified excerpt. Baseline attribution is the code-owned synthetic fixture; an added source is attributed to patient approval. Counts, grouping, latest selections, range comparisons and follow-up matching are derived views, not statements attributed to a source document. Verification establishes faithful representation within the supported source grammar; it does not establish clinical correctness, authenticity or diagnosis.
 
-`lib/demo/summary.ts` deterministically composes the completed rich Doctor Summary, rendered by `components/rich/RichDoctorSummary.tsx`. It includes the latest results for all five analytes, original ranges, medication statements, imaging, recommendations, incident wording and numbered sources. All Direct and Derived references resolve through the same composed record. The legacy Summary composer remains unchanged.
+`lib/demo/summary.ts` deterministically composes the completed rich Doctor Summary, rendered by `components/rich/RichDoctorSummary.tsx`. It includes the latest results for all five analytes, original ranges, medication statements, imaging, recommendations, incident wording and numbered sources. All Direct and Calculated references resolve through the same composed record. The legacy Summary composer remains unchanged.
 
 The incident preserves: “Anaphylaxis occurred after amoxicillin. Epinephrine was administered in the emergency department.” The explicit incident date is 18 Aug 2025; its document date is 19 Aug 2025. The system does not infer an allergy, stronger causality, a contraindication, clinical ranking or future treatment advice.
 

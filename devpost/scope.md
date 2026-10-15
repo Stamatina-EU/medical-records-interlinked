@@ -3,6 +3,8 @@ doc: scope
 status: approved
 ---
 
+> **Historical planning artifact:** This is the original scope-stage document. The project later evolved into **MRI — Medical Records Interlinked**. Historical decisions and placeholders below are preserved; the final implemented architecture and default demo are documented in [README](../README.md) and [the rich-record integration note](rich-record-integration.md).
+
 # Working title: TBD
 
 Medical evidence can exist outside a structured health record as older PDFs, scans or reports from other providers. This proof of concept demonstrates, using a clean text-layer PDF, how such external evidence can safely become part of a verified, source-linked longitudinal history. The history updates only after the patient approves the proposed evidence. *(Working description, not final copy.)*
