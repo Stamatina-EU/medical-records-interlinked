@@ -4,7 +4,7 @@
  * Runs the REAL pipeline on the live demo note N times:
  *   PDF text -> OpenAI Responses API (EXTRACTION_MODEL) -> schema -> Fact Verifier -> dedupe vs the SEED state
  * A run passes only if BOTH expected facts are verified: ferritin 32 μg/L (range 15–150, page 2)
- * and oral iron Current, shown as "Ongoing" (page 1). Never writes runtime state. Costs well under a cent per run on the default model.
+ * and oral iron Current, shown as "Ongoing" (page 1). Never writes runtime state. Uses a real provider call and may incur normal API usage costs.
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";
