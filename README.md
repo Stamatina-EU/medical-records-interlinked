@@ -1,4 +1,4 @@
-# MRI — Medical Records Interlinked
+# MRI | Medical Records Interlinked
 
 *Every claim, back to its source.*
 
